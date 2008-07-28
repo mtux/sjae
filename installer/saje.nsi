@@ -71,6 +71,7 @@ Section "SAJE (required)"
   ; Set output path to the plugins directory.
   SetOutPath $INSTDIR\plugins  
   File "..\bin\release\plugins\accounts.dll"
+  File "..\bin\release\plugins\add_contact.dll"
   File "..\bin\release\plugins\contact_list.dll"
   File "..\bin\release\plugins\icons.dll"
   File "..\bin\release\plugins\jabber.dll"
