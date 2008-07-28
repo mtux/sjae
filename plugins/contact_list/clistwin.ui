@@ -1,0 +1,37 @@
+<ui version="4.0" >
+ <class>CListWinClass</class>
+ <widget class="QWidget" name="CListWinClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>210</width>
+    <height>398</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>CListWin</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <item>
+    <widget class="ContactTree" name="treeWidget" >
+     <column>
+      <property name="text" >
+       <string>1</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <customwidgets>
+  <customwidget>
+   <class>ContactTree</class>
+   <extends>QTreeWidget</extends>
+   <header>contacttree.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

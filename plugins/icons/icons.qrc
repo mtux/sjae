@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/icons" >
+        <file>Resources/c_blue.png</file>
+        <file>Resources/c_brown.png</file>
+        <file>Resources/c_cyan.png</file>
+        <file>Resources/c_green.png</file>
+        <file>Resources/c_grey.png</file>
+        <file>Resources/c_lblue.png</file>
+        <file>Resources/c_lcyan.png</file>
+        <file>Resources/c_lgreen.png</file>
+        <file>Resources/c_lmagenta.png</file>
+        <file>Resources/c_lred.png</file>
+        <file>Resources/c_lyellow.png</file>
+        <file>Resources/c_magenta.png</file>
+        <file>Resources/c_orange.png</file>
+        <file>Resources/c_purple.png</file>
+        <file>Resources/c_red.png</file>
+        <file>Resources/c_white.png</file>
+        <file>Resources/c_yellow.png</file>
+        <file>Resources/s.png</file>
+    </qresource>
+</RCC>

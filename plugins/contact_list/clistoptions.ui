@@ -1,0 +1,45 @@
+<ui version="4.0" >
+ <class>CListOptionsClass</class>
+ <widget class="OptionsPageI" name="CListOptionsClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="minimumSize" >
+   <size>
+    <width>300</width>
+    <height>150</height>
+   </size>
+  </property>
+  <property name="windowTitle" >
+   <string>CListOptions</string>
+  </property>
+  <widget class="QCheckBox" name="chkHideOffline" >
+   <property name="geometry" >
+    <rect>
+     <x>60</x>
+     <y>50</y>
+     <width>141</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>Hide offline contacts</string>
+   </property>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <customwidgets>
+  <customwidget>
+   <class>OptionsPageI</class>
+   <extends>QWidget</extends>
+   <header>options_i.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

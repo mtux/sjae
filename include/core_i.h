@@ -1,0 +1,70 @@
+#ifndef _I_CORE_H
+#define _I_CORE_H
+
+/*!
+\mainpage
+
+ \section Introduction
+
+ SJC - \b Simple \b Jabber \b Clien - is a pluginized platform and Jabber client implementation by Scott Ellis (mail@scottellis.com.au)
+
+ \section Architecture
+
+ The SJC software relies on a plugin based architecture, where functionality is modularized and separated into independent plugins. The core program 
+ is accessible via the CoreI interface definition, and provides a minimal set of common functions as well as the ability to obtain interfaces
+ to other modules. Every module is passed a reference to the core within it's PluginI::load method which is called when the module is
+ loaded by the system.
+
+ The core uses a two-step load system to allow for circular dependencies. A second method, PluginI::modules_loaded, is called on every module after 
+ all plugins have been loaded and their load methods have been called.
+
+ In order for a module to provide functionality to other modules, it must subclass PluginI and implement the necessary pure virtual functions defined 
+ therein.
+
+ \section Licencing
+ The SJC software, in source and binary form, is copyright &copy; <a href="http://www.scottellis.com.au">Scott Ellis</a> All rights reserved.
+*/
+
+#include <QObject>
+#include <QStringList>
+#include <QPointer>
+#include <QCoreApplication>
+
+class PluginI;
+
+/**
+* Interface to core functions.
+*/
+class CoreI: public QObject {
+
+public:
+	CoreI(QObject *parent = 0): QObject(parent) {}
+	virtual ~CoreI() {}
+
+	/// obtain an interface for a module - use the INAME_<module name> #define in the module's header file as the 'name' parameter
+	virtual Q_INVOKABLE PluginI *get_interface(const QString &pluginId) = 0;
+
+	/// get a list of all loaded interface names
+	virtual Q_INVOKABLE QStringList get_interface_ids() = 0;
+
+	/// get a list of all loaded interface class names
+	virtual Q_INVOKABLE QStringList get_interface_class_names() = 0;
+
+	/// retreive the config file directory name
+	virtual Q_INVOKABLE const QString &get_config_dir() = 0;
+
+	/// return the current time as seconds since 1/1/1970, to millisecond or better resolution, as a double
+	virtual Q_INVOKABLE double current_time() = 0;
+
+	/// make a relative path absolute - does nothing to an absolute path
+	virtual Q_INVOKABLE QString make_absolute(const QString &path) = 0;
+
+	/// encrypt a string
+	virtual Q_INVOKABLE QString encrypt(const QString &source, const QString &key = "bad key") = 0;
+	/// decrypt a string
+	virtual Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "bad key") = 0;
+};
+
+Q_DECLARE_INTERFACE(CoreI, "au.com.sje.CoreI/1.0")
+
+#endif
