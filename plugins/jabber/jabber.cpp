@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <icons_i.h>
 
+#include "jabbersearchwin.h"
+
 PluginInfo info = {
 	0x800,
 	"Jabber Protocol",
@@ -137,6 +139,14 @@ bool JabberProto::set_status(const QString &account_id, GlobalStatus gs) {
 	return true;
 }
 
+void JabberProto::add_contact(const QString &account_id, const QString &contact_id) {
+	if(ctx.contains(account_id)) {
+		ctx[account_id]->addContact(contact_id);
+	} else
+		qWarning() << "add_contact: no account called" << account_id;
+
+}
+
 void JabberProto::context_status_change(const QString &account_id, GlobalStatus gs) {
 	emit local_status_change(name(), account_id, gs);
 }
@@ -206,6 +216,10 @@ AccountExtra *JabberProto::create_account_extra(const QString &account_id) {
 	if(ctx.contains(account_id))
 		po->setContext(ctx[account_id]);
 	return po;
+}
+
+ProtoSearchWindowI *JabberProto::create_search_window() {
+	return new JabberSearchWin(this);
 }
 
 ///////////////////////////////////////////

@@ -40,6 +40,7 @@ public:
 public slots:
 	void msgSend(const QString &jid, const QString &msg, int id);
 	void requestStatus(GlobalStatus gs);
+	void addContact(const QString &jid);
 
 signals:
 	void msgRecv(const QString &account_id, const QString &jid, const QString &msg);

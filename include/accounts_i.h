@@ -3,6 +3,7 @@
 
 #include "plugin_i.h"
 #include "options_i.h"
+#include "add_contact_i.h"
 #include <QString>
 #include <QWidget>
 #include "global_status.h"
@@ -55,6 +56,8 @@ public:
 
 	// return 0 if you don't have extra options for accounts
 	virtual AccountExtra *create_account_extra(const QString &account_id) {return 0;}
+	// return 0 if you don't have 'add contact' functionality
+	virtual ProtoSearchWindowI *create_search_window() {return 0;}
 
 	virtual bool remove_account_data(const QString &id) = 0;
 	virtual bool update_account_data(const QString &id, const AccountInfo &info) = 0;

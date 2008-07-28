@@ -35,6 +35,7 @@ public:
 
 	// return 0 if you don't have extra options for accounts
 	AccountExtra *create_account_extra(const QString &account_id);
+	ProtoSearchWindowI *create_search_window();
 
 	bool remove_account_data(const QString &id);
 	bool update_account_data(const QString &id, const AccountInfo &info);
@@ -46,6 +47,8 @@ public:
 public slots:
 	bool message_send(const QString &account_id, const QString &contact_id, const QString &msg, int id);
 	bool set_status(const QString &account_id, GlobalStatus gs);
+
+	void add_contact(const QString &account_id, const QString &contact_id);
 protected slots:
 	void context_status_change(const QString &account_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);

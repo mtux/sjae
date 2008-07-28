@@ -185,10 +185,6 @@ public:
 			return name;
 	}
 
-	virtual void addChild(RosterTreeNode *child) {
-		children.append(child);
-	}
-
 	QStringList all_items() {
 		QStringList ret;
 		foreach(RosterTreeNode *n, children) {

@@ -721,6 +721,8 @@ void JabberCtx::parseRosterItem() {
 	RosterItem *item = roster.get_item(jid);
 	if(subscription == "remove" && item) {
 		clist_i->remove_contact("Jabber", account_id, jid);
+		item->getGroup()->removeChild(item);
+		delete item;
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
 	} else {
@@ -894,6 +896,36 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 	writer.writeEndElement(); // iq
 	sendWriteBuffer();
 	//log("sent version info to " + sender);
+}
+
+void JabberCtx::addContact(const QString &jid) {
+	RosterItem *item = roster.get_item(mid);
+	if(!item) {
+
+		//<iq from='juliet@example.com/balcony' type='set' id='roster_2'>
+		//	<query xmlns='jabber:iq:roster'>
+		//		<item jid='nurse@example.com' name='Nurse'>
+		//			<group>Servants</group>
+		//		</item>
+		//	</query>
+		//</iq>
+		writer.writeStartElement("iq");
+		writer.writeAttribute("type", "set");
+		writer.writeAttribute("id", "roster_add");
+			writer.writeStartElement("query");
+			writer.writeDefaultNamespace("jabber:iq:roster");
+				writer.writeStartElement("item");
+				writer.writeAttribute("jid", jid);
+				//writer.writeAttribute("name", d.getName());
+				//if(!d.getGroup().isEmpty()) {
+				//	writer.writeTextElement("group", d.getGroup());
+				//}
+				writer.writeEndElement();
+			writer.writeEndElement();
+		writer.writeEndElement();
+		sendWriteBuffer();
+	} else
+		qWarning() << "JID" << jid << "already exists for account" << account_id;
 }
 
 void JabberCtx::addRosterItem() {
