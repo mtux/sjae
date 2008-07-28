@@ -3,7 +3,7 @@
 
 typedef enum {ST_OFFLINE, ST_ONLINE, ST_INVISIBLE, ST_FREETOCHAT, ST_SHORTAWAY, ST_LONGAWAY, ST_DND, ST_OUTTOLUNCH, ST_ONTHEPHONE, ST_CONNECTING} GlobalStatus;
 
-static char *status_name[] = {
+static const char *status_name[] = {
 	"status_offline",
 	"status_online",
 	"status_invisible",
@@ -16,7 +16,7 @@ static char *status_name[] = {
 	"status_connecting"
 };
 
-static char *hr_status_name[] = {
+static const char *hr_status_name[] = {
 	"Offline",
 	"Online",
 	"Invisible",

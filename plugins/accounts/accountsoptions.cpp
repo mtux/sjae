@@ -191,6 +191,7 @@ void AccountsOptions::on_btnCreate_clicked() {
 			info.enabled = true;
 
 			acc_info[proto->name()][text] = info;
+			proto->update_account_data(text, info);
 
 			AccountExtra *w = proto->create_account_extra(text);
 			if(w) {
