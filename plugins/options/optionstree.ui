@@ -1,0 +1,30 @@
+<ui version="4.0" >
+ <class>OptionsTreeClass</class>
+ <widget class="QTreeWidget" name="OptionsTreeClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>144</width>
+    <height>428</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle" >
+   <string>OptionsTree</string>
+  </property>
+  <column>
+   <property name="text" >
+    <string>1</string>
+   </property>
+  </column>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <resources/>
+ <connections/>
+</ui>

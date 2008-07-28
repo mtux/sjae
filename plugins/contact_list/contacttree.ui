@@ -1,0 +1,30 @@
+<ui version="4.0" >
+ <class>ContactTreeClass</class>
+ <widget class="QTreeWidget" name="ContactTreeClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="contextMenuPolicy" >
+   <enum>Qt::CustomContextMenu</enum>
+  </property>
+  <property name="windowTitle" >
+   <string>ContactTree</string>
+  </property>
+  <property name="sortingEnabled" >
+   <bool>true</bool>
+  </property>
+  <column>
+   <property name="text" >
+    <string>1</string>
+   </property>
+  </column>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <resources/>
+ <connections/>
+</ui>
