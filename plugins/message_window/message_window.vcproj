@@ -57,7 +57,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies=" qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib"
-				OutputFile="$(OutDir)\plugins\$(ProjectName).dll"
+				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="false"
 				SubSystem="2"
@@ -128,7 +128,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies=" qtmaind.lib QtCored4.lib QtGuid4.lib QtXmld4.lib"
-				OutputFile="$(OutDir)\plugins\$(ProjectName).dll"
+				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -305,18 +305,6 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_message_window_i.cpp"
 				>
 				<FileConfiguration
@@ -336,6 +324,30 @@
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)\$(InputName)1.obj"
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -363,10 +375,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_messagewindow.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -379,18 +391,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_messagewindow.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

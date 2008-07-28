@@ -57,7 +57,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies=" qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib"
-				OutputFile="$(OutDir)\plugins\$(ProjectName).dll"
+				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="false"
 				SubSystem="2"
@@ -128,7 +128,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies=" qtmaind.lib QtCored4.lib QtGuid4.lib QtXmld4.lib"
-				OutputFile="$(OutDir)\plugins\$(ProjectName).dll"
+				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -443,18 +443,6 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_clist_i.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_clist_i.cpp"
 				>
 				<FileConfiguration
@@ -478,7 +466,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_clistoptions.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_clist_i.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -502,10 +490,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_clistwin.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_clistoptions.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -518,6 +506,18 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Debug\moc_clistwin.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -550,6 +550,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\GeneratedFiles\Debug\moc_contacttree.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\GeneratedFiles\Release\moc_contacttree.cpp"
 				>
 				<FileConfiguration
@@ -562,10 +574,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_contacttree.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_options_i.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -593,18 +605,6 @@
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)\$(InputName)1.obj"
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\GeneratedFiles\Release\moc_options_i.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 			</File>
