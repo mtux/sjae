@@ -6,11 +6,11 @@
 
  \section Introduction
 
- SJC - \b Simple \b Jabber \b Clien - is a pluginized platform and Jabber client implementation by Scott Ellis (mail@scottellis.com.au)
+ SAJE - is a pluginized platform (including a Jabber client implementation) by Scott Ellis (<a href="mailto:mail@scottellis.com.au">mail@scottellis.com.au</a>).
 
  \section Architecture
 
- The SJC software relies on a plugin based architecture, where functionality is modularized and separated into independent plugins. The core program 
+ The SAJE software relies on a plugin based architecture, where functionality is modularized and separated into independent plugins. The core program 
  is accessible via the CoreI interface definition, and provides a minimal set of common functions as well as the ability to obtain interfaces
  to other modules. Every module is passed a reference to the core within it's PluginI::load method which is called when the module is
  loaded by the system.
@@ -22,7 +22,8 @@
  therein.
 
  \section Licencing
- The SJC software, in source and binary form, is copyright &copy; <a href="http://www.scottellis.com.au">Scott Ellis</a> All rights reserved.
+ The SAGE software, in source and binary form, is copyright &copy; <a href="http://www.scottellis.com.au">Scott Ellis</a>. It is licenced under
+ the <a href="http://www.gnu.org/licenses/gpl-3.0.html">GPL v3<a/>.
 */
 
 #include <QObject>

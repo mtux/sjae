@@ -8,17 +8,17 @@
 ;--------------------------------
 
 ; The name of the installer
-Name "SJC"
+Name "saje"
 
 ; The file to write
-OutFile "SJC_Setup.exe"
+OutFile "saje_setup.exe"
 
 ; The default installation directory
-InstallDir "$PROGRAMFILES\SJE\SJC"
+InstallDir "$PROGRAMFILES\SJE\SAJE"
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\NSIS_SJC" "Install_Dir"
+InstallDirRegKey HKLM "Software\NSIS_SAJE" "Install_Dir"
 
 !define QTDIR	"c:\Qt\4.4.0"
 
@@ -48,7 +48,7 @@ Section "Microsoft Visual C Runtime"
   
 SectionEnd
 
-Section "Qt 4.3.3 Runtime Libraries (MinGW, Commercial)"
+Section "Qt Runtime Libraries"
   SetOutPath $INSTDIR  
 
   File "${QTDIR}\bin\QtCore4.dll"
@@ -60,7 +60,7 @@ Section "Qt 4.3.3 Runtime Libraries (MinGW, Commercial)"
  
 SectionEnd
 
-Section "SJC (required)"
+Section "SAJE (required)"
   SectionIn RO
   
   ; Set output path to the installation directory.
@@ -81,13 +81,13 @@ Section "SJC (required)"
   File "..\bin\release\plugins\status_bar.dll"
 	
   ; Write the installation path into the registry
-  WriteRegStr HKLM SOFTWARE\NSIS_SJC "Install_Dir" "$INSTDIR"
+  WriteRegStr HKLM SOFTWARE\NSIS_SAJE "Install_Dir" "$INSTDIR"
   
   ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SJC" "DisplayName" "SJC"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SJC" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SJC" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SJC" "NoRepair" 1
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SAJE" "DisplayName" "SAJE"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SAJE" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SAJE" "NoModify" 1
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SAJE" "NoRepair" 1
   WriteUninstaller "uninstall.exe"
 SectionEnd
 
@@ -95,7 +95,7 @@ SectionEnd
 Section "Desktop Shortcut"
 
 ;create desktop shortcut
-  CreateShortCut "$DESKTOP\SJC.lnk" "$INSTDIR\SJC.exe" ""
+  CreateShortCut "$DESKTOP\saje.lnk" "$INSTDIR\core.exe" ""
 
 SectionEnd
 
@@ -103,8 +103,8 @@ Section "Start Menu Shortcuts"
 
 ; start menu shortcuts
   CreateDirectory "$SMPROGRAMS\SJE"
-  CreateShortCut "$SMPROGRAMS\SJE\SJC.lnk" "$INSTDIR\core.exe" "" "$INSTDIR\core.exe" 0
-  CreateShortCut "$SMPROGRAMS\SJE\Uninstall SJC.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateShortCut "$SMPROGRAMS\SJE\saje.lnk" "$INSTDIR\core.exe" "" "$INSTDIR\core.exe" 0
+  CreateShortCut "$SMPROGRAMS\SJE\Uninstall saje.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
 
@@ -115,17 +115,17 @@ SectionEnd
 Section "Uninstall"
   
   ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SJC"
-  DeleteRegKey HKLM SOFTWARE\NSIS_SJC
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SAJE"
+  DeleteRegKey HKLM SOFTWARE\NSIS_SAJE
 
   ; Remove files and uninstaller
   Delete "$INSTDIR\plugins\*.*"
   Delete "$INSTDIR\*.*"
 
   ; Remove shortcuts, if any
-  Delete "$DESKTOP\SJC.lnk"
-  Delete "$SMPROGRAMS\SJE\SJC.lnk"
-  Delete "$SMPROGRAMS\SJE\Uninstall SJC.lnk"
+  Delete "$DESKTOP\saje.lnk"
+  Delete "$SMPROGRAMS\SJE\saje.lnk"
+  Delete "$SMPROGRAMS\SJE\Uninstall saje.lnk"
   RMDir "$SMPROGRAMS\SJE"
 
   ; Remove directories used
