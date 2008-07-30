@@ -8,7 +8,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Status bar plugin for SJC",
+	"Status Bar",
 	0x00000001
 };
 

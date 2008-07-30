@@ -8,7 +8,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Startup status plugin for SJC",
+	"Startup Status",
 	0x00000001
 };
 

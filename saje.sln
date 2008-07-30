@@ -11,6 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 		Integration = True
 	EndGlobalSection
 	ProjectSection(ProjectDependencies) = postProject
+		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314} = {D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}
 		{954CB916-3B4E-495A-BC1F-EBAAE4F5F079} = {954CB916-3B4E-495A-BC1F-EBAAE4F5F079}
 		{F6CA5A48-880A-4E92-A08F-5FEEF03EA1BE} = {F6CA5A48-880A-4E92-A08F-5FEEF03EA1BE}
 		{F33B8055-FC8B-4D46-B573-02BD00369036} = {F33B8055-FC8B-4D46-B573-02BD00369036}
@@ -68,6 +69,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "add_contact", "plugins\add_
 		Integration = True
 	EndGlobalSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log_window", "plugins\log_window\log_window.vcproj", "{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}"
+	GlobalSection(Qt) = preSolution
+		Integration = True
+	EndGlobalSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -118,6 +124,10 @@ Global
 		{F33B8055-FC8B-4D46-B573-02BD00369036}.Debug|Win32.Build.0 = Debug|Win32
 		{F33B8055-FC8B-4D46-B573-02BD00369036}.Release|Win32.ActiveCfg = Release|Win32
 		{F33B8055-FC8B-4D46-B573-02BD00369036}.Release|Win32.Build.0 = Release|Win32
+		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}.Debug|Win32.Build.0 = Debug|Win32
+		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}.Release|Win32.ActiveCfg = Release|Win32
+		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

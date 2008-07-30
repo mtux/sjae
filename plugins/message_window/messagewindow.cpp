@@ -9,7 +9,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Message window plugin for SJC",
+	"Message Window",
 	0x00000001
 };
 

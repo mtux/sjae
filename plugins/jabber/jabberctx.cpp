@@ -119,11 +119,15 @@ QString JabberCtx::to_jid(const QString &clist_id) {
 }
 
 void JabberCtx::showMessage(const QString &message) {
-	qDebug() << "Jabber message:" << message;
+	//qDebug() << "Jabber message:" << message;
+	QMessageBox::information(0, tr("Jabber Message"), message);
 }
 
 void JabberCtx::log(const QString &message, LogMessageType type) {
-	qDebug() << "Jabber log (" << type << "):" << message;
+	QString m = message;
+	if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">") && type == LMT_SEND)
+		m = "Challenge response: CENSORED FOR SECURITY REASONS";
+	qDebug() << "Jabber log (" << type << "):" << m;
 }
 
 void JabberCtx::requestStatus(GlobalStatus gs) {

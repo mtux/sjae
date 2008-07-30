@@ -13,7 +13,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Account manager plugin for SJC",
+	"Account manager",
 	0x00000001
 };
 

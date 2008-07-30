@@ -8,7 +8,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Icons plugin for SJC",
+	"Icons",
 	0x00000001
 };
 
