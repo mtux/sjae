@@ -1,6 +1,7 @@
 #include "mainwin.h"
 #include <QSettings>
 #include <QSystemTrayIcon>
+#include <QCloseEvent>
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
 	: QMainWindow(parent), core_i(core), closing(false)
@@ -19,7 +20,7 @@ MainWin::MainWin(CoreI *core, QWidget *parent)
 	QAction *exitAct = new QAction(tr("E&xit"), this);
 	exitAct->setShortcut(tr("Ctrl+Q"));
 	//exitAct->setStatusTip(tr("Exit the application"));
-	connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+	connect(exitAct, SIGNAL(triggered()), this, SLOT(quit()));
 	
 	winMenu->addAction(exitAct);
 
@@ -37,6 +38,11 @@ MainWin::~MainWin()
 {
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
+}
+
+void MainWin::quit() {
+	closing = true;
+	qApp->quit();
 }
 
 void MainWin::systrayActivated(QSystemTrayIcon::ActivationReason reason) {
@@ -70,8 +76,8 @@ void MainWin::showEvent(QShowEvent *e) {
 }
 
 void MainWin::closeEvent(QCloseEvent *e) {
-	closing = true;
-	QMainWindow::closeEvent(e);
+	e->setAccepted(false);
+	hide();
 }
 
 void MainWin::restoreHiddenState() {
