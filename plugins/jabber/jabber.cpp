@@ -2,6 +2,9 @@
 #include <QtPlugin>
 #include <QDebug>
 #include <icons_i.h>
+#include <main_window_i.h>
+
+#include "senddirect.h"
 
 #include "jabbersearchwin.h"
 
@@ -16,7 +19,7 @@ PluginInfo info = {
 };
 
 
-jabber::jabber(): proto(0)
+jabber::jabber(): proto(0), sd(0)
 {
 
 }
@@ -28,15 +31,21 @@ jabber::~jabber()
 
 bool jabber::load(CoreI *core) {
 	core_i = core;
-	accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS);
+	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	IconsI *icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	if(icons_i) icons_i->add_icon("Proto/Jabber", QPixmap(":/icons/Resources/bulb.PNG"), "Protocols/Jabber");
 
+	sd = new SendDirect();
+	connect(this, SIGNAL(destroyed()), sd, SLOT(deleteLater()));
+
+	connect(accounts_i, SIGNAL(account_changed(const QString &, const QString &)), this, SLOT(account_changed(const QString &, const QString &)));
+	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), this, SLOT(account_added(const QString &, const QString &)));
+	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
+
 	proto = new JabberProto(this);
 	accounts_i->register_protocol(proto);
-	connect(accounts_i, SIGNAL(account_changed(const QString &, const QString &)), proto, SLOT(account_changed(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), proto, SLOT(account_added(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), proto, SLOT(account_removed(const QString &, const QString &)));
+
+	connect(sd, SIGNAL(send_direct(const QString &, const QString &)), proto, SLOT(direct_send(const QString &, const QString &)));
 	return true;
 }
 
@@ -45,7 +54,37 @@ bool jabber::modules_loaded() {
 	//if(options_i)
 	//	options_i->add_page("User Interface/Contact List", new CListOptions(this));
 
+	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
+	if(main_win_i) {
+		QMenu *menu = new QMenu(tr("Jabber"));
+		QAction *act = menu->addAction("Send direct to server");
+		connect(act, SIGNAL(triggered()), sd, SLOT(show()));
+
+		main_win_i->add_submenu(menu);
+	} else
+		sd->show();
+
 	return true;
+}
+
+void jabber::account_changed(const QString &proto_name, const QString &account_id) {
+	if(proto_name == "Jabber") {
+		proto->account_changed(account_id);
+	}
+}
+
+void jabber::account_added(const QString &proto_name, const QString &account_id) {
+	if(proto_name == "Jabber") {
+		proto->account_added(account_id);
+		if(sd) sd->add_account(account_id);
+	}
+}
+
+void jabber::account_removed(const QString &proto_name, const QString &account_id) {
+	if(proto_name == "Jabber") {
+		proto->account_removed(account_id);
+		if(sd) sd->remove_account(account_id);
+	}
 }
 
 bool jabber::pre_shutdown() {
@@ -147,6 +186,15 @@ void JabberProto::add_contact(const QString &account_id, const QString &contact_
 
 }
 
+bool JabberProto::direct_send(const QString &account_id, const QString &text) {
+	if(ctx.contains(account_id)) {
+		return ctx[account_id]->directSend(text);
+	} else {
+		qWarning() << "direct_send: no account called" << account_id;
+		return false;
+	}
+}
+
 void JabberProto::context_status_change(const QString &account_id, GlobalStatus gs) {
 	emit local_status_change(name(), account_id, gs);
 }
@@ -178,10 +226,8 @@ bool JabberProto::update_account_data(const QString &account_id, const AccountIn
 	return true;
 }
 
-void JabberProto::account_added(const QString &proto_name, const QString &account_id) {
+void JabberProto::account_added(const QString &account_id) {
 	/*
-	if(proto_name != name()) return;
-
 	if(!ctx.contains(account_id)) {
 		ctx[account_id] = new JabberCtx(account_id, plugin->accounts_i->account_info(name(), account_id), plugin->core_i, this);
 		connect(ctx[account_id], SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
@@ -190,10 +236,10 @@ void JabberProto::account_added(const QString &proto_name, const QString &accoun
 	*/
 }
 
-void JabberProto::account_removed(const QString &proto_name, const QString &account_id) {
+void JabberProto::account_removed(const QString &account_id) {
 }
 
-void JabberProto::account_changed(const QString &proto_name, const QString &account_id) {
+void JabberProto::account_changed(const QString &account_id) {
 }
 
 void JabberProto::parse_extra_data(QDomElement &node, const QString &account_id) {

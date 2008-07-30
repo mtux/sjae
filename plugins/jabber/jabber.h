@@ -2,10 +2,12 @@
 #define JABBER_H
 
 #include <accounts_i.h>
+#include <main_window_i.h>
 #include <QPointer>
 #include <QMap>
 #include "jabberctx.h"
 #include "protooptions.h"
+#include "senddirect.h"
 
 class jabber;
 
@@ -49,13 +51,18 @@ public slots:
 	bool set_status(const QString &account_id, GlobalStatus gs);
 
 	void add_contact(const QString &account_id, const QString &contact_id);
+
+	// send text direct to the server for the given account, return false if not connected
+	bool direct_send(const QString &account_id, const QString &text);
+
+	void account_changed(const QString &account_id);
+	void account_added(const QString &account_id);
+	void account_removed(const QString &account_id);
 protected slots:
 	void context_status_change(const QString &account_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
-	void account_changed(const QString &proto_name, const QString &account_id);
-	void account_added(const QString &proto_name, const QString &account_id);
-	void account_removed(const QString &proto_name, const QString &account_id);
+
 signals:
 	void msgAck(int i);
 protected:
@@ -81,9 +88,17 @@ public:
 
 	JabberProto *proto;
 
+protected slots:
+	void account_changed(const QString &proto_name, const QString &account_id);
+	void account_added(const QString &proto_name, const QString &account_id);
+	void account_removed(const QString &proto_name, const QString &account_id);
+
 protected:
 	CoreI *core_i;
 	QPointer<AccountsI> accounts_i;
+	QPointer<MainWindowI> main_win_i;
+
+	SendDirect *sd;
 };
 
 #endif // JABBER_H
