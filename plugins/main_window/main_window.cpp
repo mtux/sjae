@@ -29,7 +29,7 @@ bool main_window::load(CoreI *core) {
 }
 
 bool main_window::modules_loaded() {	
-	win->show();
+	win->restoreHiddenState();
 	return true;
 }
 
@@ -56,6 +56,10 @@ void main_window::set_status_bar(QStatusBar *sb) {
 
 void main_window::add_window(QWidget *w) {	
 	if(win) win->add_window(w);
+}
+
+void main_window::add_submenu(QMenu *menu) {
+	if(win) win->add_submenu(menu);
 }
 
 Q_EXPORT_PLUGIN2(mainWindow, main_window)

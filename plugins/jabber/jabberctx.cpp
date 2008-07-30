@@ -119,15 +119,31 @@ QString JabberCtx::to_jid(const QString &clist_id) {
 }
 
 void JabberCtx::showMessage(const QString &message) {
-	//qDebug() << "Jabber message:" << message;
-	QMessageBox::information(0, tr("Jabber Message"), message);
+	qDebug() << "Jabber message:" << message;
+	//QMessageBox::information(0, tr("Jabber Message"), message);
 }
 
 void JabberCtx::log(const QString &message, LogMessageType type) {
-	QString m = message;
-	if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">") && type == LMT_SEND)
-		m = "Challenge response: CENSORED FOR SECURITY REASONS";
-	qDebug() << "Jabber log (" << type << "):" << m;
+	switch(type) {
+		case LMT_NORMAL:
+			qDebug() << "Jabber:" << message;
+			break;
+		case LMT_SEND:
+				if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"))
+					qDebug() << "Jabber (send): Challenge response: CENSORED FOR SECURITY REASONS";
+				else
+					qDebug() << "Jabber (send):" << message;
+			break;
+		case LMT_RECV:
+			qDebug() << "Jabber (recv):" << message;
+			break;
+		case LMT_WARNING:
+			qWarning() << "Jabber:" << message;
+			break;
+		case LMT_ERROR:
+			qCritical() << "Jabber:" << message;
+			break;
+	}
 }
 
 void JabberCtx::requestStatus(GlobalStatus gs) {
@@ -930,6 +946,17 @@ void JabberCtx::addContact(const QString &jid) {
 		sendWriteBuffer();
 	} else
 		qWarning() << "JID" << jid << "already exists for account" << account_id;
+}
+
+bool JabberCtx::directSend(const QString &text) {
+	if(sstate == SSOK) {
+		sendBuffer.write(text.toUtf8());
+		sendWriteBuffer();
+		return true;
+	} else {
+		log("direct send failed", LMT_ERROR);
+	}
+	return false;
 }
 
 void JabberCtx::addRosterItem() {
