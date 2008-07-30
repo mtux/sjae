@@ -12,7 +12,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Contact list plugin for SJC",
+	"Contact List",
 	0x00000001
 };
 

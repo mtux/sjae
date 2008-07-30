@@ -8,7 +8,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Main window plugin for SJC",
+	"Main Window",
 	0x00000001
 };
 

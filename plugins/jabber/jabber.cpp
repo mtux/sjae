@@ -11,7 +11,7 @@ PluginInfo info = {
 	"Scott Ellis",
 	"mail@scottellis.com.au",
 	"http://www.scottellis.com.au",
-	"Jabber protocol plugin for SJC",
+	"Jabber Protocol",
 	0x00000001
 };
 
