@@ -949,8 +949,15 @@ void JabberCtx::addContact(const QString &jid) {
 }
 
 bool JabberCtx::directSend(const QString &text) {
+	QString t = text;
+	if(t.indexOf("^^") != -1) {
+		// aliases
+		t.replace("^^JID", acc_info.username + "@" + acc_info.host);
+		t.replace("^^SERVER", acc_info.host);
+		t.replace("^^FJID", jid);
+	}
 	if(sstate == SSOK) {
-		sendBuffer.write(text.toUtf8());
+		sendBuffer.write(t.toUtf8());
 		sendWriteBuffer();
 		return true;
 	} else {

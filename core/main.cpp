@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 	QApplication::setOrganizationName("Scott Ellis");
 	QApplication::setOrganizationDomain("scottellis.com.au");
 	QApplication::setApplicationName("SJC");
+	QApplication::setQuitOnLastWindowClosed(false);
 
 	core = new Core(&a);
 	QObject::connect(&a, SIGNAL(aboutToQuit()), core, SLOT(unload_plugins()));

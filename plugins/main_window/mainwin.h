@@ -20,6 +20,7 @@ public:
 	void restoreHiddenState();
 public slots:
 	void toggleHidden();
+	void quit();
 
 protected:
 	bool eventFilter(QObject *target, QEvent *e);

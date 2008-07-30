@@ -23,5 +23,6 @@ void SendDirect::remove_account(const QString &id) {
 }
 
 void SendDirect::on_btnSend_clicked() {
+	QString text = ui.plainTextEdit->document()->toPlainText();
 	emit send_direct(ui.cmbAccount->currentText(), ui.plainTextEdit->document()->toPlainText());
 }
