@@ -61,11 +61,11 @@ bool ContactList::modules_loaded() {
 }
 
 bool ContactList::pre_shutdown() {
-	win->deleteLater();
 	return true;
 }
 
 bool ContactList::unload() {
+	win->deleteLater();
 	return true;
 }
 

@@ -12,8 +12,11 @@
 #include <QTextCodec>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QStringList>
 
 #include "newrosteritemdialog.h"
+#include "gatewayregister.h"
+#include "asksubscribe.h"
 
 #include <clist_i.h>
 
@@ -66,6 +69,10 @@ void JabberCtx::setAccountInfo(const AccountInfo &info) {
 JabberCtx::~JabberCtx()
 {
 	requestStatus(ST_OFFLINE);
+}
+
+AccountInfo JabberCtx::get_account_info() {
+	return acc_info;
 }
 
 void JabberCtx::aboutToShowContactMenu(const QString &proto_name, const QString &aid, const QString &id) {
@@ -482,36 +489,56 @@ void JabberCtx::parseProceed() {
 void JabberCtx::parseIq() {
 	QString id = reader.attributes().value("id").toString(), 
 		from = reader.attributes().value("from").toString();
-	if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "bind") {
-		reader.readNext();
-		if(reader.name() == "bind") {
+	if(reader.attributes().value("type") == "result") {
+		if(reader.attributes().value("id") == "bind") {
 			reader.readNext();
-			if(reader.name() == "jid") {
-				jid = reader.readElementText();
-				if(sessionRequired)
-					startSession();
-				else
-					getRoster();
+			if(reader.name() == "bind") {
+				reader.readNext();
+				if(reader.name() == "jid") {
+					jid = reader.readElementText();
+					if(sessionRequired)
+						startSession();
+					else
+						getRoster();
+				}
 			}
-		}
-	} else if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "session") {
-		getGroupDelimiter();
-	} else if(reader.attributes().value("id") == "group_delimiter_get") {
-		if(reader.attributes().value("type") == "result") {
+		} else if(reader.attributes().value("id") == "session") {
+			sendIqQueryDiscoInfo(acc_info.host);
+			getGroupDelimiter();
+		} else if(reader.attributes().value("id") == "group_delimiter_get") {
 			reader.readNext();
 			if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:private") {
 				reader.readNext();
 				parseGroupDelimiter();
 			}
+			getRoster();
+		} else if(reader.attributes().value("id") == "roster_get") {
+			reader.readNext();
+			parseRosterQuery();
+		} else if(reader.attributes().value("id") == "roster_remove") {
+		} else if(reader.attributes().value("id") == "roster_update") {
+		} else if(reader.attributes().value("id") == "roster_add") {
+			sendPresence(from);
+		} else if(reader.attributes().value("id") == "gateway_register2") {
+			//addContact(from);
+			sendRequestSubscription(from);
+			//sendPresence(from);
+			//sendGrant(from);
+		} else if(reader.attributes().value("id") == "gateway_unregister") {
+		} else {
+			reader.readNext();
+			if(reader.isStartElement() && reader.name() == "query") {
+				if(reader.namespaceUri() == "http://jabber.org/protocol/disco#info")
+					parseDiscoInfoResult(from);
+				else if(reader.namespaceUri() == "http://jabber.org/protocol/disco#items")
+					parseDiscoItemsResult(from);
+				else if(reader.namespaceUri() == "jabber:iq:register")
+					parseRegisterResult(from);
+				else
+					sendIqError(id, from);
+			} else
+				sendIqError(id, from);
 		}
-		getRoster();
-	} else if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "roster_get") {
-		reader.readNext();
-		parseRosterQuery();
-	} else if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "roster_remove") {
-	} else if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "roster_update") {
-	} else if(reader.attributes().value("type") == "result" && reader.attributes().value("id") == "roster_add") {
-		sendPresence(from);
 	} else if(reader.attributes().value("type") == "set") {
 		reader.readNext();
 		if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:roster") {
@@ -529,7 +556,8 @@ void JabberCtx::parseIq() {
 		} else {
 			sendIqError(id, from);
 		}
-	} else if(reader.attributes().value("type") != "error")
+	} else if(reader.attributes().value("type") == "error") {
+	} else
 		sendIqError(id, from);
 
 	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "iq")) reader.readNext();
@@ -728,6 +756,7 @@ void JabberCtx::parseRosterItem() {
 	QString jid = reader.attributes().value("jid").toString(),
 		name = reader.attributes().value("name").toString(),
 		subscription = 	reader.attributes().value("subscription").toString(),
+		ask = reader.attributes().value("ask").toString(),
 		group;
 
 	reader.readNext();
@@ -745,8 +774,18 @@ void JabberCtx::parseRosterItem() {
 		delete item;
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
+		if(ask == "subscribe") {
+			AskSubscribe *ask = new AskSubscribe(jid);
+			connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
+			ask->show();
+		}
 	} else {
 		addItem(jid, name, group, RosterItem::string2sub(subscription));
+		if(ask == "subscribe") {
+			AskSubscribe *ask = new AskSubscribe(jid);
+			connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
+			ask->show();
+		}
 	}
 }
 
@@ -784,31 +823,48 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 void JabberCtx::parsePresence() {
 	QString jid = reader.attributes().value("from").toString(), 
 		presence = "available",
+		presenceType,
 		name = jid,
+		nick,
 		msg;
 
-	if(!reader.attributes().value("type").isNull()) presence = reader.attributes().value("type").toString();
+	presenceType = reader.attributes().value("type").toString();
 
-	if(presence == "subscribe") {
-		if(QMessageBox::information(0, "Subscription Request", "Approve subscription from " + jid + "?", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
-			sendGrant(jid);			
-		} else {
-			sendRevoke(jid);
-		}
-	} else if(presence == "subscribed") {
-	} else if(presence == "unsubscribe") {
-	} else if(presence == "unsubscribed") {
-	} else {
-		while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "presence")) {
-			reader.readNext();
-			if(!reader.atEnd() && reader.isStartElement() && reader.name() == "show")
-				presence = reader.readElementText();
-			if(!reader.atEnd() && reader.isStartElement() && reader.name() == "status") {
-				msg = reader.readElementText();
-			}
-		}
+	if(presenceType == "subscribe") {
+		AskSubscribe *ask = new AskSubscribe(jid);
+		connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
+		ask->show();
+	} else if(presenceType == "subscribed") {
+		//sendPresence(jid);
+	} else if(presenceType == "unsubscribe") {
+	} else if(presenceType == "unsubscribed") {
+	}
 
-		setPresence(jid, Resource::string2pres(presence), msg);
+	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "presence")) {
+		reader.readNext();
+		if(!reader.atEnd() && reader.isStartElement() && reader.name() == "show") {
+			presence = reader.readElementText();
+		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "status") {
+			msg = reader.readElementText();
+		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "nick") {
+			nick = reader.readElementText();
+		}
+	}
+
+	if(presenceType.isEmpty()) setPresence(jid, Resource::string2pres(presence), msg);
+	if(!nick.isEmpty()) {
+		writer.writeStartElement("iq");
+		writer.writeAttribute("type", "set");
+		writer.writeAttribute("id", "roster_update");
+			writer.writeStartElement("query");
+			writer.writeDefaultNamespace("jabber:iq:roster");
+				writer.writeStartElement("item");
+				writer.writeAttribute("jid", jid);
+				writer.writeAttribute("name", nick);
+				writer.writeEndElement();
+			writer.writeEndElement();
+		writer.writeEndElement();
+		sendWriteBuffer();
 	}
 }
 
@@ -845,6 +901,90 @@ void JabberCtx::parseMessage() {
 	} else {
 		log("message from unknown resource ignored: " + source);
 	}
+}
+
+void JabberCtx::sendIqQueryDiscoInfo(const QString &entity_jid, const QString &node) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("type", "get");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", entity_jid);
+	writer.writeAttribute("id", "get_disco_info");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("http://jabber.org/protocol/disco#info");
+		if(!node.isEmpty())
+			writer.writeAttribute("node", node);
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+}
+
+void JabberCtx::sendIqQueryDiscoItems(const QString &entity_jid, const QString &node) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("type", "get");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", entity_jid);
+	writer.writeAttribute("id", "get_disco_items");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("http://jabber.org/protocol/disco#items");
+		if(!node.isEmpty())
+			writer.writeAttribute("node", node);
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+}
+
+void JabberCtx::parseDiscoInfoResult(const QString &entity) {
+	DiscoInfo discoInfo;
+	discoInfo.entity = entity;
+	discoInfo.node = reader.attributes().value("node").toString();
+	
+	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
+		reader.readNext();
+		if(!reader.atEnd() && reader.isStartElement() && reader.name() == "identity") {
+			Identity ident;
+			ident.category = reader.attributes().value("category").toString();
+			ident.type = reader.attributes().value("type").toString();
+			ident.name = reader.attributes().value("name").toString(); // optional
+
+			discoInfo.indentities.append(ident);
+
+			if(ident.category == "gateway") {
+				emit gotGateway(account_id, entity);
+			}
+
+		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "feature") {
+			Feature feature;
+			feature.var = reader.attributes().value("var").toString();
+			if(feature.var == "http://jabber.org/protocol/disco#items")
+				sendIqQueryDiscoItems(discoInfo.entity, discoInfo.node);
+			
+			discoInfo.features.append(feature);
+		}
+	}
+
+	log("Parsed disco info for entity " + discoInfo.entity, LMT_NORMAL);
+	emit gotDiscoInfo(discoInfo);
+}
+
+void JabberCtx::parseDiscoItemsResult(const QString &entity) {
+	DiscoItems discoItems;
+	discoItems.entity = entity;
+	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
+		reader.readNext();
+		if(!reader.atEnd() && reader.isStartElement() && reader.name() == "item") {
+			Item item;
+			item.jid = reader.attributes().value("jid").toString();
+			item.name = reader.attributes().value("name").toString();
+			item.node = reader.attributes().value("node").toString();
+
+			discoItems.items.append(item);
+
+			if(entity == acc_info.host)
+				sendIqQueryDiscoInfo(item.jid, item.node);
+		}
+	}
+	log("Parsed disco items for entity " + discoItems.entity, LMT_NORMAL);
+	emit gotDiscoItems(discoItems);
 }
 
 void JabberCtx::sendIqError(const QString &id, const QString &sender, const QString &errorType, const QString &definedCondition) {
@@ -944,8 +1084,11 @@ void JabberCtx::addContact(const QString &jid) {
 			writer.writeEndElement();
 		writer.writeEndElement();
 		sendWriteBuffer();
+
 	} else
 		qWarning() << "JID" << jid << "already exists for account" << account_id;
+
+	sendRequestSubscription(jid);
 }
 
 bool JabberCtx::directSend(const QString &text) {
@@ -1030,9 +1173,12 @@ void JabberCtx::editRosterItem() {
 }
 
 void JabberCtx::removeRosterItem() {
-	RosterItem *item = roster.get_item(mid);
+	removeContact(mid);
+}
+
+void JabberCtx::removeContact(const QString &jid) {
+	RosterItem *item = roster.get_item(jid);
 	if(item) {
-		QString jid = item->getJID();
 		//<iq from='juliet@example.com/balcony' type='set' id='delete_1'>
 		//	<query xmlns='jabber:iq:roster'>
 		//		<item jid='nurse@example.com' subscription='remove'/>
@@ -1049,13 +1195,16 @@ void JabberCtx::removeRosterItem() {
 			writer.writeEndElement();
 		writer.writeEndElement();
 		sendWriteBuffer();
+
+		sendRevoke(jid);
 	}
 }
 
-void JabberCtx::sendGrant(const QString &jid) {
-	log("Granting subscription to " + jid);
+void JabberCtx::sendGrant(const QString &to) {
+	log("Granting subscription to " + to);
 	writer.writeEmptyElement("presence");
-	writer.writeAttribute("to", jid);
+	writer.writeAttribute("to", to);
+	writer.writeAttribute("from", Roster::full_jid2jid(jid));
 	writer.writeAttribute("type", "subscribed");
 	writer.writeCharacters("");
 	sendWriteBuffer();
@@ -1065,11 +1214,12 @@ void JabberCtx::grantSubscription() {
 	sendGrant(mid);
 }
 
-void JabberCtx::sendRevoke(const QString &jid) {
-	log("Revoking subscription from " + jid);
+void JabberCtx::sendRevoke(const QString &to) {
+	log("Revoking subscription from " + to);
 	//<presence to='romeo@example.net' type='unsubscribed'/>
 	writer.writeEmptyElement("presence");
-	writer.writeAttribute("to", jid);
+	writer.writeAttribute("to", to);
+	writer.writeAttribute("from", Roster::full_jid2jid(jid));
 	writer.writeAttribute("type", "unsubscribed");
 	writer.writeCharacters("");
 	sendWriteBuffer();
@@ -1079,13 +1229,18 @@ void JabberCtx::revokeSubscription() {
 	sendRevoke(mid);
 }
 
-void JabberCtx::requestSubscription() {
-	log("Requesting subscription from " + mid);
+void JabberCtx::sendRequestSubscription(const QString &to) {
+	log("Requesting subscription from " + to);
 	writer.writeEmptyElement("presence");
-	writer.writeAttribute("to", jid);
+	writer.writeAttribute("from", Roster::full_jid2jid(jid));
+	writer.writeAttribute("to", to);
 	writer.writeAttribute("type", "subscribe");
 	writer.writeCharacters("");
 	sendWriteBuffer();
+}
+
+void JabberCtx::requestSubscription() {
+	sendRequestSubscription(mid);
 }
 
 
@@ -1094,4 +1249,72 @@ void JabberCtx::setAllOffline() {
 	foreach(QString id, all_ids) {
 		clist_i->set_status("Jabber", account_id, id, ST_OFFLINE);
 	}
+}
+
+bool JabberCtx::gatewayRegister(const QString &gateway) {
+	log("Registering with gateway " + gateway);
+	writer.writeStartElement("iq");
+	writer.writeAttribute("type", "get");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", gateway);
+	writer.writeAttribute("id", "gateway_register");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("jabber:iq:register");
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();	
+	return true;
+}
+
+void JabberCtx::parseRegisterResult(const QString &gateway) {
+	QString instructions;
+	QStringList fields;
+	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
+		reader.readNext();
+		if(reader.isStartElement()) {
+			if(reader.name() == "instructions")
+				instructions = reader.readElementText();
+			else if(reader.name() == "registered") {
+				log("Already registered with gateway " + gateway, LMT_WARNING);
+			} else
+				fields << reader.name().toString();
+		}
+	}
+
+	GatewayRegister *r = new GatewayRegister(gateway, instructions, fields);
+	connect(r, SIGNAL(gatewayRegistration(const QString &, const QMap<QString, QString> &)), this, SLOT(gatewayRegistration(const QString &, const QMap<QString, QString> &)));
+	r->show();
+}
+
+void JabberCtx::gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("type", "set");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", gateway);
+	writer.writeAttribute("id", "gateway_register2");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("jabber:iq:register");
+			foreach(QString field, fields.keys()) {
+				writer.writeTextElement(field, fields[field]);
+			}
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();	
+}
+
+bool JabberCtx::gatewayUnregister(const QString &gateway) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("type", "set");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", gateway);
+	writer.writeAttribute("id", "gateway_unregister");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("jabber:iq:register");
+			writer.writeEmptyElement("remove");
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();	
+
+	removeContact(gateway);
+	return true;
 }
