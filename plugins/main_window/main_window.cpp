@@ -58,6 +58,10 @@ void main_window::add_window(QWidget *w) {
 	if(win) win->add_window(w);
 }
 
+void main_window::manage_window_position(QWidget *w) {
+	if(win) win->manage_window_position(w);
+}
+
 void main_window::add_submenu(QMenu *menu) {
 	if(win) win->add_submenu(menu);
 }

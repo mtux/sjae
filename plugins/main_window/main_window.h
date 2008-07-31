@@ -19,6 +19,7 @@ public:
 	void set_status_bar(QStatusBar *sb);
 
 	void add_window(QWidget *w);
+	void manage_window_position(QWidget *w);
 	void add_submenu(QMenu *menu);
 protected:
 	CoreI *core_i;

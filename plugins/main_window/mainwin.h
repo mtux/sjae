@@ -16,6 +16,7 @@ public:
 	~MainWin();
 
 	void add_window(QWidget *w);
+	void manage_window_position(QWidget *w);
 	void add_submenu(QMenu *menu);
 	void restoreHiddenState();
 public slots:

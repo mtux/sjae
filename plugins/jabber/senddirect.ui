@@ -10,7 +10,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>SendDirect</string>
+   <string>Send Direct</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" >
    <item>

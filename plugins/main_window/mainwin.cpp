@@ -87,10 +87,14 @@ void MainWin::restoreHiddenState() {
 	else show();
 }
 
-void MainWin::add_window(QWidget *w) {
+void MainWin::manage_window_position(QWidget *w) {
 	QSettings settings;
 	w->restoreGeometry(settings.value(w->windowTitle() + "/geometry").toByteArray());
 	w->installEventFilter(this);
+}
+
+void MainWin::add_window(QWidget *w) {
+	manage_window_position(w);
 
 	QAction *action;
 	winMenu->insertAction(sepAction, action = new QAction(w->windowIcon(), w->windowTitle(), this));

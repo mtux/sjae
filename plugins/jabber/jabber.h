@@ -8,6 +8,8 @@
 #include "jabberctx.h"
 #include "protooptions.h"
 #include "senddirect.h"
+#include "servicediscovery.h"
+#include "gatewaylist.h"
 
 class jabber;
 
@@ -18,6 +20,7 @@ public:
 	JabberProto(jabber *jabberPlugin);
 	~JabberProto();
 
+	void modules_loaded();
 	void deleteContexts();
 
 	const QString name() const {return "Jabber";}
@@ -41,6 +44,7 @@ public:
 
 	bool remove_account_data(const QString &id);
 	bool update_account_data(const QString &id, const AccountInfo &info);
+	bool get_account_data(const QString &id, AccountInfo &account_info);
 
 	const QList<GlobalStatus> statuses() const;
 	const GlobalStatus closest_status_to(GlobalStatus gs) const;
@@ -54,6 +58,8 @@ public slots:
 
 	// send text direct to the server for the given account, return false if not connected
 	bool direct_send(const QString &account_id, const QString &text);
+	bool gateway_register(const QString &account_id, const QString &gateway);
+	bool gateway_unregister(const QString &account_id, const QString &gateway);
 
 	void account_changed(const QString &account_id);
 	void account_added(const QString &account_id);
@@ -62,12 +68,13 @@ protected slots:
 	void context_status_change(const QString &account_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
-
 signals:
 	void msgAck(int i);
 protected:
 	jabber *plugin;
 	QMap<QString, JabberCtx *> ctx;
+	ServiceDiscovery *service_discovery;
+	GatewayList *gateways;
 };
 
 class jabber: public PluginI
@@ -98,7 +105,8 @@ protected:
 	QPointer<AccountsI> accounts_i;
 	QPointer<MainWindowI> main_win_i;
 
-	SendDirect *sd;
+	QMenu *menu;
+	SendDirect *send_direct;
 };
 
 #endif // JABBER_H

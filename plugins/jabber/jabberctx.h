@@ -15,6 +15,7 @@
 #include <accounts_i.h>
 #include <global_status.h>
 #include <QDomElement>
+#include "disco.h"
 
 typedef enum {LMT_NORMAL, LMT_WARNING, LMT_ERROR, LMT_SEND, LMT_RECV} LogMessageType;
 
@@ -39,14 +40,29 @@ public:
 	void setConnectionHost(const QString &host) {connectionHost = host;}
 
 	bool directSend(const QString &text);
+	bool gatewayRegister(const QString &gateway);
+	bool gatewayUnregister(const QString &gateway);
+
+	AccountInfo get_account_info();
+
 public slots:
 	void msgSend(const QString &jid, const QString &msg, int id);
 	void requestStatus(GlobalStatus gs);
 	void addContact(const QString &jid);
+	void removeContact(const QString &jid);
+
+	void sendIqQueryDiscoInfo(const QString &entity_jid, const QString &node = "");
+	void sendIqQueryDiscoItems(const QString &entity_jid, const QString &node = "");
+
 signals:
 	void msgRecv(const QString &account_id, const QString &jid, const QString &msg);
 	void statusChanged(const QString &account_id, GlobalStatus gs);
 	void msgAck(int id);
+
+	void gotDiscoInfo(const DiscoInfo &info);
+	void gotDiscoItems(const DiscoItems &items);
+
+	void gotGateway(const QString &account_id, const QString &gateway);
 
 protected slots:
 	void socketError(QAbstractSocket::SocketError socketError);
@@ -69,11 +85,17 @@ protected slots:
 	void revokeSubscription();
 	void requestSubscription();
 
+	void sendRequestSubscription(const QString &to);
+
 	void setAllOffline();
 
 	void aboutToShowContactMenu(const QString &proto_name, const QString &account_id, const QString &id);
 	void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
 
+	void gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields);
+
+	void sendGrant(const QString &jid);
+	void sendRevoke(const QString &jid);
 protected:
 	AccountInfo acc_info;
 	bool useSSL;
@@ -141,6 +163,10 @@ protected:
 	void parseRosterItem();
 	void parsePresence();
 	void parseMessage();
+	void parseDiscoInfoResult(const QString &entity);
+	void parseDiscoItemsResult(const QString &entity);
+	void parseRegisterResult(const QString &gateway);
+
 	void setDetails(RosterItem *item, const QString &group, const QString &name, SubscriptionType sub);
 	void addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub);
 	bool setPresence(const QString &full_jid, PresenceType presence, const QString &msg);
@@ -151,8 +177,6 @@ protected:
 	void sendVersionInfoResult(const QString &id, const QString &sender);
 	void sendDiscoInfoResult(const QString &id, const QString &sender);
 
-	void sendGrant(const QString &jid);
-	void sendRevoke(const QString &jid);
 };
 
 #endif // JABBERCTX_H
