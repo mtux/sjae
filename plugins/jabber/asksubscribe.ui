@@ -5,18 +5,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>315</width>
-    <height>132</height>
+    <width>355</width>
+    <height>277</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>Subscription Request</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout_2" >
    <item>
     <widget class="QLabel" name="label" >
+     <property name="minimumSize" >
+      <size>
+       <width>0</width>
+       <height>50</height>
+      </size>
+     </property>
      <property name="text" >
-      <string>Do you want to allow this user to see your online status?</string>
+      <string>Allow the following users to see your status:</string>
      </property>
      <property name="alignment" >
       <set>Qt::AlignCenter|Qt::AlignHCenter|Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -24,30 +30,38 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="lblUser" >
-     <property name="font" >
-      <font>
-       <family>MS Shell Dlg 2</family>
-       <pointsize>12</pointsize>
-       <weight>75</weight>
-       <italic>false</italic>
-       <bold>true</bold>
-       <underline>false</underline>
-       <strikeout>false</strikeout>
-      </font>
-     </property>
-     <property name="text" >
-      <string>User Name</string>
-     </property>
-     <property name="alignment" >
-      <set>Qt::AlignCenter|Qt::AlignHCenter|Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
+    <layout class="QVBoxLayout" name="verticalLayout" >
+     <item>
+      <widget class="QListWidget" name="lstUsers" >
+       <property name="selectionMode" >
+        <enum>QAbstractItemView::NoSelection</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout" >
+       <item>
+        <widget class="QPushButton" name="btnSelectAll" >
+         <property name="text" >
+          <string>Select All</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnInvertSelection" >
+         <property name="text" >
+          <string>Invert Selection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox" >
      <property name="standardButtons" >
-      <set>QDialogButtonBox::No|QDialogButtonBox::Yes</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
      <property name="centerButtons" >
       <bool>true</bool>

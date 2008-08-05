@@ -223,10 +223,10 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_statusbar.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_statusbar.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -235,10 +235,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_statusbar.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_statusbar.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -255,7 +255,7 @@
 		/>
 		<Global
 			Name="QtVersion"
-			Value="4.3.2"
+			Value="4.4.1"
 		/>
 		<Global
 			Name="RccDir"

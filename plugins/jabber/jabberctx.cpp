@@ -16,7 +16,6 @@
 
 #include "newrosteritemdialog.h"
 #include "gatewayregister.h"
-#include "asksubscribe.h"
 
 #include <clist_i.h>
 
@@ -775,16 +774,12 @@ void JabberCtx::parseRosterItem() {
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
-			AskSubscribe *ask = new AskSubscribe(jid);
-			connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
-			ask->show();
+			emit grantRequested(jid, account_id);
 		}
 	} else {
 		addItem(jid, name, group, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
-			AskSubscribe *ask = new AskSubscribe(jid);
-			connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
-			ask->show();
+			emit grantRequested(jid, account_id);
 		}
 	}
 }
@@ -831,9 +826,7 @@ void JabberCtx::parsePresence() {
 	presenceType = reader.attributes().value("type").toString();
 
 	if(presenceType == "subscribe") {
-		AskSubscribe *ask = new AskSubscribe(jid);
-		connect(ask, SIGNAL(grant(const QString &)), this, SLOT(sendGrant(const QString &)));
-		ask->show();
+		emit grantRequested(jid, account_id);
 	} else if(presenceType == "subscribed") {
 		//sendPresence(jid);
 	} else if(presenceType == "unsubscribe") {
@@ -1021,7 +1014,7 @@ void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) 
 	writer.writeAttribute("type", "result");
 		writer.writeStartElement("query");
 		writer.writeDefaultNamespace("jabber:iq:version");
-			writer.writeTextElement("name", "sjc - sje's Simple Jabber Client");
+			writer.writeTextElement("name", "saje");
 			writer.writeTextElement("version", "0.0.1a");
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq

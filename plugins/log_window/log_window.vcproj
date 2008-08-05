@@ -249,18 +249,11 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_LogWindow.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_LogWindow.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -268,17 +261,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_LogWindow.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_LogWindow.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -299,7 +285,7 @@
 		/>
 		<Global
 			Name="QtVersion"
-			Value="4.4.0"
+			Value="4.4.1"
 		/>
 		<Global
 			Name="RccDir"

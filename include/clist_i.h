@@ -30,7 +30,7 @@ public slots:
 	virtual void set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) = 0;
 	virtual void set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group) = 0;
 	virtual void set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs) = 0;
-	virtual void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide) = 0;
+	//virtual void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide) = 0;
 
 	virtual void set_hide_offline(bool hide) {hide_offline = hide;}
 

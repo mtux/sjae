@@ -10,6 +10,7 @@
 #include "senddirect.h"
 #include "servicediscovery.h"
 #include "gatewaylist.h"
+#include "asksubscribe.h"
 
 class jabber;
 
@@ -68,6 +69,8 @@ protected slots:
 	void context_status_change(const QString &account_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
+	void handleGranted(const QString &contact_id, const QString &account_id);
+
 signals:
 	void msgAck(int i);
 protected:
@@ -75,6 +78,9 @@ protected:
 	QMap<QString, JabberCtx *> ctx;
 	ServiceDiscovery *service_discovery;
 	GatewayList *gateways;
+	AskSubscribe *ask_subscribe;
+
+	void connect_context(JabberCtx *);
 };
 
 class jabber: public PluginI
