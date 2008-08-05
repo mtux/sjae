@@ -54,6 +54,8 @@ public slots:
 	void sendIqQueryDiscoInfo(const QString &entity_jid, const QString &node = "");
 	void sendIqQueryDiscoItems(const QString &entity_jid, const QString &node = "");
 
+	void sendGrant(const QString &jid);
+	void sendRevoke(const QString &jid);
 signals:
 	void msgRecv(const QString &account_id, const QString &jid, const QString &msg);
 	void statusChanged(const QString &account_id, GlobalStatus gs);
@@ -63,6 +65,7 @@ signals:
 	void gotDiscoItems(const DiscoItems &items);
 
 	void gotGateway(const QString &account_id, const QString &gateway);
+	void grantRequested(const QString &jid, const QString &account_id);
 
 protected slots:
 	void socketError(QAbstractSocket::SocketError socketError);
@@ -93,9 +96,6 @@ protected slots:
 	void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
 
 	void gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields);
-
-	void sendGrant(const QString &jid);
-	void sendRevoke(const QString &jid);
 protected:
 	AccountInfo acc_info;
 	bool useSSL;

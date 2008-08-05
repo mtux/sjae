@@ -8,16 +8,21 @@
 #include "clistwin.h"
 #include <QPointer>
 #include <QMenu>
+#include <QMutex>
 
 class SortedTreeWidgetItem: public QTreeWidgetItem {
 public:
 	SortedTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
+	SortedTreeWidgetItem(const QStringList &strings, int type);
 	virtual bool operator<( const QTreeWidgetItem &other) const;
+
+	GlobalStatus gs;
 };
 
 class ContactList: public CListI {
 	Q_OBJECT
 
+	friend class SortedTreeWidgetItem;
 public:
 	ContactList();
 	virtual ~ContactList();
@@ -40,7 +45,7 @@ public slots:
 	void set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label);
 	void set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group);
 	void set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs);
-	void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
+	//void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
 
 	void set_hide_offline(bool hide);
 
@@ -54,6 +59,8 @@ signals:
 	void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
 
 protected:
+	void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
+
 	CoreI *core_i;
 	QPointer<MainWindowI> main_win_i;
 	QPointer<IconsI> icons_i;
@@ -65,7 +72,7 @@ protected:
 
 	class ContactInfo {
 	public:
-		QTreeWidgetItem *item;
+		SortedTreeWidgetItem *item;
 		GlobalStatus gs;
 	};
 	QMap<QString, ContactInfo> id_item_map;
@@ -74,6 +81,9 @@ protected:
 	QString make_id(const QString &proto_name, const QString &account_id, const QString &id);
 	QStringList break_id(const QString &id);
 
+	void update_hide_offline(QTreeWidgetItem *root);
+
+	QMutex list_mutex;
 protected slots:
 	void aboutToShowMenuSlot(QTreeWidgetItem *i);
 

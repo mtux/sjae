@@ -117,6 +117,9 @@ JabberProto::JabberProto(jabber *jabberPlugin): plugin(jabberPlugin) {
 	connect(this, SIGNAL(destroyed()), gateways, SLOT(deleteLater()));
 	connect(gateways, SIGNAL(gateway_register(const QString &, const QString &)), this, SLOT(gateway_register(const QString &, const QString &)));
 	connect(gateways, SIGNAL(gateway_unregister(const QString &, const QString &)), this, SLOT(gateway_unregister(const QString &, const QString &)));
+	ask_subscribe = new AskSubscribe();
+	connect(this, SIGNAL(destroyed()), ask_subscribe, SLOT(deleteLater()));
+	connect(ask_subscribe, SIGNAL(grant(const QString &, const QString &)), this, SLOT(handleGranted(const QString &, const QString &)));
 }
 
 void JabberProto::modules_loaded() {
@@ -138,6 +141,11 @@ JabberProto::~JabberProto() {
 	deleteContexts();
 }
 
+void JabberProto::handleGranted(const QString &contact_id, const QString &account_id) {
+	if(ctx.contains(account_id))
+		ctx[account_id]->sendGrant(contact_id);
+}
+
 void JabberProto::deleteContexts() {
 	QMapIterator<QString, JabberCtx *> i(ctx);
 	while(i.hasNext()) {
@@ -145,6 +153,27 @@ void JabberProto::deleteContexts() {
 		delete i.value();
 	}
 	ctx.clear();
+}
+
+void JabberProto::connect_context(JabberCtx *context) {
+	connect(context, SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
+	connect(context, SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
+	connect(context, SIGNAL(msgAck(int)), this, SIGNAL(msgAck(int)));
+
+	if(service_discovery) {
+		connect(context, SIGNAL(gotDiscoInfo(const DiscoInfo &)), service_discovery, SLOT(gotDiscoInfo(const DiscoInfo &)));
+		connect(context, SIGNAL(gotDiscoItems(const DiscoItems &)), service_discovery, SLOT(gotDiscoItems(const DiscoItems &)));
+
+		connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &)), context, SLOT(sendIqQueryDiscoInfo(const QString &, const QString &)));
+		connect(service_discovery, SIGNAL(queryItems(const QString &, const QString &)), context, SLOT(sendIqQueryDiscoItems(const QString &, const QString &)));
+
+	}
+	if(gateways) {
+		connect(context, SIGNAL(gotGateway(const QString &, const QString &)), gateways, SLOT(add_gateway(const QString &, const QString &)));
+	}
+	if(ask_subscribe) {
+		connect(context, SIGNAL(grantRequested(const QString &, const QString &)), ask_subscribe, SLOT(addUser(const QString &, const QString &)));
+	}
 }
 
 const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
@@ -195,21 +224,7 @@ bool JabberProto::set_status(const QString &account_id, GlobalStatus gs) {
 
 	if(!ctx.contains(account_id)) {
 		ctx[account_id] = new JabberCtx(account_id, plugin->accounts_i->account_info(name(), account_id), plugin->core_i, this);
-		connect(ctx[account_id], SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
-		connect(ctx[account_id], SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
-		connect(ctx[account_id], SIGNAL(msgAck(int)), this, SIGNAL(msgAck(int)));
-
-		if(service_discovery) {
-			connect(ctx[account_id], SIGNAL(gotDiscoInfo(const DiscoInfo &)), service_discovery, SLOT(gotDiscoInfo(const DiscoInfo &)));
-			connect(ctx[account_id], SIGNAL(gotDiscoItems(const DiscoItems &)), service_discovery, SLOT(gotDiscoItems(const DiscoItems &)));
-
-			connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &)), ctx[account_id], SLOT(sendIqQueryDiscoInfo(const QString &, const QString &)));
-			connect(service_discovery, SIGNAL(queryItems(const QString &, const QString &)), ctx[account_id], SLOT(sendIqQueryDiscoItems(const QString &, const QString &)));
-
-		}
-		if(gateways) {
-			connect(ctx[account_id], SIGNAL(gotGateway(const QString &, const QString &)), gateways, SLOT(add_gateway(const QString &, const QString &)));
-		}
+		connect_context(ctx[account_id]);
 	}
 
 	ctx[account_id]->requestStatus(gs);
@@ -281,20 +296,7 @@ bool JabberProto::update_account_data(const QString &account_id, const AccountIn
 		ctx[account_id]->setAccountInfo(info);
 	} else {
 		ctx[account_id] = new JabberCtx(account_id, info, plugin->core_i, this);
-		connect(ctx[account_id], SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
-		connect(ctx[account_id], SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
-		connect(ctx[account_id], SIGNAL(msgAck(int)), this, SIGNAL(msgAck(int)));
-
-		if(service_discovery) {
-			connect(ctx[account_id], SIGNAL(gotDiscoInfo(const DiscoInfo &)), service_discovery, SLOT(gotDiscoInfo(const DiscoInfo &)));
-			connect(ctx[account_id], SIGNAL(gotDiscoItems(const DiscoItems &)), service_discovery, SLOT(gotDiscoItems(const DiscoItems &)));
-
-			connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &)), ctx[account_id], SLOT(sendIqQueryDiscoInfo(const QString &, const QString &)));
-			connect(service_discovery, SIGNAL(queryItems(const QString &, const QString &)), ctx[account_id], SLOT(sendIqQueryDiscoItems(const QString &, const QString &)));
-		}
-		if(gateways) {
-			connect(ctx[account_id], SIGNAL(gotGateway(const QString &, const QString &)), gateways, SLOT(add_gateway(const QString &, const QString &)));
-		}
+		connect_context(ctx[account_id]);
 	}
 
 	return true;

@@ -20,7 +20,7 @@ InstallDir "$PROGRAMFILES\SJE\SAJE"
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\NSIS_SAJE" "Install_Dir"
 
-!define QTDIR	"c:\Qt\4.4.0"
+!define QTDIR	$%QTDIR%
 
 ;--------------------------------
 

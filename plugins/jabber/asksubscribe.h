@@ -9,15 +9,20 @@ class AskSubscribe : public QDialog
 	Q_OBJECT
 
 public:
-	AskSubscribe(const QString& jid, QWidget *parent = 0);
+	AskSubscribe(QWidget *parent = 0);
 	~AskSubscribe();
-
+public slots:
+	void addUser(const QString &jid, const QString &account_id);
 protected slots:
-	void emitGrant();
+	void emitGrantsAndClear();
+	void clearList();
 signals:
-	void grant(const QString &jid);
+	void grant(const QString &jid, const QString &account_id);
 private:
 	Ui::AskSubscribeClass ui;
+private slots:
+	void on_btnInvertSelection_clicked();
+	void on_btnSelectAll_clicked();
 };
 
 #endif // ASKSUBSCRIBE_H
