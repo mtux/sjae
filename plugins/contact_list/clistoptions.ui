@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>150</height>
+    <height>193</height>
    </rect>
   </property>
   <property name="minimumSize" >
@@ -18,19 +18,15 @@
   <property name="windowTitle" >
    <string>CListOptions</string>
   </property>
-  <widget class="QCheckBox" name="chkHideOffline" >
-   <property name="geometry" >
-    <rect>
-     <x>60</x>
-     <y>50</y>
-     <width>141</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text" >
-    <string>Hide offline contacts</string>
-   </property>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <widget class="QCheckBox" name="chkHideOffline" >
+     <property name="text" >
+      <string>Hide offline contacts</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <layoutdefault spacing="6" margin="11" />
  <customwidgets>

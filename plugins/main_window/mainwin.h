@@ -6,6 +6,7 @@
 #include <icons_i.h>
 #include <QPointer>
 #include <QSystemTrayIcon>
+#include <QPoint>
 
 class MainWin : public QMainWindow
 {
@@ -19,11 +20,19 @@ public:
 	void manage_window_position(QWidget *w);
 	void add_submenu(QMenu *menu);
 	void restoreHiddenState();
+
+	void set_hide_frame(bool hide);
+	void set_transparency(int trans_percent);
+
 public slots:
 	void toggleHidden();
 	void quit();
 
 protected:
+	void mouseMoveEvent(QMouseEvent *e);
+	void mousePressEvent(QMouseEvent *e);
+	void mouseReleaseEvent(QMouseEvent *e);
+
 	bool eventFilter(QObject *target, QEvent *e);
 
 	CoreI *core_i;
@@ -38,6 +47,9 @@ protected:
 	bool closing;
 	QAction *sepAction;
 	QSystemTrayIcon *systray;
+
+	bool mousePressed;
+	QPoint cursorOffset;
 
 protected slots:
 	void systrayActivated(QSystemTrayIcon::ActivationReason reason);

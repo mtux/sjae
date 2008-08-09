@@ -3,9 +3,12 @@ include (../global_pro.inc)
 TEMPLATE = lib
 TARGET =
 
-DEPENDPATH += .
-INCLUDEPATH += ../../include
+DEPENDPATH += . GeneratedFiles
+INCLUDEPATH += ../../include GeneratedFiles
 CONFIG += plugin
+
+MOC_DIR = GeneratedFiles
+UI_DIR = GeneratedFiles
 
 CONFIG(release, debug|release) {
         DESTDIR = ../../bin/release/plugins

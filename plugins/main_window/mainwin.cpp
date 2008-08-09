@@ -2,27 +2,39 @@
 #include <QSettings>
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
+#include <QStyle>
+#include <QToolButton>
+#include <QDebug>
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
-	: QMainWindow(parent), core_i(core), closing(false)
+	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false)
 {
 	ui.setupUi(this);
-	icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 
+	icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
+	winMenu = new QMenu("MainMenu", this);
 	if(icons_i) {
 		setWindowIcon(icons_i->get_icon("generic"));
-		winMenu = menuBar()->addMenu(QIcon(icons_i->get_icon("dot_grey_16")), "");
-	} else 
-		winMenu = menuBar()->addMenu("Main Menu");
+		//winMenu = menuBar()->addMenu(QIcon(icons_i->get_icon("dot_grey")), "");
+		winMenu->setIcon(icons_i->get_icon("dot_grey"));
+	} //else 
+		//winMenu = menuBar()->addMenu("Main Menu");
 
 	sepAction = winMenu->addSeparator();
 
-	QAction *exitAct = new QAction(tr("E&xit"), this);
+	QAction *exitAct = new QAction(QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton), tr("E&xit"), this);
 	exitAct->setShortcut(tr("Ctrl+Q"));
 	//exitAct->setStatusTip(tr("Exit the application"));
 	connect(exitAct, SIGNAL(triggered()), this, SLOT(quit()));
 	
 	winMenu->addAction(exitAct);
+
+	QToolButton *mainMenuButton = new QToolButton(this);
+	mainMenuButton->setMenu(winMenu);
+	mainMenuButton->setIcon(winMenu->icon());
+	mainMenuButton->setPopupMode(QToolButton::InstantPopup);
+	ui.toolBar->addWidget(mainMenuButton);
+	ui.toolBar->addAction(exitAct);
 
 	QSettings settings;
 	restoreGeometry(settings.value("MainWin/geometry").toByteArray());
@@ -38,6 +50,19 @@ MainWin::~MainWin()
 {
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
+}
+
+void MainWin::set_hide_frame(bool hide) {
+	bool hidden = isHidden();
+	if(hide)
+		setWindowFlags((windowFlags() & Qt::WindowType_Mask) | Qt::FramelessWindowHint);
+	else
+		setWindowFlags((windowFlags() & Qt::WindowType_Mask) & ~Qt::FramelessWindowHint);
+	if(!hidden) show();
+}
+
+void MainWin::set_transparency(int trans_percent) {
+	setWindowOpacity(1 - (trans_percent / 100.0));
 }
 
 void MainWin::quit() {
@@ -115,3 +140,21 @@ bool MainWin::eventFilter(QObject *target, QEvent *e) {
 	return QMainWindow::eventFilter(target, e);
 }
 
+void MainWin::mousePressEvent(QMouseEvent *e) {
+	mousePressed = true;
+	cursorOffset = e->globalPos() - pos();
+	QMainWindow::mousePressEvent(e);
+}
+
+void MainWin::mouseMoveEvent(QMouseEvent *e) {
+	if(mousePressed) {
+		move(e->globalPos() - cursorOffset);
+		//cursorOffset = e->globalPos();// - QWidget::mapToGlobal(pos());
+	}
+	QMainWindow::mouseMoveEvent(e);
+}
+
+void MainWin::mouseReleaseEvent(QMouseEvent *e) {
+	mousePressed = false;
+	QMainWindow::mouseReleaseEvent(e);
+}
