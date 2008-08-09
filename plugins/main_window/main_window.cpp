@@ -29,8 +29,34 @@ bool main_window::load(CoreI *core) {
 }
 
 bool main_window::modules_loaded() {	
+	OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
+
+	QSettings settings;
+	MainWinOptions::Settings s;
+	s.hide_frame = settings.value("MainWin/HideFrame", false).toBool();
+	s.trans_percent = settings.value("MainWin/TransPercent", 0).toInt();
+
+	if(options_i) {
+		opt = new MainWinOptions(s);
+		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
+		options_i->add_page("User Interface/Main Window", opt);
+	}
+
+	win->set_hide_frame(s.hide_frame);
+	win->set_transparency(s.trans_percent);
 	win->restoreHiddenState();
+
 	return true;
+}
+
+void main_window::options_applied() {
+	QSettings settings;
+	MainWinOptions::Settings s = opt->get_settings();
+	settings.setValue("MainWin/HideFrame", s.hide_frame);
+	settings.setValue("MainWin/TransPercent", s.trans_percent);
+
+	win->set_hide_frame(s.hide_frame);
+	win->set_transparency(s.trans_percent);
 }
 
 bool main_window::pre_shutdown() {

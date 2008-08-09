@@ -3,9 +3,11 @@
 
 #include <main_window_i.h>
 #include "mainwin.h"
+#include "mainwinoptions.h"
 
 class main_window: public MainWindowI
 {
+	Q_OBJECT
 public:
 	main_window();
 	~main_window();
@@ -21,11 +23,14 @@ public:
 	void add_window(QWidget *w);
 	void manage_window_position(QWidget *w);
 	void add_submenu(QMenu *menu);
+protected slots:
+	void options_applied();
 protected:
 	CoreI *core_i;
+	QPointer<OptionsI> options_i;
 
 	MainWin *win;
-
+	MainWinOptions *opt;
 };
 
 #endif // MAIN_WINDOW_H

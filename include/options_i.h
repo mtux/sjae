@@ -14,7 +14,7 @@ public:
 	virtual bool apply() = 0;
 	virtual void reset() = 0;
 signals:
-	void changed(bool valid);
+	void changed(bool valid = true);
 };
 
 class OptionsI: public PluginI {

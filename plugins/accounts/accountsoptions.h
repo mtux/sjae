@@ -19,7 +19,7 @@ public:
 	bool apply();
 	void reset();
 signals:
-	void changed(bool valid);
+	void changed(bool valid = true);
 	void applied();
 
 protected:

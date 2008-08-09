@@ -15,6 +15,9 @@
   <property name="windowTitle" >
    <string>ContactTree</string>
   </property>
+  <property name="frameShape" >
+   <enum>QFrame::NoFrame</enum>
+  </property>
   <column>
    <property name="text" >
     <string>1</string>
