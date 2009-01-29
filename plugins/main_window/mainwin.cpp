@@ -5,6 +5,7 @@
 #include <QStyle>
 #include <QToolButton>
 #include <QDebug>
+#include <QMenu>
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
 	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false)

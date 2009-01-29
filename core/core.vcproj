@@ -235,18 +235,6 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_core.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_core.cpp"
 				>
 				<FileConfiguration
@@ -269,6 +257,18 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Release\moc_core.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
@@ -278,7 +278,7 @@
 		/>
 		<Global
 			Name="QtVersion"
-			Value="4.4.1"
+			Value="4.4.3"
 		/>
 		<Global
 			Name="RccDir"

@@ -21,7 +21,17 @@ do
 	fi
 done
 
-if [ "`grep -l \"SUBDIRS+=$LOWER\" ../plugins.pro`" = "" ]
+# replace the vc project's guid with a new one
+if [ -e "../$LOWER/$LOWER.vcproj" ]
 then
-	echo "SUBDIRS+=$LOWER" >> ../plugins.pro
+  GUID=`uuidgen`
+  UP_GUID="`echo $GUID | tr \"[:lower:]\" \"[:upper:]\"`"
+  sed "/^\tProjectGUID=/ s/\".*\"/\"{$UP_GUID}\"/" ../$LOWER/$LOWER.vcproj > ../$LOWER/$LOWER.vcproj_test
+  mv ../$LOWER/$LOWER.vcproj_test ../$LOWER/$LOWER.vcproj
 fi
+
+# add the new directory to the qt project file
+#if [ "`grep -l \"SUBDIRS+=$LOWER\" ../plugins.pro`" = "" ]
+#then
+#	echo "SUBDIRS+=$LOWER" >> ../plugins.pro
+#fi
