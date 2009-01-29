@@ -24,7 +24,7 @@ signals:
 
 protected:
 	QPointer<AccountsI> accounts_i;
-	QMap<QString, QMap<QString, int> > proto_extra_map;
+	QMap<QString, QMap<QString, QWidget *> > proto_extra_map;
 	QMap<QString, QMap<QString, AccountInfo> > acc_info;
 	QMap<QString, QList<QString> > deleted_ids;
 

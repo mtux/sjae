@@ -32,6 +32,7 @@ JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObj
 	connect(&sslSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 	connect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 
+	//sslSocket.setProtocol(QSsl::SslV2);
 
 	clist_i = (CListI *)core_i->get_interface(INAME_CLIST);
 	if(clist_i) {
@@ -249,7 +250,7 @@ void JabberCtx::sslErrors(const QList<QSslError> &errors) {
 }
 
 void JabberCtx::socketStateChanged(QAbstractSocket::SocketState socketState) {
-	/*
+	
 	QString state = "Unknown";
 	switch(socketState) {
 		case QAbstractSocket::UnconnectedState: state = "Unconnected"; break;
@@ -262,7 +263,7 @@ void JabberCtx::socketStateChanged(QAbstractSocket::SocketState socketState) {
 	}
 
 	log("Socket state changed to: " + state);
-	*/
+	
 }
 
 void JabberCtx::readSocket() {
