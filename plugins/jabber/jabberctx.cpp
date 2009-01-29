@@ -32,7 +32,7 @@ JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObj
 	connect(&sslSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 	connect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 
-	//sslSocket.setProtocol(QSsl::SslV2);
+	sslSocket.setProtocol(QSsl::AnyProtocol);
 
 	clist_i = (CListI *)core_i->get_interface(INAME_CLIST);
 	if(clist_i) {
@@ -188,7 +188,7 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			break;
 		case SSSTARTSSL:
 			setStatus(ST_CONNECTING);
-			showMessage("Connecting...");
+			showMessage("Connecting (encrypted)...");
 			sslSocket.connectToHostEncrypted(connectionHost.isEmpty() ? acc_info.host : connectionHost, acc_info.port);
 			break;
 		case SSSTARTTLS:
@@ -557,6 +557,9 @@ void JabberCtx::parseIq() {
 			sendIqError(id, from);
 		}
 	} else if(reader.attributes().value("type") == "error") {
+		if(reader.attributes().value("id") == "group_delimiter_get") {
+			getRoster();
+		}
 	} else
 		sendIqError(id, from);
 
