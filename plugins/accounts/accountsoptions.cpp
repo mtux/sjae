@@ -40,7 +40,9 @@ bool AccountsOptions::apply() {
 			i.next();
 			QListIterator<QString> j(i.value());
 			while(j.hasNext()) {
-				accounts_i->remove_account(i.key(), j.next());
+				QString id = j.next();
+				accounts_i->remove_account(i.key(), id);
+				ui.stackedWidget->removeWidget(proto_extra_map[i.key()][id]);
 			}
 		}
 		deleted_ids.clear();
@@ -109,7 +111,8 @@ void AccountsOptions::reset() {
 			AccountExtra *w = pi->create_account_extra(acc_ids.at(j));
 			if(w) {
 				connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
-				proto_extra_map[proto_names.at(i)][acc_ids.at(j)] = ui.stackedWidget->addWidget(w);
+				proto_extra_map[proto_names.at(i)][acc_ids.at(j)] = w;
+				ui.stackedWidget->addWidget(w);
 				w->set_info(acc_info[proto_names.at(i)][acc_ids.at(j)]);
 			} else 
 				proto_extra_map[proto_names.at(i)][acc_ids.at(j)] = 0;
@@ -155,8 +158,10 @@ void AccountsOptions::reset() {
 }
 
 void AccountsOptions::setAccInfo(const QString &proto, const QString &acc) {
-	if(proto_extra_map.contains(proto) && proto_extra_map[proto].contains(acc))
-		ui.stackedWidget->setCurrentIndex(proto_extra_map[proto][acc]);
+	if(proto_extra_map.contains(proto) && proto_extra_map[proto].contains(acc) && proto_extra_map[proto][acc] != 0)
+		ui.stackedWidget->setCurrentWidget(proto_extra_map[proto][acc]);
+	else
+		ui.stackedWidget->setCurrentIndex(0);
 	if(acc_info.contains(proto) && acc_info[proto].contains(acc)) {
 		AccountInfo &info = acc_info[proto][acc];
 
@@ -196,7 +201,8 @@ void AccountsOptions::on_btnCreate_clicked() {
 			AccountExtra *w = proto->create_account_extra(text);
 			if(w) {
 				connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
-				proto_extra_map[proto->name()][text] = ui.stackedWidget->addWidget(w);
+				proto_extra_map[proto->name()][text] = w;
+				ui.stackedWidget->addWidget(w);
 				w->set_info(acc_info[proto->name()][text]);
 			} else 
 				proto_extra_map[proto->name()][text] = 0;
