@@ -9,14 +9,23 @@
 #include <QPointer>
 #include <QMenu>
 #include <QMutex>
+#include <QMetaType>
 
 class SortedTreeWidgetItem: public QTreeWidgetItem {
 public:
 	SortedTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
 	SortedTreeWidgetItem(const QStringList &strings, int type);
 	virtual bool operator<( const QTreeWidgetItem &other) const;
+};
 
+class ContactInfo {
+public:
+	//ContactInfo(): item(0), gs(ST_OFFLINE) {}
+
+	SortedTreeWidgetItem *item, *parent;
 	GlobalStatus gs;
+	QString proto_name, account_id, id;
+	QString group, label;
 };
 
 class ContactList: public CListI {
@@ -60,6 +69,7 @@ signals:
 
 protected:
 	void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
+	//void update_hide_offline(QTreeWidgetItem *item);
 
 	CoreI *core_i;
 	QPointer<MainWindowI> main_win_i;
@@ -69,19 +79,10 @@ protected:
 	CListWin *win;
 
 	QMap<QString, QMap<QString, QString> > group_delim;
+	QMap<QString, SortedTreeWidgetItem *> id_item_map;
 
-	class ContactInfo {
-	public:
-		SortedTreeWidgetItem *item;
-		GlobalStatus gs;
-	};
-	QMap<QString, ContactInfo> id_item_map;
-	QMap<QTreeWidgetItem *, QString> item_id_map;
-
-	QString make_id(const QString &proto_name, const QString &account_id, const QString &id);
-	QStringList break_id(const QString &id);
-
-	void update_hide_offline(QTreeWidgetItem *root);
+	QMap<uint, ContactInfo> hash_map;
+	QString make_uid(const QString &proto_name, const QString &account_id, const QString &id);
 
 	QMutex list_mutex;
 protected slots:
@@ -95,5 +96,7 @@ protected slots:
 
 	void treeShowTip(QTreeWidgetItem *i, const QPoint &pos);
 };
+
+Q_DECLARE_METATYPE(ContactInfo)
 
 #endif // CONTACTLIST_H
