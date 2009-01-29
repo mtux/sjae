@@ -299,6 +299,7 @@ void ContactList::set_hidden(const QString &proto_name, const QString &account_i
 	QString cid = make_uid(proto_name, account_id, id);
 	if(id_item_map.contains(cid)) {
 		QTreeWidgetItem *i = id_item_map[cid], *p = i->parent();
+		i->setHidden(hide);
 		if(hide) {
 			while(p && allChildrenHidden(p)) {
 				p->setHidden(true);
@@ -310,7 +311,6 @@ void ContactList::set_hidden(const QString &proto_name, const QString &account_i
 				p = p->parent();
 			}
 		}
-		i->setHidden(hide);
 	}
 }
 /*
