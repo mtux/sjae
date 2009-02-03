@@ -301,18 +301,6 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_add_contact.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Release\moc_add_contact.cpp"
 				>
 				<FileConfiguration
@@ -325,7 +313,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_add_contact_i.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_add_contact.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -349,7 +337,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_searchwindow.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_add_contact_i.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -373,6 +361,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\GeneratedFiles\Debug\moc_searchwindow.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\GeneratedFiles\ui_searchwindow.h"
 				>
 			</File>
@@ -385,7 +385,7 @@
 		/>
 		<Global
 			Name="QtVersion"
-			Value="4.4.3"
+			Value="4.5.0-beta1"
 		/>
 		<Global
 			Name="RccDir"

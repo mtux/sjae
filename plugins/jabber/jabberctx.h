@@ -32,6 +32,7 @@ public:
 	void log(const QString &message, LogMessageType type = LMT_NORMAL);
 
 	GlobalStatus getCurrentStatus() {return currentStatus;}
+	GlobalStatus getContactStatus(const QString &contact_id);
 
 	void setUseSSL(bool f) {useSSL = f;}
 	bool getUseSSL() {return useSSL;}
@@ -59,6 +60,7 @@ public slots:
 signals:
 	void msgRecv(const QString &account_id, const QString &jid, const QString &msg);
 	void statusChanged(const QString &account_id, GlobalStatus gs);
+	void contactStatusChanged(const QString &account_id, const QString &jid, GlobalStatus gs);
 	void msgAck(int id);
 
 	void gotDiscoInfo(const DiscoInfo &info);

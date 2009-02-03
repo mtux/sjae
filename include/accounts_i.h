@@ -66,6 +66,7 @@ public:
 	virtual const QList<GlobalStatus> statuses() const = 0;
 	virtual const GlobalStatus closest_status_to(GlobalStatus gs) const = 0;
 	virtual const GlobalStatus get_status(const QString &account_id) const = 0;
+	virtual const GlobalStatus get_contact_status(const QString &account_id, const QString &contact_id) const = 0;
 
 public slots:
 	virtual bool message_send(const QString &account_id, const QString &contact_id, const QString &msg, int id) = 0;

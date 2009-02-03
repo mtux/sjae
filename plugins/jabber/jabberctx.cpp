@@ -817,6 +817,15 @@ GlobalStatus presenceToStatus(PresenceType pt) {
 	return ST_OFFLINE;
 }
 
+GlobalStatus JabberCtx::getContactStatus(const QString &contact_id) {
+	RosterItem *item = roster.get_item(contact_id);
+	if(item) {
+		Resource *r = item->get_active_resource();
+		return presenceToStatus(r->getPresence());
+	}
+	return ST_OFFLINE;
+}
+
 bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, const QString &msg) {
 	log("setting presence for resource: " + full_jid);
 	Resource *r = roster.get_resource(full_jid, false);
@@ -834,6 +843,7 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 		r->setPresenceMessage(msg);
 	}
 
+	emit contactStatusChanged(account_id, Roster::full_jid2jid(full_jid), presenceToStatus(presence));
 	clist_i->set_status("Jabber", account_id, Roster::full_jid2jid(full_jid), presenceToStatus(presence));
 	return true;
 }
@@ -854,6 +864,8 @@ void JabberCtx::parsePresence() {
 		//sendPresence(jid);
 	} else if(presenceType == "unsubscribe") {
 	} else if(presenceType == "unsubscribed") {
+	} else if(presenceType == "unavailable") {
+		presence = "unavailable";
 	}
 
 	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "presence")) {
@@ -867,7 +879,7 @@ void JabberCtx::parsePresence() {
 		}
 	}
 
-	if(presenceType.isEmpty()) setPresence(jid, Resource::string2pres(presence), msg);
+	if(presenceType.isEmpty() || presenceType == "unavailable") setPresence(jid, Resource::string2pres(presence), msg);
 
 	if(!nick.isEmpty()) {
 		writer.writeStartElement("iq");
