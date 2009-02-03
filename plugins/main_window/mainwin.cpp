@@ -8,7 +8,7 @@
 #include <QMenu>
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
-	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false)
+	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), hideFrame(false), toolWindow(false)
 {
 	ui.setupUi(this);
 
@@ -53,13 +53,21 @@ MainWin::~MainWin()
 	settings.setValue("MainWin/geometry", saveGeometry());
 }
 
+void MainWin::updateFlags() {
+	//Qt::WindowFlags flags = windowFlags();
+
+	setWindowFlags((toolWindow ? Qt::Tool : Qt::Window) | (hideFrame ? Qt::FramelessWindowHint : Qt::Widget));
+	show();	
+}
+
 void MainWin::set_hide_frame(bool hide) {
-	bool hidden = isHidden();
-	if(hide)
-		setWindowFlags((windowFlags() & Qt::WindowType_Mask) | Qt::FramelessWindowHint);
-	else
-		setWindowFlags((windowFlags() & Qt::WindowType_Mask) & ~Qt::FramelessWindowHint);
-	if(!hidden) show();
+	hideFrame = hide;
+	updateFlags();
+}
+
+void MainWin::set_tool_window(bool tool) {
+	toolWindow = tool;
+	updateFlags();
 }
 
 void MainWin::set_transparency(int trans_percent) {

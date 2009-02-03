@@ -22,6 +22,7 @@ public:
 	void restoreHiddenState();
 
 	void set_hide_frame(bool hide);
+	void set_tool_window(bool tool);
 	void set_transparency(int trans_percent);
 
 public slots:
@@ -50,6 +51,8 @@ protected:
 
 	bool mousePressed;
 	QPoint cursorOffset;
+	bool hideFrame, toolWindow;
+	void updateFlags();
 
 protected slots:
 	void systrayActivated(QSystemTrayIcon::ActivationReason reason);
