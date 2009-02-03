@@ -129,54 +129,57 @@ QTreeWidgetItem *findGroup(QTreeWidgetItem *parent, const QString &name) {
 }
 
 QTreeWidgetItem *ContactList::add_contact(const QString &proto_name, const QString &account_id, const QString &id, const QString &label, GlobalStatus gs, const QString &group) {
-	QMutexLocker locker(&list_mutex);
+	SortedTreeWidgetItem *si = 0;
 
-	ContactInfo ci;
-	ci.proto_name = proto_name;
-	ci.account_id = account_id;
-	ci.id = id;
-	ci.group = group;
-	ci.label = label;
-	ci.gs = gs;
-	ci.parent = 0;
+	{ // scope locker
+		QMutexLocker locker(&list_mutex);
 
-	if(group_delim.contains(proto_name) == false || group_delim[proto_name].contains(account_id) == false)
-		group_delim[proto_name][account_id] = "\\";
+		ContactInfo ci;
+		ci.proto_name = proto_name;
+		ci.account_id = account_id;
+		ci.id = id;
+		ci.group = group;
+		ci.label = label;
+		ci.gs = gs;
+		ci.parent = 0;
 
-	QSettings settings;
-	QTreeWidgetItem *i, *parent = win->tree()->invisibleRootItem();
-	QString full_gn;
-	if(!group.isEmpty()) {
-		QStringList subgroups = group.split(group_delim[proto_name][account_id]);
-		while(subgroups.size() && (i = findGroup(parent, subgroups.at(0))) != 0) {
-			parent = i;
-			full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
-			subgroups.removeAt(0);
+		if(group_delim.contains(proto_name) == false || group_delim[proto_name].contains(account_id) == false)
+			group_delim[proto_name][account_id] = "\\";
+
+		QSettings settings;
+		QTreeWidgetItem *i, *parent = win->tree()->invisibleRootItem();
+		QString full_gn;
+		if(!group.isEmpty()) {
+			QStringList subgroups = group.split(group_delim[proto_name][account_id]);
+			while(subgroups.size() && (i = findGroup(parent, subgroups.at(0))) != 0) {
+				parent = i;
+				full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
+				subgroups.removeAt(0);
+			}
+			while(subgroups.size()) {
+				i = new SortedTreeWidgetItem(parent, QStringList() << subgroups.at(0) << proto_name << account_id, TWIT_GROUP);
+				//parent->sortChildren(0, Qt::AscendingOrder);
+				parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
+				//if(hide_offline) set_hide_offline(parent);
+				parent = i;
+				full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
+				subgroups.removeAt(0);
+			}
 		}
-		while(subgroups.size()) {
-			i = new SortedTreeWidgetItem(parent, QStringList() << subgroups.at(0) << proto_name << account_id, TWIT_GROUP);
-			parent->sortChildren(0, Qt::AscendingOrder);
+			
+		si = new SortedTreeWidgetItem(parent, QStringList() << label, TWIT_CONTACT);
+		ci.item = si;
+
+		QVariant var; var.setValue(ci);
+		si->setData(0, Qt::UserRole, var);
+		if(parent && !full_gn.isEmpty())
 			parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
-			//if(hide_offline) set_hide_offline(parent);
-			parent = i;
-			full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
-			subgroups.removeAt(0);
-		}
+
+		si->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
+		id_item_map[make_uid(proto_name, account_id, id)] = si;
 	}
-		
-	SortedTreeWidgetItem *si = new SortedTreeWidgetItem(parent, QStringList() << label, TWIT_CONTACT);
-	ci.item = si;
 
-	QVariant var; var.setValue(ci);
-	si->setData(0, Qt::UserRole, var);
-	if(parent && !full_gn.isEmpty())
-		parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
-
-	si->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
-	id_item_map[make_uid(proto_name, account_id, id)] = si;
-
-	//update_hide_offline(win->tree()->invisibleRootItem());
-	set_hidden(proto_name, account_id, id, hide_offline && gs == ST_OFFLINE);
+	update_hide_offline();
 
 	return si;
 }
@@ -207,40 +210,40 @@ QString get_full_gn(QTreeWidgetItem *i, const QString &group_delim = "\\") {
 }
 
 void ContactList::remove_contact(const QString &proto_name, const QString &account_id, const QString &id) {
-	QMutexLocker locker(&list_mutex);
+	{
+		QMutexLocker locker(&list_mutex);
 
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid)) {
-		QSettings settings;
-		QTreeWidgetItem *i = id_item_map[cid];
-		id_item_map.remove(cid);
+		QString cid = make_uid(proto_name, account_id, id);
+		if(id_item_map.contains(cid)) {
+			QSettings settings;
+			QTreeWidgetItem *i = id_item_map[cid];
+			id_item_map.remove(cid);
 
-		QString full_gn;
-		while(i->parent() && i->parent()->childCount() == 1) {
-			i = i->parent();
-			full_gn = get_full_gn(i, group_delim[proto_name][account_id]);
-			settings.remove("CList/group_expand" + full_gn);
+			QString full_gn;
+			while(i->parent() && i->parent()->childCount() == 1) {
+				i = i->parent();
+				full_gn = get_full_gn(i, group_delim[proto_name][account_id]);
+				settings.remove("CList/group_expand" + full_gn);
+			}
+
+			delete i;
+
 		}
-
-		delete i;
 	}
+
+	update_hide_offline();
 }
 
 void ContactList::set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) {
-	QMutexLocker locker(&list_mutex);
+	{
+		QMutexLocker locker(&list_mutex);
 
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid)) {
-		id_item_map[cid]->setText(0, label);
-		if(id_item_map[cid]->parent()) {
-			id_item_map[cid]->parent()->sortChildren(0, Qt::AscendingOrder);
-			//if(hide_offline) set_hide_offline(id_item_map[cid].item->parent());
-		} else {
-			win->tree()->sortItems(0, Qt::AscendingOrder);
-			//set_hide_offline(hide_offline);
-		}
-		//update_hide_offline(win->tree()->invisibleRootItem());
+		QString cid = make_uid(proto_name, account_id, id);
+		if(id_item_map.contains(cid))
+			id_item_map[cid]->setText(0, label);
 	}
+
+	update_hide_offline();
 }
 
 void ContactList::set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group) {
@@ -265,26 +268,20 @@ void ContactList::set_group(const QString &proto_name, const QString &account_id
 }
 
 void ContactList::set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs) {
-	QMutexLocker locker(&list_mutex);
+	{ // scope locker
+		QMutexLocker locker(&list_mutex);
 
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid)) {
-		ContactInfo ci = id_item_map[cid]->data(0, Qt::UserRole).value<ContactInfo>();
-		ci.gs = gs;
-		QVariant var; var.setValue(ci);
-		id_item_map[cid]->setData(0, Qt::UserRole, var);
-		//id_item_map[cid].item->gs = gs;
-		id_item_map[cid]->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
-		set_hidden(proto_name, account_id, id, hide_offline && gs == ST_OFFLINE);
-		if(id_item_map[cid]->parent()) {
-			id_item_map[cid]->parent()->sortChildren(0, Qt::AscendingOrder);
-			//if(hide_offline) set_hide_offline(id_item_map[cid].item->parent());
-		} else {
-			win->tree()->sortItems(0, Qt::AscendingOrder);
-			//set_hide_offline(hide_offline);
+		QString cid = make_uid(proto_name, account_id, id);
+		if(id_item_map.contains(cid)) {
+			ContactInfo ci = id_item_map[cid]->data(0, Qt::UserRole).value<ContactInfo>();
+			ci.gs = gs;
+			QVariant var; var.setValue(ci);
+			id_item_map[cid]->setData(0, Qt::UserRole, var);
+			id_item_map[cid]->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
 		}
-		//update_hide_offline(win->tree()->invisibleRootItem());
 	}
+
+	update_hide_offline();
 }
 
 bool allChildrenHidden(QTreeWidgetItem *item) {
@@ -299,42 +296,31 @@ void ContactList::set_hidden(const QString &proto_name, const QString &account_i
 	QString cid = make_uid(proto_name, account_id, id);
 	if(id_item_map.contains(cid)) {
 		QTreeWidgetItem *i = id_item_map[cid], *p = i->parent();
-		i->setHidden(hide);
+
 		if(hide) {
-			while(p && allChildrenHidden(p)) {
-				p->setHidden(true);
+			i->setHidden(true);
+			while(p) {
+				if(allChildrenHidden(p))
+					p->setHidden(true);
 				p = p->parent();
 			}
 		} else {
-			while(p && p->isHidden()) {
-				p->setHidden(false);
-				p = p->parent();
+			QStack<QTreeWidgetItem *> stack;
+			while(i) {
+				i->setHidden(false);
+				i = i->parent();
 			}
 		}
 	}
 }
-/*
-void ContactList::update_hide_offline(QTreeWidgetItem *root) {
-	QTreeWidgetItem *child;
-	for(int i = 0; i < root->childCount(); ++i) {
-		child = root->child(i);
-		update_hide_offline(child);
-	}
 
-	ContactInfo ci;
-	if(root != win->tree()->invisibleRootItem()) {
-		switch(root->type()) {
-			case TWIT_GROUP: 
-				root->setHidden(allChildrenHidden(root));
-				break;
-			case TWIT_CONTACT: 
-				ci = root->data(0, Qt::UserRole).value<ContactInfo>();
-				root->setHidden(ci.gs == ST_OFFLINE && hide_offline);
-				break;
-		}
-	}
+void ContactList::update_hide_offline() {
+	win->tree()->setUpdatesEnabled(false);
+	win->tree()->sortItems(0, Qt::AscendingOrder);
+	set_hide_offline(hide_offline);
+	win->tree()->setUpdatesEnabled(true);
 }
-*/
+
 void ContactList::set_hide_offline(bool hide) {
 	QMutexLocker locker(&list_mutex);
 
