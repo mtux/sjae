@@ -157,6 +157,7 @@ void JabberProto::deleteContexts() {
 
 void JabberProto::connect_context(JabberCtx *context) {
 	connect(context, SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
+	connect(context, SIGNAL(contactStatusChanged(const QString &, const QString &, GlobalStatus)), this, SLOT(context_contact_status_change(const QString &, const QString &, GlobalStatus)));
 	connect(context, SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
 	connect(context, SIGNAL(msgAck(int)), this, SIGNAL(msgAck(int)));
 
@@ -219,6 +220,11 @@ const GlobalStatus JabberProto::get_status(const QString &account_id) const {
 	return ST_OFFLINE;
 }
 
+const GlobalStatus JabberProto::get_contact_status(const QString &account_id, const QString &contact_id) const {
+	if(ctx.contains(account_id)) return ctx[account_id]->getContactStatus(contact_id);
+	return ST_OFFLINE;
+}
+
 bool JabberProto::set_status(const QString &account_id, GlobalStatus gs) {
 	qDebug() << "set status called," << hr_status_name[gs];
 
@@ -273,6 +279,10 @@ void JabberProto::context_status_change(const QString &account_id, GlobalStatus 
 		if(gateways) gateways->remove_account(account_id);
 		//if(service_discovery)  ???
 	}
+}
+
+void JabberProto::context_contact_status_change(const QString &account_id, const QString &contact_id, GlobalStatus gs) {
+	emit status_change(name(), account_id, contact_id, gs);
 }
 
 void JabberProto::context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg) {

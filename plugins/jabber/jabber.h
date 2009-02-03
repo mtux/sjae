@@ -50,6 +50,7 @@ public:
 	const QList<GlobalStatus> statuses() const;
 	const GlobalStatus closest_status_to(GlobalStatus gs) const;
 	const GlobalStatus get_status(const QString &account_id) const;
+	const GlobalStatus get_contact_status(const QString &account_id, const QString &contact_id) const;
 
 public slots:
 	bool message_send(const QString &account_id, const QString &contact_id, const QString &msg, int id);
@@ -67,12 +68,17 @@ public slots:
 	void account_removed(const QString &account_id);
 protected slots:
 	void context_status_change(const QString &account_id, GlobalStatus gs);
+	void context_contact_status_change(const QString &account_id, const QString &contact_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
 	void handleGranted(const QString &contact_id, const QString &account_id);
 
 signals:
 	void msgAck(int i);
+
+	void message_recv(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg);
+	void status_change(const QString &proto_name, const QString &account_id, const QString &contact_id, GlobalStatus gs);
+	void local_status_change(const QString &proto_name, const QString &account_id, GlobalStatus gs);
 protected:
 	jabber *plugin;
 	QMap<QString, JabberCtx *> ctx;

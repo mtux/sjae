@@ -26,6 +26,7 @@ MessageWindow::~MessageWindow()
 bool MessageWindow::load(CoreI *core) {
 	core_i = core;
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
+	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
 
 	return true;
@@ -36,7 +37,9 @@ bool MessageWindow::modules_loaded() {
 
 	QStringList proto_names = accounts_i->protocol_names();
 	foreach(QString proto_name, proto_names) {
-		connect(accounts_i->get_proto_interface(proto_name), SIGNAL(message_recv(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_recv(const QString &, const QString &, const QString &, const QString &)));
+		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
+		connect(proto, SIGNAL(message_recv(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_recv(const QString &, const QString &, const QString &, const QString &)));
+		connect(proto, SIGNAL(status_change(const QString &, const QString &, const QString &, GlobalStatus)), this, SLOT(status_change(const QString &, const QString &, const QString &, GlobalStatus)));
 		qDebug() << "message window connecting message_recv signal for protocol" << proto_name;
 	}
 
@@ -57,13 +60,20 @@ const PluginInfo &MessageWindow::get_plugin_info() {
 }
 
 /////////////////////////////
+bool MessageWindow::window_exists(const QString &proto_name, const QString &account_id, const QString &contact_id) {
+	return (windows.contains(proto_name) && windows[proto_name].contains(account_id) && windows[proto_name][account_id].contains(contact_id));
+}
 
-MessageWin *MessageWindow::get_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
-	if(!windows.contains(proto_name) || !windows[proto_name].contains(account_id) || !windows[proto_name][account_id].contains(contact_id)) {
-		MessageWin *win = new MessageWin(proto_name, account_id, contact_id);
+SplitterWin *MessageWindow::get_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
+	if(!window_exists(proto_name, account_id, contact_id)) {
+		SplitterWin *win = new SplitterWin(proto_name, account_id, contact_id);
 		windows[proto_name][account_id][contact_id] = win;
 
+		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
+		win->setWindowIcon(icons_i->get_account_status_icon(proto, account_id, proto->get_contact_status(account_id, contact_id)));
+
 		connect(win, SIGNAL(msgSend(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_send(const QString &, const QString &, const QString &, const QString &)));
+		//win->setWindowIcon(i
 	}
 
 	return windows[proto_name][account_id][contact_id];
@@ -76,8 +86,15 @@ void MessageWindow::account_removed(const QString &proto_name, const QString &id
 }
 
 void MessageWindow::message_recv(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg) {
-	MessageWin *win = get_window(proto_name, account_id, contact_id);
+	SplitterWin *win = get_window(proto_name, account_id, contact_id);
 	win->msgRecv(msg);
+}
+
+void MessageWindow::status_change(const QString &proto_name, const QString &account_id, const QString &contact_id, GlobalStatus gs) {
+	if(window_exists(proto_name, account_id, contact_id)) {
+		SplitterWin *win = get_window(proto_name, account_id, contact_id);
+		win->setWindowIcon(icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
+	}
 }
 
 void MessageWindow::message_send(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg) {
@@ -90,7 +107,7 @@ void MessageWindow::message_send(const QString &proto_name, const QString &accou
 }
 
 void MessageWindow::open_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
-	MessageWin *win = get_window(proto_name, account_id, contact_id);
+	SplitterWin *win = get_window(proto_name, account_id, contact_id);
 	win->show();
 	win->activateWindow();
 }

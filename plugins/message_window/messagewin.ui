@@ -1,96 +1,63 @@
 <ui version="4.0" >
  <class>MessageWinClass</class>
- <widget class="QDialog" name="MessageWinClass" >
+ <widget class="QWidget" name="MessageWinClass" >
   <property name="geometry" >
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>605</width>
-    <height>320</height>
+    <width>551</width>
+    <height>68</height>
    </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle" >
    <string>MessageWin</string>
   </property>
-  <layout class="QVBoxLayout" >
+  <layout class="QHBoxLayout" name="horizontalLayout" >
    <property name="spacing" >
-    <number>6</number>
+    <number>0</number>
    </property>
-   <property name="leftMargin" >
-    <number>9</number>
-   </property>
-   <property name="topMargin" >
-    <number>9</number>
-   </property>
-   <property name="rightMargin" >
-    <number>9</number>
-   </property>
-   <property name="bottomMargin" >
-    <number>9</number>
+   <property name="margin" >
+    <number>0</number>
    </property>
    <item>
-    <layout class="QVBoxLayout" >
-     <property name="spacing" >
-      <number>6</number>
+    <widget class="ChatInput" name="edMsg" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+       <horstretch>0</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
      </property>
-     <property name="leftMargin" >
-      <number>0</number>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btnSend" >
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="topMargin" >
-      <number>0</number>
+     <property name="text" >
+      <string>Send</string>
      </property>
-     <property name="rightMargin" >
-      <number>0</number>
-     </property>
-     <property name="bottomMargin" >
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QTextEdit" name="edMsgLog" >
-       <property name="readOnly" >
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" >
-       <property name="spacing" >
-        <number>6</number>
-       </property>
-       <property name="leftMargin" >
-        <number>0</number>
-       </property>
-       <property name="topMargin" >
-        <number>0</number>
-       </property>
-       <property name="rightMargin" >
-        <number>0</number>
-       </property>
-       <property name="bottomMargin" >
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QLineEdit" name="edMsg" />
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnSend" >
-         <property name="text" >
-          <string>Send</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
+    </widget>
    </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11" />
- <tabstops>
-  <tabstop>edMsg</tabstop>
-  <tabstop>btnSend</tabstop>
-  <tabstop>edMsgLog</tabstop>
- </tabstops>
+ <customwidgets>
+  <customwidget>
+   <class>ChatInput</class>
+   <extends>QTextEdit</extends>
+   <header>chatinput.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
