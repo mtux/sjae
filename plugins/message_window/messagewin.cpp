@@ -25,12 +25,12 @@ QString timestamp() {
 
 void MessageWin::msgRecv(const QString &msg) {
 	show();
-	ui.edMsgLog->append(timestamp() + "<font color='#ff00ff'>" + msg + "</font>");
-	activateWindow();
+	ui.edMsgLog->append("<font color='#000000'>" + timestamp() + "</font>" + "<font color='#ff00ff'>" + msg + "</font>");
+	//activateWindow();
 }
 
 void MessageWin::on_btnSend_clicked() {
-	ui.edMsgLog->append(timestamp() + "<font color='#0000ff'>" + ui.edMsg->text() + "</font>");
+	ui.edMsgLog->append("<font color='#7f7f7f'>" + timestamp() + "</font>" + "<font color='#0000ff'>" + Qt::escape(ui.edMsg->text()) + "</font>");
 	emit msgSend(proto_name, account_id, contact_id, ui.edMsg->text());
 	ui.edMsg->clear();
 	ui.edMsg->setFocus();
