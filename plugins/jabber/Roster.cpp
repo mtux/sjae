@@ -96,7 +96,7 @@ Resource *Roster::get_resource(const QString &full_jid, bool create) {
 	//qDebug() << "jid:" << jid << "resource:" << resource;
 	RosterItem *item = get_item(jid);
 	if(!item) {
-		qDebug() << "no item";
+		qDebug() << "no item for jid" + jid;
 		return 0;
 	}
 

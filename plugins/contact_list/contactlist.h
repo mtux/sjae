@@ -57,6 +57,7 @@ public slots:
 	//void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
 
 	void set_hide_offline(bool hide);
+	void update_hide_offline();
 
 signals:
 	void contact_clicked(const QString &proto_name, const QString &account_id, const QString &id);
@@ -69,7 +70,6 @@ signals:
 
 protected:
 	void set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide);
-	//void update_hide_offline(QTreeWidgetItem *item);
 
 	CoreI *core_i;
 	QPointer<MainWindowI> main_win_i;

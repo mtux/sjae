@@ -71,6 +71,9 @@ protected slots:
 	void socketError(QAbstractSocket::SocketError socketError);
 	void sslErrors(const QList<QSslError> &errors);
 
+	void blockingReadSocketMore();
+	void readMoreIfNecessary();
+
 	void readSocket();
 	void socketConnected();
 	void socketEncrypted();
@@ -163,6 +166,7 @@ protected:
 	void parseRosterItem();
 	void parsePresence();
 	void parseMessage();
+	void parseMessageBody(const QString &source);
 	void parseDiscoInfoResult(const QString &entity);
 	void parseDiscoItemsResult(const QString &entity);
 	void parseRegisterResult(const QString &gateway);
