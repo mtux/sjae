@@ -8,13 +8,13 @@
 ;--------------------------------
 
 ; The name of the installer
-Name "saje"
+Name "Saje"
 
 ; The file to write
 OutFile "saje_setup.exe"
 
 ; The default installation directory
-InstallDir "$PROGRAMFILES\SJE\SAJE"
+InstallDir "$PROGRAMFILES\Saje"
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
@@ -60,7 +60,7 @@ Section "Qt Runtime Libraries"
  
 SectionEnd
 
-Section "SAJE (required)"
+Section "Saje (required)"
   SectionIn RO
   
   ; Set output path to the installation directory.
@@ -96,16 +96,16 @@ SectionEnd
 Section "Desktop Shortcut"
 
 ;create desktop shortcut
-  CreateShortCut "$DESKTOP\saje.lnk" "$INSTDIR\core.exe" ""
+  CreateShortCut "$DESKTOP\Saje.lnk" "$INSTDIR\core.exe" ""
 
 SectionEnd
 
 Section "Start Menu Shortcuts"
 
 ; start menu shortcuts
-  CreateDirectory "$SMPROGRAMS\SJE"
-  CreateShortCut "$SMPROGRAMS\SJE\saje.lnk" "$INSTDIR\core.exe" "" "$INSTDIR\core.exe" 0
-  CreateShortCut "$SMPROGRAMS\SJE\Uninstall saje.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateDirectory "$SMPROGRAMS\Saje"
+  CreateShortCut "$SMPROGRAMS\Saje\Saje.lnk" "$INSTDIR\core.exe" "" "$INSTDIR\core.exe" 0
+  CreateShortCut "$SMPROGRAMS\Saje\Uninstall Saje.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
 
@@ -125,13 +125,13 @@ Section "Uninstall"
 
   ; Remove shortcuts, if any
   Delete "$DESKTOP\saje.lnk"
-  Delete "$SMPROGRAMS\SJE\saje.lnk"
-  Delete "$SMPROGRAMS\SJE\Uninstall saje.lnk"
-  RMDir "$SMPROGRAMS\SJE"
+  Delete "$SMPROGRAMS\Saje\Saje.lnk"
+  Delete "$SMPROGRAMS\Saje\Uninstall Saje.lnk"
+  RMDir "$SMPROGRAMS\Saje"
 
   ; Remove directories used
   RMDir "$INSTDIR\plugins"
   RMDir "$INSTDIR"
-  RMDir "$PROGRAMFILES\SJE"
+  RMDir "$PROGRAMFILES\Saje"
   
 SectionEnd
