@@ -94,7 +94,7 @@ void jabber::account_removed(const QString &proto_name, const QString &account_i
 }
 
 bool jabber::pre_shutdown() {
-	// disconnects sets all contacts offline (changes icon, proto must remain registered)
+	// disconnects and sets all contacts offline (changes icon, proto must remain registered)
 	proto->deleteContexts(); 
 	return true;
 }

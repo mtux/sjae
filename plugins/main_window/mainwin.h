@@ -41,10 +41,6 @@ protected:
 
 	QMenu *winMenu;
 
-	void hideEvent(QHideEvent *e);
-	void showEvent(QShowEvent *e);
-	void closeEvent(QCloseEvent *e);
-
 	bool closing;
 	QAction *sepAction;
 	QSystemTrayIcon *systray;

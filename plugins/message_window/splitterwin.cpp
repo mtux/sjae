@@ -7,6 +7,7 @@ SplitterWin::SplitterWin(const QString &proto, const QString &account, const QSt
 	ui.setupUi(this);
 
 	setAttribute(Qt::WA_QuitOnClose, false);
+
 	if(!nick.isEmpty())
 		setWindowTitle(nick);
 	else

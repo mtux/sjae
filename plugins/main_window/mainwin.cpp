@@ -51,13 +51,15 @@ MainWin::~MainWin()
 {
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
+	settings.setValue("MainWin/hiddenState", isHidden());
 }
 
 void MainWin::updateFlags() {
 	//Qt::WindowFlags flags = windowFlags();
 
+	bool hidden = isHidden();
 	setWindowFlags((toolWindow ? Qt::Tool : Qt::Window) | (hideFrame ? Qt::FramelessWindowHint : Qt::Widget));
-	show();	
+	if(!hidden) show();	
 }
 
 void MainWin::set_hide_frame(bool hide) {
@@ -95,23 +97,6 @@ void MainWin::toggleHidden() {
 		activateWindow();
 	} else 
 		hide();
-}
-
-void MainWin::hideEvent(QHideEvent *e) {
-	QSettings settings;
-	if(!closing) settings.setValue("MainWin/hiddenState", true);
-	QMainWindow::hideEvent(e);
-}
-
-void MainWin::showEvent(QShowEvent *e) {
-	QSettings settings;
-	settings.setValue("MainWin/hiddenState", false);
-	QMainWindow::showEvent(e);
-}
-
-void MainWin::closeEvent(QCloseEvent *e) {
-	e->setAccepted(false);
-	hide();
 }
 
 void MainWin::restoreHiddenState() {

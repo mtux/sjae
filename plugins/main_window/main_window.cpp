@@ -68,7 +68,7 @@ bool main_window::pre_shutdown() {
 }
 
 bool main_window::unload() {
-	win->deleteLater();
+	delete win;
 	return true;
 }
 
