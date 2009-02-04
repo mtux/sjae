@@ -72,6 +72,7 @@ protected slots:
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
 	void handleGranted(const QString &contact_id, const QString &account_id);
+	void handleDenied(const QString &contact_id, const QString &account_id);
 
 signals:
 	void msgAck(int i);

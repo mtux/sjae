@@ -120,6 +120,7 @@ JabberProto::JabberProto(jabber *jabberPlugin): plugin(jabberPlugin) {
 	ask_subscribe = new AskSubscribe();
 	connect(this, SIGNAL(destroyed()), ask_subscribe, SLOT(deleteLater()));
 	connect(ask_subscribe, SIGNAL(grant(const QString &, const QString &)), this, SLOT(handleGranted(const QString &, const QString &)));
+	connect(ask_subscribe, SIGNAL(deny(const QString &, const QString &)), this, SLOT(handleDenied(const QString &, const QString &)));
 }
 
 void JabberProto::modules_loaded() {
@@ -144,6 +145,11 @@ JabberProto::~JabberProto() {
 void JabberProto::handleGranted(const QString &contact_id, const QString &account_id) {
 	if(ctx.contains(account_id))
 		ctx[account_id]->sendGrant(contact_id);
+}
+
+void JabberProto::handleDenied(const QString &contact_id, const QString &account_id) {
+	if(ctx.contains(account_id))
+		ctx[account_id]->sendRevoke(contact_id);
 }
 
 void JabberProto::deleteContexts() {

@@ -20,7 +20,9 @@
 #include <clist_i.h>
 
 JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObject *parent)
-	: QObject(parent), account_id(id), acc_info(ai), useSSL(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), sessionRequired(false), tlsAvailable(false), tlsRequired(false), currentStatus(ST_OFFLINE)
+	: QObject(parent), account_id(id), acc_info(ai), useSSL(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
+		sessionRequired(false), tlsAvailable(false), tlsRequired(false), currentStatus(ST_OFFLINE),
+		priority(DEFAULT_PRIORITY)
 {
 	sendBuffer.open(QIODevice::WriteOnly);
 
@@ -691,13 +693,18 @@ void JabberCtx::sendPresence(const QString &to) {
 	}
 
 	writer.writeStartElement("presence");
-	if(!to.isEmpty()) writer.writeAttribute("to", to);
-	if(!type.isEmpty()) writer.writeAttribute("type", type);
-	if(!show.isEmpty()) {
-		writer.writeStartElement("show");
-		writer.writeCharacters(show);
-		writer.writeEndElement();
-	}
+		if(!to.isEmpty()) writer.writeAttribute("to", to);
+		if(!type.isEmpty()) writer.writeAttribute("type", type);
+		if(!show.isEmpty()) {
+			writer.writeStartElement("show");
+			writer.writeCharacters(show);
+			writer.writeEndElement();
+		}
+		if(type != "unavailable" && DEFAULT_PRIORITY != 0) {
+			writer.writeStartElement("priority");
+			writer.writeCharacters(QString("%1").arg(DEFAULT_PRIORITY));
+			writer.writeEndElement();
+		}
 	writer.writeEndElement();
 	sendWriteBuffer();
 	log("Sent presence.");
@@ -793,7 +800,7 @@ void JabberCtx::parseRosterItem() {
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
-			emit grantRequested(jid, account_id);
+			//emit grantRequested(jid, account_id);
 		}
 	} else {
 		log("Adding id to roster: " + jid + "(group: " + group + ")");
@@ -826,25 +833,23 @@ GlobalStatus JabberCtx::getContactStatus(const QString &contact_id) {
 	return ST_OFFLINE;
 }
 
-bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, const QString &msg) {
-	log("setting presence for resource: " + full_jid);
+bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, const QString &msg, int prio) {
+	//log("setting presence for resource: " + full_jid);
+	RosterItem *item = roster.get_item(Roster::full_jid2jid(full_jid));
+	if(!item) return false;
+
 	Resource *r = roster.get_resource(full_jid, false);
-	if(!r) {
-		RosterItem *item = roster.get_item(Roster::full_jid2jid(full_jid));
-		if(!item) return false;
+	if(!r) r = roster.get_resource(full_jid, true);
 
-		r = roster.get_resource(full_jid, true);
-		log("created resource");
-		r->setPresence(presence);
-		r->setPresenceMessage(msg);
-	} else {
-		log("got resource");
-		r->setPresence(presence);
-		r->setPresenceMessage(msg);
-	}
+	r->setPresence(presence);
+	r->setPresenceMessage(msg);
+	r->updateLastActivity();
 
-	emit contactStatusChanged(account_id, Roster::full_jid2jid(full_jid), presenceToStatus(presence));
-	clist_i->set_status("Jabber", account_id, Roster::full_jid2jid(full_jid), presenceToStatus(presence));
+	// application contact status is based on 'active' resource
+	r = item->get_active_resource();
+
+	emit contactStatusChanged(account_id, Roster::full_jid2jid(full_jid), presenceToStatus(r->getPresence()));
+	clist_i->set_status("Jabber", account_id, Roster::full_jid2jid(full_jid), presenceToStatus(r->getPresence()));
 	return true;
 }
 
@@ -855,6 +860,7 @@ void JabberCtx::parsePresence() {
 		name = jid,
 		nick,
 		msg;
+	int prio = 0;
 
 	presenceType = reader.attributes().value("type").toString();
 
@@ -876,10 +882,12 @@ void JabberCtx::parsePresence() {
 			msg = reader.readElementText();
 		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "nick") {
 			nick = reader.readElementText();
+		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "priority") {
+			prio = reader.readElementText().toInt();
 		}
 	}
 
-	if(presenceType.isEmpty() || presenceType == "unavailable") setPresence(jid, Resource::string2pres(presence), msg);
+	if(presenceType.isEmpty() || presenceType == "unavailable") setPresence(jid, Resource::string2pres(presence), msg, prio);
 
 	if(!nick.isEmpty()) {
 		writer.writeStartElement("iq");
@@ -907,8 +915,8 @@ void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
 		writer.writeTextElement("body", msg);
 	writer.writeEndElement();
 	sendWriteBuffer();
+	log("Sent message to " + cid);
 	emit msgAck(id);
-	log("Sent message to " + id);
 }
 
 void JabberCtx::parseMessageBody(const QString &source) {
@@ -917,6 +925,8 @@ void JabberCtx::parseMessageBody(const QString &source) {
 
 	Resource *r = roster.get_resource(source,  false);
 	if(r) {
+		r->updateLastActivity();
+
 		RosterItem *i = r->getItem();
 		QString id = i->getJID();
 
@@ -1275,6 +1285,10 @@ void JabberCtx::requestSubscription() {
 	sendRequestSubscription(mid);
 }
 
+void JabberCtx::setPriority(int p) {
+	priority = p;
+	sendPresence();
+}
 
 void JabberCtx::setAllOffline() {
 	QStringList all_ids = roster.all_items();
