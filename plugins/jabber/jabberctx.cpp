@@ -1334,7 +1334,10 @@ void JabberCtx::parseRegisterResult(const QString &gateway) {
 				instructions = reader.readElementText();
 			else if(reader.name() == "registered") {
 				log("Already registered with gateway " + gateway, LMT_WARNING);
-			} else if(reader.name() != "x") {
+			} else if(reader.name() == "x") {
+				while(reader.name() != "x" || !reader.isEndElement())
+					readMoreIfNecessary();
+			} else {
 				fields << reader.name().toString();
 			}
 		}
