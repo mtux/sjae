@@ -440,7 +440,7 @@ void JabberCtx::parseMechanisms() {
 
 void JabberCtx::parseChallenge() {
 	QString ch = QString(QByteArray::fromBase64(reader.readElementText().toAscii()));
-	log("Responding to challenge: " + ch);
+	//log("Responding to challenge: " + ch);
 	QByteArray response;
 
 	QRegExp rre = QRegExp("realm=\\\"[^\\\"]*"), nre = QRegExp("nonce=\\\"[^\\\"]*");
@@ -481,8 +481,6 @@ void JabberCtx::parseChallenge() {
 			.arg(acc_info.host)
 			.arg(QString(hash.result().toHex()).rightJustified(32, '0'));
 
-
-		qDebug() << res;
 
 		response = res.toUtf8().toBase64();
 	}
@@ -1044,7 +1042,7 @@ void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 }
 
 void JabberCtx::sendIqError(const QString &id, const QString &sender, const QString &errorType, const QString &definedCondition) {
-	log("Sending iq error to " + sender);
+	//log("Sending iq error to: " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
 	writer.writeAttribute("to", sender);
@@ -1059,7 +1057,7 @@ void JabberCtx::sendIqError(const QString &id, const QString &sender, const QStr
 }
 
 void JabberCtx::sendEmptyResult(const QString &id, const QString &sender) {
-	log("Sending empty result to " + sender);
+	//log("Sending empty result to: " + sender);
 	writer.writeEmptyElement("iq");
 	writer.writeAttribute("id", id);
 	//writer.writeAttribute("to", sender);
@@ -1069,7 +1067,7 @@ void JabberCtx::sendEmptyResult(const QString &id, const QString &sender) {
 }
 
 void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) {
-	log("Sending version info to " + sender);
+	//log("Sending version info to " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
 	writer.writeAttribute("to", sender);
@@ -1086,7 +1084,7 @@ void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) 
 }
 
 void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
-	log("Sending disco info to " + sender);
+	//log("Sending disco info to " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
 	writer.writeAttribute("to", sender);
@@ -1336,8 +1334,9 @@ void JabberCtx::parseRegisterResult(const QString &gateway) {
 				instructions = reader.readElementText();
 			else if(reader.name() == "registered") {
 				log("Already registered with gateway " + gateway, LMT_WARNING);
-			} else
+			} else if(reader.name() != "x") {
 				fields << reader.name().toString();
+			}
 		}
 	}
 
