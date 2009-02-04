@@ -1076,7 +1076,7 @@ void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) 
 		writer.writeStartElement("query");
 		writer.writeDefaultNamespace("jabber:iq:version");
 			writer.writeTextElement("name", "saje");
-			writer.writeTextElement("version", "0.0.1a");
+			writer.writeTextElement("version", core_i->version());
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq
 	sendWriteBuffer();

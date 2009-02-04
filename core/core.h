@@ -36,6 +36,9 @@ public:
 	
 	Q_INVOKABLE QString encrypt(const QString &source, const QString &key = "");
 	Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "");
+
+	Q_INVOKABLE QString version() {return "Alpha 5";}
+
 public:
 	void show_help();
 	bool parse_command_line();
