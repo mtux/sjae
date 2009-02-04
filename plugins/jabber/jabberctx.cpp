@@ -440,19 +440,22 @@ void JabberCtx::parseMechanisms() {
 
 void JabberCtx::parseChallenge() {
 	QString ch = QString(QByteArray::fromBase64(reader.readElementText().toAscii()));
-	log("Responding to challenge...");
+	log("Responding to challenge: " + ch);
 	QByteArray response;
 
-	QRegExp rre = QRegExp("realm=\\\"\\w*"), nre = QRegExp("nonce=\\\"\\w*");
+	QRegExp rre = QRegExp("realm=\\\"[^\\\"]*"), nre = QRegExp("nonce=\\\"[^\\\"]*");
 	int rrei = rre.indexIn(ch), nrei = nre.indexIn(ch);
 	if(nrei != -1) {
-		QString realm = (rrei == -1 ? "" : ch.mid(rrei + 7, rre.matchedLength() - 7)),
+		QString realm = (rrei == -1 ? acc_info.host : ch.mid(rrei + 7, rre.matchedLength() - 7)),
 			nonce = ch.mid(nrei + 7, nre.matchedLength() - 7);
 
+		qsrand(QDateTime::currentDateTime().toTime_t());
 		QCryptographicHash hash(QCryptographicHash::Md5);
 
-		qsrand(QDateTime::currentDateTime().toTime_t());
-		QString cnonce = QString("%1").arg(qrand());
+		hash.reset();
+		hash.addData(QString("%1").arg(qrand()).toUtf8());
+
+		QString cnonce = QString(hash.result().toHex()).rightJustified(32, '0');
 
 		hash.reset();
 		hash.addData((acc_info.username + ":" + realm + ":" + acc_info.password).toUtf8());
@@ -467,10 +470,19 @@ void JabberCtx::parseChallenge() {
 		QByteArray temp2 = hash.result();
 
 		hash.reset();
-		hash.addData((temp.toHex() + ":" + nonce + ":1:" + cnonce + ":auth:" + temp2.toHex()).toUtf8());
+		hash.addData((temp.toHex() + ":" + nonce + ":00000001:" + cnonce + ":auth:" + temp2.toHex()).toUtf8());
 
-		QString res("username=\"" + acc_info.username + "\",realm=\"" + realm + "\",nonce=\"" + nonce + "\",cnonce=\"" + cnonce + "\",nc=1,qop=auth,digest-uri=\"xmpp/" +
-			acc_info.host + "\",charset=utf-8,response=" + hash.result().toHex());
+		QString res = QString("username=\"%1\",realm=\"%2\",nonce=\"%3\",cnonce=\"%4\",nc=%5,qop=auth,digest-uri=\"xmpp/%6\",charset=utf-8,response=%7")
+			.arg(acc_info.username)
+			.arg(realm)
+			.arg(nonce)
+			.arg(cnonce)
+			.arg("00000001")
+			.arg(acc_info.host)
+			.arg(QString(hash.result().toHex()).rightJustified(32, '0'));
+
+
+		qDebug() << res;
 
 		response = res.toUtf8().toBase64();
 	}
@@ -714,9 +726,11 @@ void JabberCtx::parseGroupDelimiter() {
 	if(reader.isStartElement() && reader.name() == "roster") {
 		reader.readNext();
 		QString groupDelim = reader.text().toString();
-		RosterGroup::setDelimiter(groupDelim);
-		clist_i->set_group_delimiter("Jabber", account_id, groupDelim);
-		log("Delim is " + groupDelim);
+		if(!groupDelim.isEmpty()) {
+			RosterGroup::setDelimiter(groupDelim);
+			clist_i->set_group_delimiter("Jabber", account_id, groupDelim);
+			log("Delim is " + groupDelim);
+		}
 	}
 }
 
