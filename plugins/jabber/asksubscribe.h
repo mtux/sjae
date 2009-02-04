@@ -18,6 +18,7 @@ protected slots:
 	void clearList();
 signals:
 	void grant(const QString &jid, const QString &account_id);
+	void deny(const QString &jid, const QString &account_id);
 private:
 	Ui::AskSubscribeClass ui;
 private slots:

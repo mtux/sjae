@@ -19,6 +19,8 @@ void AskSubscribe::emitGrantsAndClear() {
 	for(int i = 0; i < rows; i++) {
 		if(ui.lstUsers->item(i)->checkState() == Qt::Checked)
 			emit grant(ui.lstUsers->item(i)->text(), ui.lstUsers->item(i)->data(Qt::UserRole).toString());
+		else
+			emit deny(ui.lstUsers->item(i)->text(), ui.lstUsers->item(i)->data(Qt::UserRole).toString());
 	}
 
 	clearList();

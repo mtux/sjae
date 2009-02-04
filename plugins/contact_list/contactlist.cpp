@@ -273,6 +273,7 @@ void ContactList::set_status(const QString &proto_name, const QString &account_i
 
 		QString cid = make_uid(proto_name, account_id, id);
 		if(id_item_map.contains(cid)) {
+			qDebug() << "Setting status for id" << id << "to" << (int)gs;
 			ContactInfo ci = id_item_map[cid]->data(0, Qt::UserRole).value<ContactInfo>();
 			ci.gs = gs;
 			QVariant var; var.setValue(ci);

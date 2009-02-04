@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QMap>
 #include <QVariant>
+#include <QDateTime>
 #include <QDebug>
 
 typedef enum {ST_NONE, ST_TO, ST_FROM, ST_BOTH, ST_UNKNOWN} SubscriptionType;
@@ -79,14 +80,18 @@ class RosterItem;
 
 class Resource: public RosterTreeNode {
 public:
-	Resource(const QString &n, RosterTreeNonLeafNode *i = 0): RosterTreeNode(n, i), presence(PT_UNAVAILABLE) {}
+	Resource(const QString &n, RosterTreeNonLeafNode *i = 0): RosterTreeNode(n, i), presence(PT_UNAVAILABLE), priority(0) {}
 	virtual ~Resource() {}
 	virtual NodeType type() const {return RTNT_RESOURCE;}
 	PresenceType getPresence() {return presence;}
 	QString getPresenceMessage() {return presenceMessage;}
+	int getPriority() {return priority;}
+	QDateTime getLastActivity() {return last_activity;}
 
 	void setPresence(PresenceType p, const QString &m = "") {presence = p; presenceMessage = m;}
 	void setPresenceMessage(const QString &msg) {presenceMessage = msg;}
+	void setPriority(int prio) {priority = prio;}
+	void updateLastActivity() {last_activity = QDateTime::currentDateTime();}
 	
 	static PresenceType string2pres(const QString &p) {
 		if(p == "unavailable") return PT_UNAVAILABLE;
@@ -123,6 +128,8 @@ public:
 protected:
 	PresenceType presence;
 	QString presenceMessage;
+	int priority;
+	QDateTime last_activity;
 };
 
 class RosterGroup;

@@ -19,6 +19,8 @@
 
 typedef enum {LMT_NORMAL, LMT_WARNING, LMT_ERROR, LMT_SEND, LMT_RECV} LogMessageType;
 
+#define DEFAULT_PRIORITY	48
+
 class JabberCtx : public QObject
 {
 	Q_OBJECT
@@ -57,6 +59,8 @@ public slots:
 
 	void sendGrant(const QString &jid);
 	void sendRevoke(const QString &jid);
+
+	void setPriority(int p);
 signals:
 	void msgRecv(const QString &account_id, const QString &jid, const QString &msg);
 	void statusChanged(const QString &account_id, GlobalStatus gs);
@@ -135,6 +139,7 @@ protected:
 	SessionState sstate;
 	bool sessionRequired, tlsAvailable, tlsRequired;
 	GlobalStatus connectStatus, currentStatus;
+	int priority;
 
 	void startStream();
 	void endStream();
@@ -175,7 +180,7 @@ protected:
 
 	void setDetails(RosterItem *item, const QString &group, const QString &name, SubscriptionType sub);
 	void addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub);
-	bool setPresence(const QString &full_jid, PresenceType presence, const QString &msg);
+	bool setPresence(const QString &full_jid, PresenceType presence, const QString &msg, int prio = 0);
 
 	void sendIqError(const QString &id, const QString &sender, const QString &errorType = "cancel", const QString &definedCondition = "feature-not-implemented");
 

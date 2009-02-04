@@ -19,8 +19,34 @@ Resource *RosterItem::get_active_resource() const {
 	if(childCount() == 0) return 0;
 	else if(childCount() == 1) return static_cast<Resource *>(child(0));
 	else {
-		// TODO: get most online or last active or highest priority resource
-		return static_cast<Resource *>(child(0));
+		int max_prio = -128;
+		QVectorIterator<RosterTreeNode *> i(children);
+		Resource *r = 0;
+		while(i.hasNext()) {
+			r = static_cast<Resource *>(i.next());
+			if(r->getPriority() > max_prio)
+				max_prio = r->getPriority();
+		}
+		i.toFront();
+		QVector<Resource *> hipri;
+		while(i.hasNext()) {
+			r = static_cast<Resource *>(i.next());
+			if(r->getPriority() == max_prio)
+				hipri.append(r);
+		}
+
+		if(hipri.size() == 1) return hipri.first();
+
+		QDateTime recent = hipri.first()->getLastActivity();
+		Resource *active = hipri.first();
+		QVectorIterator<Resource *> j(hipri);
+		while(j.hasNext()) {
+			r = j.next();
+			if(r->getLastActivity() > active->getLastActivity())
+				active = r;
+		}
+
+		return active;
 	}
 }
 
