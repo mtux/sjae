@@ -64,6 +64,9 @@ public:
 	virtual Q_INVOKABLE QString encrypt(const QString &source, const QString &key = "bad key") = 0;
 	/// decrypt a string
 	virtual Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "bad key") = 0;
+
+	// return version info
+	virtual Q_INVOKABLE QString version() = 0;
 };
 
 Q_DECLARE_INTERFACE(CoreI, "au.com.sje.CoreI/1.0")
