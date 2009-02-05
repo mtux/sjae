@@ -70,7 +70,7 @@ void ServiceDiscovery::gotDiscoInfo(const DiscoInfo &info) {
 
 void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 	//qDebug() << "ServiceDiscovery window got items:" << items.entity;
-	QList<QTreeWidgetItem *> parents = ui.itemTree->findItems(items.entity, Qt::MatchExactly, 1);
+	QList<QTreeWidgetItem *> parents = ui.itemTree->findItems(items.entity, Qt::MatchFixedString | Qt::MatchCaseSensitive | Qt::MatchRecursive, 1);
 	if(!parents.size()) {
 		qDebug() << "Disco items: no such entity (" + items.entity + ")";
 		return;

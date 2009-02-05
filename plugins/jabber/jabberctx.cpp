@@ -1050,8 +1050,9 @@ void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 
 			discoItems.items.append(item);
 
-			//if(entity == acc_info.host)
-			//	sendIqQueryDiscoInfo(item.jid, item.node);
+			// get info about root host items - necessary to find gateways
+			if(entity == acc_info.host)
+				sendIqQueryDiscoInfo(item.jid, item.node);
 		}
 	}
 	log("Parsed disco items for entity " + discoItems.entity, LMT_NORMAL);
