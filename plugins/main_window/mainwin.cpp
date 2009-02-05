@@ -62,6 +62,10 @@ void MainWin::updateFlags() {
 	if(!hidden) show();	
 }
 
+void MainWin::set_hide_toolbar(bool hide) {
+	ui.toolBar->setVisible(!hide);
+}
+
 void MainWin::set_hide_frame(bool hide) {
 	hideFrame = hide;
 	updateFlags();
