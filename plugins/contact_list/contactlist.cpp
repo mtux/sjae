@@ -234,6 +234,44 @@ void ContactList::remove_contact(const QString &proto_name, const QString &accou
 	update_hide_offline();
 }
 
+void ContactList::get_all_contacts(QTreeWidgetItem *root, QList<QString> &cids, const QString &proto_name, const QString &account_id) {
+	for(int i = 0; i < root->childCount(); i++) {
+		if(root->child(i)->type() == TWIT_CONTACT) {
+			ContactInfo ci = root->child(i)->data(0, Qt::UserRole).value<ContactInfo>();
+			if(ci.proto_name == proto_name && ci.account_id == account_id)
+				cids << make_uid(proto_name, account_id, ci.id);
+		} else {
+			get_all_contacts(root->child(i), cids, proto_name, account_id);
+		}
+	}
+}
+
+void ContactList::remove_all_contacts(const QString &proto_name, const QString &account_id) {
+	{
+		QMutexLocker locker(&list_mutex);
+
+		QList<QString> cids;
+		get_all_contacts(win->tree()->invisibleRootItem(), cids, proto_name, account_id);
+
+		foreach(QString cid, cids) {
+			if(id_item_map.contains(cid)) {
+				QSettings settings;
+				QTreeWidgetItem *i = id_item_map[cid];
+				id_item_map.remove(cid);
+
+				QString full_gn;
+				while(i->parent() && i->parent()->childCount() == 1)
+					i = i->parent();
+
+				delete i;
+			}
+		}
+	}
+
+	update_hide_offline();
+}
+
+
 void ContactList::set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) {
 	{
 		QMutexLocker locker(&list_mutex);

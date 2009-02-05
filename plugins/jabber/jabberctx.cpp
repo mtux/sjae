@@ -26,12 +26,12 @@ JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObj
 {
 	sendBuffer.open(QIODevice::WriteOnly);
 
-	connect(&sslSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
-	connect(&sslSocket, SIGNAL(sslErrors(const QList<QSslError> &)), this, SLOT(sslErrors(const QList<QSslError> &)));
 	connect(&sslSocket, SIGNAL(readyRead()), this, SLOT(readSocket()), Qt::QueuedConnection);
 	connect(&sslSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
 	connect(&sslSocket, SIGNAL(encrypted()), this, SLOT(socketEncrypted()));
 	connect(&sslSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
+	connect(&sslSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+	connect(&sslSocket, SIGNAL(sslErrors(const QList<QSslError> &)), this, SLOT(sslErrors(const QList<QSslError> &)));
 	connect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 
 	sslSocket.setProtocol(QSsl::AnyProtocol);
@@ -74,6 +74,14 @@ void JabberCtx::setAccountInfo(const AccountInfo &info) {
 JabberCtx::~JabberCtx()
 {
 	requestStatus(ST_OFFLINE);
+	if(sstate != SSNONE) changeSessionState(SSNONE);
+	disconnect(&sslSocket, SIGNAL(readyRead()), this, SLOT(readSocket()));
+	disconnect(&sslSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
+	disconnect(&sslSocket, SIGNAL(encrypted()), this, SLOT(socketEncrypted()));
+	disconnect(&sslSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
+	disconnect(&sslSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+	disconnect(&sslSocket, SIGNAL(sslErrors(const QList<QSslError> &)), this, SLOT(sslErrors(const QList<QSslError> &)));
+	disconnect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 }
 
 AccountInfo JabberCtx::get_account_info() {
@@ -190,7 +198,9 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			showMessage("Disconnected");
 			sslSocket.close();
 			//newRosterItemAction->setEnabled(false);
-			setAllOffline();
+			//setAllOffline();
+			clist_i->remove_all_contacts("Jabber", account_id);
+			roster.clear();
 			break;
 		case SSSTARTSSL:
 			setStatus(ST_CONNECTING);
@@ -1063,7 +1073,8 @@ void JabberCtx::sendIqError(const QString &id, const QString &sender, const QStr
 	//log("Sending iq error to: " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
-	writer.writeAttribute("to", sender);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
 	writer.writeAttribute("type", "error");
 		writer.writeStartElement("error");
 		writer.writeAttribute("type", errorType);
@@ -1078,7 +1089,8 @@ void JabberCtx::sendEmptyResult(const QString &id, const QString &sender) {
 	//log("Sending empty result to: " + sender);
 	writer.writeEmptyElement("iq");
 	writer.writeAttribute("id", id);
-	//writer.writeAttribute("to", sender);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
 	writer.writeAttribute("type", "result");
 	writer.writeCharacters("");
 	sendWriteBuffer();
@@ -1088,7 +1100,8 @@ void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) 
 	//log("Sending version info to " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
-	writer.writeAttribute("to", sender);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
 	//writer.writeAttribute("from", jid);
 	writer.writeAttribute("type", "result");
 		writer.writeStartElement("query");
@@ -1105,7 +1118,8 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 	//log("Sending disco info to " + sender);
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
-	writer.writeAttribute("to", sender);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
 	//writer.writeAttribute("from", jid);
 	writer.writeAttribute("type", "result");
 		writer.writeStartElement("query");

@@ -65,6 +65,9 @@ void ServiceDiscovery::gotDiscoInfo(const DiscoInfo &info) {
 		}
 	}
 
+	ui.itemTree->resizeColumnToContents(0);
+	ui.itemTree->resizeColumnToContents(1);
+	ui.itemTree->resizeColumnToContents(2);
 	//parent->setExpanded(true);
 }
 
@@ -83,6 +86,10 @@ void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 		iitem->setExpanded(false);
 		dummy->setFirstColumnSpanned(true);
 	}
+
+	ui.itemTree->resizeColumnToContents(0);
+	ui.itemTree->resizeColumnToContents(1);
+	ui.itemTree->resizeColumnToContents(2);
 }
 
 void ServiceDiscovery::itemExpanded(QTreeWidgetItem *item) {

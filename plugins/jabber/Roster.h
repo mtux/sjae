@@ -59,6 +59,7 @@ public:
 		}
 		return false;
 	}
+
 	int childCount() const {return children.size();}
 	RosterTreeNode *child(int n) const {return children.at(n);}
 	RosterTreeNode *child(const QString &name) const {
@@ -72,6 +73,11 @@ public:
 		return 0;
 	}
 	int indexOfChild(RosterTreeNode *child) const {return children.indexOf(child);}
+
+	virtual void clear() {
+		qDeleteAll(children);
+		children.clear();
+	}
 protected:
 	QVector<RosterTreeNode *> children;
 };
