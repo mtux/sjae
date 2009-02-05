@@ -51,6 +51,7 @@ public slots:
 	}
 
 	void remove_contact(const QString &proto_name, const QString &account_id, const QString &id);
+	void remove_all_contacts(const QString &proto_name, const QString &account_id);
 	void set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label);
 	void set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group);
 	void set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs);
@@ -81,10 +82,11 @@ protected:
 	QMap<QString, QMap<QString, QString> > group_delim;
 	QMap<QString, SortedTreeWidgetItem *> id_item_map;
 
-	QMap<uint, ContactInfo> hash_map;
 	QString make_uid(const QString &proto_name, const QString &account_id, const QString &id);
 
 	QMutex list_mutex;
+
+	void get_all_contacts(QTreeWidgetItem *root, QList<QString> &cids, const QString &proto_name, const QString &account_id);
 protected slots:
 	void aboutToShowMenuSlot(QTreeWidgetItem *i);
 

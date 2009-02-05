@@ -27,6 +27,7 @@ public:
 public slots:
 	virtual void set_group_delimiter(const QString &proto_name, const QString &account_id, const QString &delim) = 0;
 	virtual void remove_contact(const QString &proto_name, const QString &account_id, const QString &id) = 0;
+	virtual void remove_all_contacts(const QString &proto_name, const QString &account_id) = 0;
 	virtual void set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) = 0;
 	virtual void set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group) = 0;
 	virtual void set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs) = 0;
