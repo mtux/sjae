@@ -113,6 +113,7 @@ const PluginInfo &jabber::get_plugin_info() {
 JabberProto::JabberProto(jabber *jabberPlugin): plugin(jabberPlugin) {
 	service_discovery = new ServiceDiscovery();
 	connect(this, SIGNAL(destroyed()), service_discovery, SLOT(deleteLater()));
+	connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &, const QString &)), this, SLOT(contextQueryDiscoInfo(const QString &, const QString &, const QString &)));
 	gateways = new GatewayList();
 	connect(this, SIGNAL(destroyed()), gateways, SLOT(deleteLater()));
 	connect(gateways, SIGNAL(gateway_register(const QString &, const QString &)), this, SLOT(gateway_register(const QString &, const QString &)));
@@ -161,6 +162,13 @@ void JabberProto::deleteContexts() {
 	ctx.clear();
 }
 
+void JabberProto::contextQueryDiscoInfo(const QString &account_id, const QString &entity_jid, const QString &node) {
+	if(ctx.contains(account_id))
+		ctx[account_id]->sendIqQueryDiscoInfo(entity_jid, node);
+	else
+		qDebug() << "contextQueryDiscoInfo: no such account id -" << account_id;
+}
+
 void JabberProto::connect_context(JabberCtx *context) {
 	connect(context, SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
 	connect(context, SIGNAL(contactStatusChanged(const QString &, const QString &, GlobalStatus)), this, SLOT(context_contact_status_change(const QString &, const QString &, GlobalStatus)));
@@ -170,10 +178,6 @@ void JabberProto::connect_context(JabberCtx *context) {
 	if(service_discovery) {
 		connect(context, SIGNAL(gotDiscoInfo(const DiscoInfo &)), service_discovery, SLOT(gotDiscoInfo(const DiscoInfo &)));
 		connect(context, SIGNAL(gotDiscoItems(const DiscoItems &)), service_discovery, SLOT(gotDiscoItems(const DiscoItems &)));
-
-		connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &)), context, SLOT(sendIqQueryDiscoInfo(const QString &, const QString &)));
-		connect(service_discovery, SIGNAL(queryItems(const QString &, const QString &)), context, SLOT(sendIqQueryDiscoItems(const QString &, const QString &)));
-
 	}
 	if(gateways) {
 		connect(context, SIGNAL(gotGateway(const QString &, const QString &)), gateways, SLOT(add_gateway(const QString &, const QString &)));

@@ -71,6 +71,8 @@ protected slots:
 	void context_contact_status_change(const QString &account_id, const QString &contact_id, GlobalStatus gs);
 	void context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg);
 
+	void contextQueryDiscoInfo(const QString &account_id, const QString &entity_jid, const QString &node = "");
+
 	void handleGranted(const QString &contact_id, const QString &account_id);
 	void handleDenied(const QString &contact_id, const QString &account_id);
 

@@ -1004,6 +1004,7 @@ void JabberCtx::sendIqQueryDiscoItems(const QString &entity_jid, const QString &
 
 void JabberCtx::parseDiscoInfoResult(const QString &entity) {
 	DiscoInfo discoInfo;
+	discoInfo.account_id = account_id;
 	discoInfo.entity = entity;
 	discoInfo.node = reader.attributes().value("node").toString();
 	
@@ -1037,6 +1038,7 @@ void JabberCtx::parseDiscoInfoResult(const QString &entity) {
 
 void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 	DiscoItems discoItems;
+	discoItems.account_id = account_id;
 	discoItems.entity = entity;
 	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
 		readMoreIfNecessary();
@@ -1048,8 +1050,8 @@ void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 
 			discoItems.items.append(item);
 
-			if(entity == acc_info.host)
-				sendIqQueryDiscoInfo(item.jid, item.node);
+			//if(entity == acc_info.host)
+			//	sendIqQueryDiscoInfo(item.jid, item.node);
 		}
 	}
 	log("Parsed disco items for entity " + discoItems.entity, LMT_NORMAL);

@@ -15,8 +15,7 @@ public:
 	~ServiceDiscovery();
 
 signals:
-	void queryInfo(const QString &entity_jid, const QString &node);
-	void queryItems(const QString &entity_jid, const QString &node);
+	void queryInfo(const QString &account_id, const QString &entity_jid, const QString &node);
 public slots:
 	void reset();
 	void gotDiscoInfo(const DiscoInfo &info);

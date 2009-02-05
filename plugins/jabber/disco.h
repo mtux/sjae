@@ -25,6 +25,7 @@ public:
 	QString entity, node;
 	QList<Identity> indentities;
 	QList<Feature> features;
+	QString account_id;
 };
 
 class Item {
@@ -41,6 +42,7 @@ public:
 
 	QString entity;
 	QList<Item> items;
+	QString account_id;
 };
 
 void registerDiscoMetaTypes();
