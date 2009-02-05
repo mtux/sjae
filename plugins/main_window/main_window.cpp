@@ -37,6 +37,7 @@ bool main_window::modules_loaded() {
 	s.hide_frame = settings.value("MainWin/HideFrame", false).toBool();
 	s.tool_window = settings.value("MainWin/ToolWindow", false).toBool();
 	s.trans_percent = settings.value("MainWin/TransPercent", 0).toInt();
+	s.round_corners = settings.value("MainWin/RoundCorners", false).toBool();
 
 	if(options_i) {
 		opt = new MainWinOptions(s);
@@ -48,6 +49,7 @@ bool main_window::modules_loaded() {
 	win->set_hide_frame(s.hide_frame);
 	win->set_tool_window(s.tool_window);
 	win->set_transparency(s.trans_percent);
+	win->set_round_corners(s.round_corners);
 	win->restoreHiddenState();
 
 	return true;
@@ -60,11 +62,13 @@ void main_window::options_applied() {
 	settings.setValue("MainWin/HideFrame", s.hide_frame);
 	settings.setValue("MainWin/ToolWindow", s.tool_window);
 	settings.setValue("MainWin/TransPercent", s.trans_percent);
+	settings.setValue("MainWin/RoundCorners", s.round_corners);
 
 	win->set_hide_toolbar(s.hide_toolbar);
 	win->set_hide_frame(s.hide_frame);
 	win->set_tool_window(s.tool_window);
 	win->set_transparency(s.trans_percent);
+	win->set_round_corners(s.round_corners);
 }
 
 bool main_window::pre_shutdown() {

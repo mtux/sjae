@@ -25,6 +25,7 @@ public:
 	void set_hide_frame(bool hide);
 	void set_tool_window(bool tool);
 	void set_transparency(int trans_percent);
+	void set_round_corners(bool round);
 
 public slots:
 	void toggleHidden();
@@ -34,6 +35,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent *e);
 	void mousePressEvent(QMouseEvent *e);
 	void mouseReleaseEvent(QMouseEvent *e);
+	void resizeEvent(QResizeEvent *e);
 
 	bool eventFilter(QObject *target, QEvent *e);
 
@@ -48,7 +50,7 @@ protected:
 
 	bool mousePressed;
 	QPoint cursorOffset;
-	bool hideFrame, toolWindow;
+	bool hideFrame, toolWindow, roundCorners;
 	void updateFlags();
 
 protected slots:

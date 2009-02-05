@@ -6,9 +6,28 @@
 #include <QToolButton>
 #include <QDebug>
 #include <QMenu>
+#include <QResizeEvent>
+#include <QRegion>
+
+QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
+	QRegion r(x, y, w, h);
+	// remove the corners
+	r -= QRegion(x, y, radius, radius);
+	r -= QRegion(x + w - radius, y, radius, radius);
+	r -= QRegion(x + w - radius, y + h - radius, radius, radius);
+	r -= QRegion(x, y + h - radius, radius, radius);
+	// add rounded ones
+	double daimeter = radius * 2;
+	r += QRegion(x, y, daimeter, daimeter, QRegion::Ellipse);
+	r += QRegion(x + w - daimeter, y, daimeter, daimeter, QRegion::Ellipse);
+	r += QRegion(x + w - daimeter, y + h - daimeter, daimeter, daimeter, QRegion::Ellipse);
+	r += QRegion(x, y + h - daimeter, daimeter, daimeter, QRegion::Ellipse);
+	
+	return r;
+}
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
-	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), hideFrame(false), toolWindow(false)
+	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), hideFrame(false), toolWindow(false), roundCorners(false)
 {
 	ui.setupUi(this);
 
@@ -78,6 +97,15 @@ void MainWin::set_tool_window(bool tool) {
 
 void MainWin::set_transparency(int trans_percent) {
 	setWindowOpacity(1 - (trans_percent / 100.0));
+}
+
+void MainWin::set_round_corners(bool round) {
+	roundCorners = round;
+	if(roundCorners && hideFrame) {
+		QRegion r = roundRectRegion(0, 0, width(), height(), 10);
+		setMask(r);
+	} else
+		clearMask();
 }
 
 void MainWin::quit() {
@@ -155,4 +183,11 @@ void MainWin::mouseMoveEvent(QMouseEvent *e) {
 void MainWin::mouseReleaseEvent(QMouseEvent *e) {
 	mousePressed = false;
 	QMainWindow::mouseReleaseEvent(e);
+}
+
+void MainWin::resizeEvent(QResizeEvent *e) {
+	if(roundCorners) {
+		QRegion r = roundRectRegion(0, 0, width(), height(), 10);
+		setMask(r);
+	}
 }
