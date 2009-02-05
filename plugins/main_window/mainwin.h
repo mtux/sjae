@@ -21,6 +21,7 @@ public:
 	void add_submenu(QMenu *menu);
 	void restoreHiddenState();
 
+	void set_hide_toolbar(bool hide);
 	void set_hide_frame(bool hide);
 	void set_tool_window(bool tool);
 	void set_transparency(int trans_percent);

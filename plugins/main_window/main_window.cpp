@@ -33,6 +33,7 @@ bool main_window::modules_loaded() {
 
 	QSettings settings;
 	MainWinOptions::Settings s;
+	s.hide_toolbar = settings.value("MainWin/HideToolbar", false).toBool();
 	s.hide_frame = settings.value("MainWin/HideFrame", false).toBool();
 	s.tool_window = settings.value("MainWin/ToolWindow", false).toBool();
 	s.trans_percent = settings.value("MainWin/TransPercent", 0).toInt();
@@ -43,6 +44,7 @@ bool main_window::modules_loaded() {
 		options_i->add_page("User Interface/Main Window", opt);
 	}
 
+	win->set_hide_toolbar(s.hide_toolbar);
 	win->set_hide_frame(s.hide_frame);
 	win->set_tool_window(s.tool_window);
 	win->set_transparency(s.trans_percent);
@@ -54,10 +56,12 @@ bool main_window::modules_loaded() {
 void main_window::options_applied() {
 	QSettings settings;
 	MainWinOptions::Settings s = opt->get_settings();
+	settings.setValue("MainWin/HideToolbar", s.hide_toolbar);
 	settings.setValue("MainWin/HideFrame", s.hide_frame);
 	settings.setValue("MainWin/ToolWindow", s.tool_window);
 	settings.setValue("MainWin/TransPercent", s.trans_percent);
 
+	win->set_hide_toolbar(s.hide_toolbar);
 	win->set_hide_frame(s.hide_frame);
 	win->set_tool_window(s.tool_window);
 	win->set_transparency(s.trans_percent);

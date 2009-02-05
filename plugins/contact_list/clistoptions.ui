@@ -20,11 +20,37 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" >
    <item>
+    <spacer name="verticalSpacer_2" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <widget class="QCheckBox" name="chkHideOffline" >
      <property name="text" >
       <string>Hide offline contacts</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
@@ -34,6 +60,7 @@
    <class>OptionsPageI</class>
    <extends>QWidget</extends>
    <header>options_i.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
