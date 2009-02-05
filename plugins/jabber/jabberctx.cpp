@@ -62,6 +62,9 @@ JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObj
 		connect(clist_i, SIGNAL(aboutToShowContactMenu(const QString &, const QString &, const QString &)), this, SLOT(aboutToShowContactMenu(const QString &, const QString &, const QString &)));
 		connect(clist_i, SIGNAL(aboutToShowGroupMenu(const QString &, const QString &, const QString &)), this, SLOT(aboutToShowGroupMenu(const QString &, const QString &, const QString &)));
 	}
+
+	keepAliveTimer.setInterval(30000);
+	connect(&keepAliveTimer, SIGNAL(timeout()), this, SLOT(sendKeepAlive()));
 }
 
 void JabberCtx::setAccountInfo(const AccountInfo &info) {
@@ -182,6 +185,7 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 	sstate = newState;
 	switch(newState) {
 		case SSNONE:
+			keepAliveTimer.stop();
 			setStatus(ST_OFFLINE);
 			showMessage("Disconnected");
 			sslSocket.close();
@@ -217,15 +221,26 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			setStatus(connectStatus);
 			showMessage("Ok");
 			//newRosterItemAction->setEnabled(true);
+			keepAliveTimer.start();
 			break;
 		case SSTERMINATING:
+			keepAliveTimer.stop();
 			setStatus(ST_OFFLINE);
 			showMessage("Disconnecting...");
 			endStream();
 			break;
 	}
 }
+
+void JabberCtx::sendKeepAlive() {
+	if(sstate == SSOK)
+		sslSocket.write(" ", 1);
+}
+
 void JabberCtx::sendWriteBuffer() {
+	keepAliveTimer.stop();
+	keepAliveTimer.start();
+
 	sendBuffer.close();
 	sendBuffer.open(QIODevice::ReadOnly);
 	const QByteArray &b = sendBuffer.readAll();

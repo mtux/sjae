@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QBuffer>
 #include <QPointer>
+#include <QTimer>
 
 #include "Roster.h"
 #include <clist_i.h>
@@ -105,6 +106,8 @@ protected slots:
 	void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
 
 	void gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields);
+
+	void sendKeepAlive();
 protected:
 	AccountInfo acc_info;
 	bool useSSL;
@@ -129,6 +132,8 @@ protected:
 	QBuffer sendBuffer;
 	QXmlStreamWriter writer;
 	void sendWriteBuffer();
+
+	QTimer keepAliveTimer;
 
 	enum SessionState {SSNONE, SSSTARTTLS, SSSTARTSSL, SSINITIALIZING, SSAUTHORIZING, SSTERMINATING, SSLOGIN, SSOK};
 
