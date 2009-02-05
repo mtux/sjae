@@ -13,14 +13,10 @@ PluginInfo info = {
 	0x00000001
 };
 
-MessageWindow::MessageWindow(): next_msg_id(1)
-{
-
+MessageWindow::MessageWindow(): next_msg_id(1) {
 }
 
-MessageWindow::~MessageWindow()
-{
-
+MessageWindow::~MessageWindow() {
 }
 
 bool MessageWindow::load(CoreI *core) {
@@ -48,6 +44,20 @@ bool MessageWindow::modules_loaded() {
 }
 
 bool MessageWindow::pre_shutdown() {
+	QMapIterator<QString, QMap<QString, QMap<QString, SplitterWin *> > > i(windows);
+	while(i.hasNext()) {
+		i.next();
+		QMapIterator<QString, QMap<QString, SplitterWin *> > j(i.value());
+		while(j.hasNext()) {
+			j.next();
+			QMapIterator<QString, SplitterWin *> k(j.value());
+			while(k.hasNext()) {
+				k.next();
+				delete k.value();
+			}
+		}
+	}
+	windows.clear();
 	return true;
 }
 
