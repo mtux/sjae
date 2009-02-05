@@ -20,32 +20,31 @@ ServiceDiscovery::~ServiceDiscovery()
 }
 
 void ServiceDiscovery::reset() {
-	QStringList hosts;
+	QStringList hosts, ids;
 	while(ui.itemTree->topLevelItemCount()) {
 		QTreeWidgetItem *i = ui.itemTree->takeTopLevelItem(0);
 		hosts << i->text(0);
+		ids << i->text(3);
 		delete i;
 	}
 
-	ui.itemTree->clear();
-
-	foreach(QString host, hosts) {
-		emit queryInfo(host, "");
-	}
+	for(int i = 0; i < ids.size(); i++)
+		emit queryInfo(ids.at(i), hosts.at(i), "");
 }
 
 void ServiceDiscovery::gotDiscoInfo(const DiscoInfo &info) {
-	//qDebug() << "ServiceDiscovery window got info:" << info.entity;
-	QList<QTreeWidgetItem *> items = ui.itemTree->findItems(info.entity, Qt::MatchFixedString | Qt::MatchCaseSensitive | Qt::MatchRecursive);
+	qDebug() << "ServiceDiscovery window got info:" << info.entity;
+	QList<QTreeWidgetItem *> items = ui.itemTree->findItems(info.entity, Qt::MatchFixedString | Qt::MatchCaseSensitive | Qt::MatchRecursive, 1);
 	QTreeWidgetItem *parent = 0;
 	if(items.size()) parent = items.at(0);
 	else {
 		qDebug() << "found no parent with text=" + info.entity;
 		parent = new QTreeWidgetItem(ui.itemTree->invisibleRootItem());
+		parent->setText(0, info.entity);
+		parent->setText(1, info.entity);
+		parent->setText(2, info.node);
+		parent->setText(3, info.account_id);
 	}
-	parent->setText(0, info.entity);
-	parent->setText(1, info.entity);
-	parent->setText(2, info.node);
 	while(parent->childCount())
 		parent->removeChild(parent->child(0));
 
@@ -71,7 +70,7 @@ void ServiceDiscovery::gotDiscoInfo(const DiscoInfo &info) {
 
 void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 	//qDebug() << "ServiceDiscovery window got items:" << items.entity;
-	QList<QTreeWidgetItem *> parents = ui.itemTree->findItems(items.entity, Qt::MatchExactly);
+	QList<QTreeWidgetItem *> parents = ui.itemTree->findItems(items.entity, Qt::MatchExactly, 1);
 	if(!parents.size()) {
 		qDebug() << "Disco items: no such entity (" + items.entity + ")";
 		return;
@@ -79,7 +78,7 @@ void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 
 	QTreeWidgetItem *parent = parents.at(0);
 	foreach(Item item, items.items) {
-		QTreeWidgetItem *iitem = new QTreeWidgetItem(parent, QStringList() << (item.name.isEmpty() ? item.jid : item.name) << item.jid << item.node),
+		QTreeWidgetItem *iitem = new QTreeWidgetItem(parent, QStringList() << (item.name.isEmpty() ? item.jid : item.name) << item.jid << item.node << items.account_id),
 			*dummy = new QTreeWidgetItem(iitem, QStringList () << "Querying...");
 		iitem->setExpanded(false);
 		dummy->setFirstColumnSpanned(true);
@@ -89,7 +88,7 @@ void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 void ServiceDiscovery::itemExpanded(QTreeWidgetItem *item) {
 	if(!item->text(1).isEmpty()) {
 		if(item->childCount() == 1 && item->child(0)->text(0) == "Querying...")
-			emit queryInfo(item->text(1), item->text(2));
+			emit queryInfo(item->text(3), item->text(1), item->text(2));
 	}
 }
 
