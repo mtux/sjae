@@ -9,9 +9,11 @@ ContactTree::ContactTree(QWidget *parent)
 	ui.setupUi(this);
 	setColumnCount(1);
 
+	/*
 	QTreeWidgetItem *header = new QTreeWidgetItem();
 	setHeaderItem(header);
 	header->setHidden(true);
+	*/
 
 	setMouseTracking(true);
 }
