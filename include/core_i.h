@@ -29,7 +29,7 @@
 #include <QObject>
 #include <QStringList>
 #include <QPointer>
-#include <QCoreApplication>
+#include <QApplication>
 
 class PluginI;
 
@@ -37,9 +37,10 @@ class PluginI;
 * Interface to core functions.
 */
 class CoreI: public QObject {
+	Q_OBJECT
 
 public:
-	CoreI(QObject *parent = 0): QObject(parent) {}
+	CoreI(QApplication *parent = 0): QObject(parent) {}
 	virtual ~CoreI() {}
 
 	/// obtain an interface for a module - use the INAME_<module name> #define in the module's header file as the 'name' parameter
@@ -67,6 +68,14 @@ public:
 
 	// return version info
 	virtual Q_INVOKABLE QString version() = 0;
+
+	// set application style sheet and emit styleSheetSet
+	virtual Q_INVOKABLE void setStyleSheet(const QString &styleSheet) {
+		if(qApp) qApp->setStyleSheet(styleSheet);
+		emit styleSheetSet(styleSheet);
+	}
+signals:
+	void styleSheetSet(const QString &styleSheet);
 };
 
 Q_DECLARE_INTERFACE(CoreI, "au.com.sje.CoreI/1.0")

@@ -22,7 +22,7 @@
 #define TIME_GAIN		1
 
 
-Core::Core(QObject *parent): CoreI(parent) {
+Core::Core(QApplication *parent): CoreI(parent) {
 
 	if(parse_command_line())
 		load_plugins();
@@ -43,6 +43,8 @@ Core::Core(QObject *parent): CoreI(parent) {
 
 	if(decrypt(encrypt("test", "some silly key"), "some silly key") != "test")
 		qDebug() << "crypt broken";
+
+	if(parent) connect(parent, SIGNAL(aboutToQuit()), this, SLOT(unload_plugins()));
 }
 
 Core::~Core() {

@@ -76,13 +76,19 @@ bool MessageWindow::window_exists(const QString &proto_name, const QString &acco
 
 SplitterWin *MessageWindow::get_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
 	if(!window_exists(proto_name, account_id, contact_id)) {
-		SplitterWin *win = new SplitterWin(proto_name, account_id, contact_id);
+		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
+		AccountInfo ai = accounts_i->account_info(proto_name, account_id);
+
+		SplitterWin *win = new SplitterWin(proto_name, account_id, contact_id, clist_i->get_label(proto_name, account_id, contact_id), ai.nick);
 		windows[proto_name][account_id][contact_id] = win;
 
-		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
 		win->setWindowIcon(icons_i->get_account_status_icon(proto, account_id, proto->get_contact_status(account_id, contact_id)));
 
 		connect(win, SIGNAL(msgSend(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_send(const QString &, const QString &, const QString &, const QString &)));
+		connect(core_i, SIGNAL(styleSheetSet(const QString &)), win, SLOT(setLogStyleSheet(const QString &)));
+
+		win->setLogStyleSheet(qApp->styleSheet());
+
 		//win->setWindowIcon(i
 	}
 

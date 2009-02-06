@@ -85,6 +85,7 @@ bool OptionsWin::add_page(const QString &category, OptionsPageI *w) {
 		ui.treeWidget->setCurrentItem(i);
 	}
 	ui.treeWidget->resizeColumnToContents(0);
+	ui.treeWidget->sortByColumn(0, Qt::AscendingOrder);
 
 	return true;
 }
