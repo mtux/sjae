@@ -36,6 +36,7 @@ protected:
 	void mousePressEvent(QMouseEvent *e);
 	void mouseReleaseEvent(QMouseEvent *e);
 	void resizeEvent(QResizeEvent *e);
+	void paintEvent(QPaintEvent *e);
 
 	bool eventFilter(QObject *target, QEvent *e);
 

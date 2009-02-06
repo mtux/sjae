@@ -8,6 +8,8 @@
 #include <QMenu>
 #include <QResizeEvent>
 #include <QRegion>
+#include <QPaintEvent>
+#include <QTimer>
 
 QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	QRegion r(x, y, w, h);
@@ -127,6 +129,7 @@ void MainWin::toggleHidden() {
 	if(isHidden()) {
 		show();
 		activateWindow();
+		raise();
 	} else 
 		hide();
 }
@@ -190,4 +193,10 @@ void MainWin::resizeEvent(QResizeEvent *e) {
 		QRegion r = roundRectRegion(0, 0, width(), height(), 10);
 		setMask(r);
 	}
+}
+
+void MainWin::paintEvent(QPaintEvent *e) {
+	//qDebug() << "Widget rect" << rect();
+	//qDebug() << "Paint rect:" << e->rect();
+	QMainWindow::paintEvent(e);
 }
