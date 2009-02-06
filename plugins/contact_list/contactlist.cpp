@@ -54,7 +54,7 @@ bool ContactList::load(CoreI *core) {
 bool ContactList::modules_loaded() {
 	OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
 	if(options_i)
-		options_i->add_page("User Interface/Contact List", new CListOptions(this));
+		options_i->add_page("Appearance/Contact List", new CListOptions(this));
 
 	// test
 	//add_contact("test", "test", "test", "offline");
@@ -271,6 +271,15 @@ void ContactList::remove_all_contacts(const QString &proto_name, const QString &
 	update_hide_offline();
 }
 
+QString ContactList::get_label(const QString &proto_name, const QString &account_id, const QString &id) {
+	QMutexLocker locker(&list_mutex);
+
+	QString cid = make_uid(proto_name, account_id, id);
+	if(id_item_map.contains(cid))
+		return id_item_map[cid]->text(0);
+
+	return "Unknown";
+}
 
 void ContactList::set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) {
 	{
@@ -377,12 +386,13 @@ void ContactList::set_hide_offline(bool hide) {
 }
 
 void ContactList::aboutToShowMenuSlot(QTreeWidgetItem *i) {
-	QMutexLocker locker(&list_mutex);
-
+	list_mutex.lock();
 	if(i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
+		list_mutex.unlock();
 		emit aboutToShowContactMenu(ci.proto_name, ci.account_id, ci.id);
 	} else if(i->type() == TWIT_GROUP) {
+		list_mutex.unlock();
 		emit aboutToShowGroupMenu(i->text(1), i->text(2), get_full_gn(i));
 	}
 }
@@ -400,27 +410,33 @@ void ContactList::treeItemCollapsed(QTreeWidgetItem *i) {
 }
 
 void ContactList::treeItemClicked(QTreeWidgetItem *i, int col) {
-	QMutexLocker locker(&list_mutex);
+	list_mutex.lock();
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
+		list_mutex.unlock();
 		emit contact_clicked(ci.proto_name, ci.account_id, ci.id);
-	}
+	} else
+		list_mutex.unlock();
 }
 
 void ContactList::treeItemDoubleClicked(QTreeWidgetItem *i, int col) {
-	QMutexLocker locker(&list_mutex);
+	list_mutex.lock();
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
+		list_mutex.unlock();
 		emit contact_dbl_clicked(ci.proto_name, ci.account_id, ci.id);
-	}
+	} else
+		list_mutex.unlock();
 }
 
 void ContactList::treeShowTip(QTreeWidgetItem *i, const QPoint &pos) {
-	QMutexLocker locker(&list_mutex);
+	list_mutex.lock();
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
+		list_mutex.unlock();
 		emit show_tip(ci.proto_name, ci.account_id, ci.id, pos);
-	}
+	} else
+		list_mutex.unlock();
 }
 
 /////////////////////////////

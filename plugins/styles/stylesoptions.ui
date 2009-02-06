@@ -1,0 +1,35 @@
+<ui version="4.0" >
+ <class>StylesOptionsClass</class>
+ <widget class="OptionsPageI" name="StylesOptionsClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>StylesOptions</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <widget class="QComboBox" name="cmbFiles" />
+   </item>
+   <item>
+    <widget class="QTextEdit" name="edStyleSheet" />
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <customwidgets>
+  <customwidget>
+   <class>OptionsPageI</class>
+   <extends>QWidget</extends>
+   <header>options_i.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

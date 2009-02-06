@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>Resources/default.ss</file>
+    </qresource>
+</RCC>

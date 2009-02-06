@@ -24,6 +24,8 @@ public:
 	virtual QAction *add_contact_action(const QString &proto_name, const QString &account_id, const QString &label, const QString &icon = "") = 0;
 
 	virtual bool get_hide_offline() {return hide_offline;}
+	virtual QString get_label(const QString &proto_name, const QString &account_id, const QString &id) = 0;
+
 public slots:
 	virtual void set_group_delimiter(const QString &proto_name, const QString &account_id, const QString &delim) = 0;
 	virtual void remove_contact(const QString &proto_name, const QString &account_id, const QString &id) = 0;

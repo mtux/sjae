@@ -12,7 +12,9 @@ int main(int argc, char *argv[])
 	QApplication::setQuitOnLastWindowClosed(false);
 
 	core = new Core(&a);
-	QObject::connect(&a, SIGNAL(aboutToQuit()), core, SLOT(unload_plugins()));
 
-	return a.exec();
+	int ret = a.exec();
+
+	delete core;
+	return ret;
 }

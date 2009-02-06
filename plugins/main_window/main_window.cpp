@@ -42,7 +42,7 @@ bool main_window::modules_loaded() {
 	if(options_i) {
 		opt = new MainWinOptions(s);
 		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
-		options_i->add_page("User Interface/Main Window", opt);
+		options_i->add_page("Appearance/Main Window", opt);
 	}
 
 	win->set_hide_toolbar(s.hide_toolbar);

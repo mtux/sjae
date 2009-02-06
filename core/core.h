@@ -20,8 +20,14 @@ protected:
 	QString plugin_dir, config_dir;
 	double time_offset;
 
+	void show_help();
+	bool parse_command_line();
+
+	bool load_plugins();
+	bool unload_plugins();
+
 public:
-	Core(QObject *parent = 0);
+	Core(QApplication *parent = 0);
 	virtual ~Core();
 	
 	Q_INVOKABLE PluginI *get_interface(const QString &name);
@@ -38,14 +44,6 @@ public:
 	Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "");
 
 	Q_INVOKABLE QString version() {return "Alpha 7";}
-
-public:
-	void show_help();
-	bool parse_command_line();
-	bool load_plugins();
-
-public slots:
-	bool unload_plugins();
 };
 
 

@@ -45,6 +45,8 @@ public:
 	QTreeWidgetItem *add_contact(const QString &proto_name, const QString &account_id, const QString &id, const QString &label, GlobalStatus gs, const QString &group = "");
 	QAction *add_contact_action(const QString &proto_name, const QString &account_id, const QString &label, const QString &icon = "");
 
+	QString get_label(const QString &proto_name, const QString &account_id, const QString &id);
+
 public slots:
 	void set_group_delimiter(const QString &proto_name, const QString &account_id, const QString &delim) {
 		group_delim[proto_name][account_id] = delim;
