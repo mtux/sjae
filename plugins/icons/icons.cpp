@@ -111,16 +111,18 @@ void icons::setup_proto_icons(ProtocolI *proto) {
 	add_alias("Proto/" + proto->name(), "generic", "Protocols/" + proto->name());
 }
 
-void icons::setup_account_status_icons(ProtocolI *proto, const QString &account_id) {
-	QList<GlobalStatus> statuses = proto->statuses();
+void icons::setup_account_status_icons(Account *account) {
+	QList<GlobalStatus> statuses = account->proto->statuses();
 	foreach(GlobalStatus status, statuses) {
-		add_alias("Proto/" + proto->name() + "/Account/" + account_id + "/" + status_name[status], "Proto/" + proto->name() + "/" + status_name[status], "Protocols/" + proto->name() + "/Accounts/" + account_id + "/" + hr_status_name[status]);
+		add_alias("Proto/" + account->proto->name() + "/Account/" + account->account_id + "/" + status_name[status], 
+			"Proto/" +account->proto->name() + "/" + status_name[status], 
+			"Protocols/" + account->proto->name() + "/Accounts/" + account->account_id + "/" + hr_status_name[status]);
 	}
 }
 
-QPixmap icons::get_account_status_icon(ProtocolI *proto, const QString &account_id, GlobalStatus gs) {
+QPixmap icons::get_account_status_icon(Account *account, GlobalStatus gs) {
 	//if(!proto) return get_icon(status_name[gs]);
-	return get_icon("Proto/" + proto->name() + "/Account/" + account_id + "/" + status_name[proto->closest_status_to(gs)]);
+	return get_icon("Proto/" + account->proto->name() + "/Account/" + account->account_id + "/" + status_name[account->proto->closest_status_to(gs)]);
 }
 
 Q_EXPORT_PLUGIN2(iconsPlugin, icons)

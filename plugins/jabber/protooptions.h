@@ -10,18 +10,18 @@ class ProtoOptions : public AccountExtra
 	Q_OBJECT
 
 public:
-	ProtoOptions(QWidget *parent = 0);
+	ProtoOptions(ProtocolI *proto, QWidget *parent = 0);
 	~ProtoOptions();
 
-	void setContext(JabberCtx *c);
-	void set_account_info(const AccountInfo &info);
+	void set_account_info(Account *acc);
 	bool apply();
 	void reset();
 
 private:
 	Ui::ProtoOptionsClass ui;
-	JabberCtx *ctx;
-
+	ProtocolI *proto;
+	Account *account;
+	
 private slots:
 	void on_edConHost_textChanged(const QString &);
 	void on_chkSSL_stateChanged(int);

@@ -21,9 +21,9 @@ public:
 	bool add_alias(const QString &alias, const QString &icon_id, const QString &label);
 
 	void setup_proto_icons(ProtocolI *proto);
-	void setup_account_status_icons(ProtocolI *proto, const QString &account_id);
+	void setup_account_status_icons(Account *account);
 	
-	QPixmap get_account_status_icon(ProtocolI *proto, const QString &account_id, GlobalStatus gs);
+	QPixmap get_account_status_icon(Account *account, GlobalStatus gs);
 
 protected:
 	CoreI *core_i;

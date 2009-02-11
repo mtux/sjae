@@ -6,7 +6,7 @@
 #include <QPointer>
 #include <QMap>
 
-class StartupStatus: public PluginI
+class StartupStatus: public PluginI, public EventsI::EventListener
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
@@ -20,16 +20,18 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
+	bool event_fired(EventsI::Event &e);
+
 protected slots:
-	void local_status_change(const QString &proto_name, const QString &account_id, GlobalStatus gs);
-	void account_removed(const QString &proto_name, const QString &id);
-	void account_added(const QString &proto_name, const QString &id);
+	void account_removed(Account *account);
+	void account_changed(Account *account);
 
 protected:
 	CoreI *core_i;
 	QPointer<AccountsI> accounts_i;
+	QPointer<EventsI> events_i;
 
-	QMap<QString, QMap<QString, GlobalStatus> > statuses;
+	QMap<Account *, GlobalStatus> statuses;
 };
 
 #endif // STARTUPSTATUS_H

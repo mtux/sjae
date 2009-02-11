@@ -19,9 +19,9 @@
 
 #include <clist_i.h>
 
-JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObject *parent)
-	: QObject(parent), account_id(id), acc_info(ai), useSSL(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
-		sessionRequired(false), tlsAvailable(false), tlsRequired(false), currentStatus(ST_OFFLINE),
+JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
+	: QObject(parent), account(acc), useSSL(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
+		sessionRequired(false), tlsAvailable(false), tlsRequired(false),
 		priority(DEFAULT_PRIORITY)
 {
 	sendBuffer.open(QIODevice::WriteOnly);
@@ -38,37 +38,39 @@ JabberCtx::JabberCtx(const QString &id, const AccountInfo &ai, CoreI *core, QObj
 
 	clist_i = (CListI *)core_i->get_interface(INAME_CLIST);
 	if(clist_i) {
-		//newRosterItemAction = clist_i->add_contact_action("Jabber", account_id, "Add...");
-		//connect(newRosterItemAction, SIGNAL(triggered()), this, SLOT(addRosterItem()));
 
-		editRosterItemAction = clist_i->add_contact_action("Jabber", account_id, "Edit...");
+		editRosterItemAction = clist_i->add_contact_action(account, "Edit...");
 		connect(editRosterItemAction, SIGNAL(triggered()), this, SLOT(editRosterItem()));
 
-		removeRosterItemAction = clist_i->add_contact_action("Jabber", account_id, "Remove");
+		removeRosterItemAction = clist_i->add_contact_action(account, "Remove");
 		connect(removeRosterItemAction, SIGNAL(triggered()), this, SLOT(removeRosterItem()));
 
 
-		grantAction = clist_i->add_contact_action("Jabber", account_id, "Grant");
+		grantAction = clist_i->add_contact_action(account, "Grant");
 		connect(grantAction, SIGNAL(triggered()), this, SLOT(grantSubscription()));
 
-		revokeAction = clist_i->add_contact_action("Jabber", account_id, "Revoke");
+		revokeAction = clist_i->add_contact_action(account, "Revoke");
 		connect(revokeAction, SIGNAL(triggered()), this, SLOT(revokeSubscription()));
 
-		requestAction = clist_i->add_contact_action("Jabber", account_id, "Request");
+		requestAction = clist_i->add_contact_action(account, "Request");
 		connect(requestAction, SIGNAL(triggered()), this, SLOT(requestSubscription()));
 
 		//	void aboutToShowMenu(const QString &proto_name, const QString &account_id, const QString &id);
 
-		connect(clist_i, SIGNAL(aboutToShowContactMenu(const QString &, const QString &, const QString &)), this, SLOT(aboutToShowContactMenu(const QString &, const QString &, const QString &)));
-		connect(clist_i, SIGNAL(aboutToShowGroupMenu(const QString &, const QString &, const QString &)), this, SLOT(aboutToShowGroupMenu(const QString &, const QString &, const QString &)));
+		//connect(clist_i, SIGNAL(aboutToShowContactMenu(Contact &)), this, SLOT(aboutToShowContactMenu(const QString &, const QString &, const QString &)));
+		//connect(clist_i, SIGNAL(aboutToShowGroupMenu(const QString &, const QString &, const QString &)), this, SLOT(aboutToShowGroupMenu(const QString &, const QString &, const QString &)));
 	}
+
+	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
+	events_i->add_event_listener(this, UUID_SHOW_CONTACT_MENU);
+	events_i->add_event_listener(this, UUID_SHOW_GROUP_MENU);
 
 	keepAliveTimer.setInterval(30000);
 	connect(&keepAliveTimer, SIGNAL(timeout()), this, SLOT(sendKeepAlive()));
 }
 
-void JabberCtx::setAccountInfo(const AccountInfo &info) {
-	acc_info = info;
+void JabberCtx::setAccountInfo(Account *acc) {
+	account = acc;
 }
 
 JabberCtx::~JabberCtx()
@@ -82,64 +84,56 @@ JabberCtx::~JabberCtx()
 	disconnect(&sslSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 	disconnect(&sslSocket, SIGNAL(sslErrors(const QList<QSslError> &)), this, SLOT(sslErrors(const QList<QSslError> &)));
 	disconnect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
+
+	events_i->remove_event_listener(this, UUID_SHOW_CONTACT_MENU);
+	events_i->remove_event_listener(this, UUID_SHOW_GROUP_MENU);
 }
 
-AccountInfo JabberCtx::get_account_info() {
-	return acc_info;
+Account *JabberCtx::get_account_info() {
+	return account;
 }
 
-void JabberCtx::aboutToShowContactMenu(const QString &proto_name, const QString &aid, const QString &id) {
-	bool vis = (proto_name == "Jabber" && aid == account_id);
-	//newRosterItemAction->setVisible(vis);
+bool JabberCtx::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_SHOW_CONTACT_MENU) {
+		ShowContactMenu &sm = static_cast<ShowContactMenu &>(e);
 
-	removeRosterItemAction->setVisible(vis);
-	editRosterItemAction->setVisible(vis);
+		bool vis = (sm.contact->account == account);
+		//newRosterItemAction->setVisible(vis);
 
-	if(vis) {
-		RosterItem *item = roster.get_item(id);
-		SubscriptionType sub = item->getSubscription();
+		removeRosterItemAction->setVisible(vis);
+		editRosterItemAction->setVisible(vis);
 
-		bool to = (sub == ST_BOTH || sub == ST_TO),
-			from = (sub == ST_BOTH || sub == ST_FROM);
+		if(vis) {
+			RosterItem *item = roster.get_item(sm.contact->contact_id);
+			SubscriptionType sub = item->getSubscription();
 
-		grantAction->setVisible(vis && !to);
-		revokeAction->setVisible(vis && to);
+			bool to = (sub == ST_BOTH || sub == ST_TO),
+				from = (sub == ST_BOTH || sub == ST_FROM);
 
-		requestAction->setVisible(vis && !from);
+			grantAction->setVisible(vis && !to);
+			revokeAction->setVisible(vis && to);
 
-		mid = id;
-	} else {
+			requestAction->setVisible(vis && !from);
+
+			mid = sm.contact->contact_id;
+		} else {
+			grantAction->setVisible(false);
+			revokeAction->setVisible(false);
+
+			requestAction->setVisible(false);
+		}
+	} else if(e.uuid == UUID_SHOW_GROUP_MENU) {
+		removeRosterItemAction->setVisible(false);
+		editRosterItemAction->setVisible(false);
 		grantAction->setVisible(false);
 		revokeAction->setVisible(false);
-
 		requestAction->setVisible(false);
 	}
-}
-
-void JabberCtx::aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn) {
-	removeRosterItemAction->setVisible(false);
-	editRosterItemAction->setVisible(false);
-	grantAction->setVisible(false);
-	revokeAction->setVisible(false);
-	requestAction->setVisible(false);
-}
-
-QString JabberCtx::to_clist_id(const QString &jid) {
-	return "Jabber::" + account_id + "::" + jid;
-}
-
-bool JabberCtx::is_ctx_id(const QString &clist_id) {
-	QStringList sl = clist_id.split("::");
-	return sl.at(0) == "Jabber" && sl.at(1) == account_id;
-}
-
-QString JabberCtx::to_jid(const QString &clist_id) {
-	QStringList sl = clist_id.split("::");
-	return sl.at(2);
+	return true;
 }
 
 void JabberCtx::showMessage(const QString &message) {
-	qDebug() << "Jabber message:" << message;
+	qDebug() << ("Jabber message (" + account->account_id + "):") << message;
 	//QMessageBox::information(0, tr("Jabber Message"), message);
 }
 
@@ -167,24 +161,28 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 }
 
 void JabberCtx::requestStatus(GlobalStatus gs) {
-	if(gs == currentStatus) return;
+	account->desiredStatus = gs;
+
+	if(account->desiredStatus == account->status) return;
 
 	if(sstate == SSOK) {
-		if(gs == ST_OFFLINE)
+		if(account->desiredStatus == ST_OFFLINE)
 			connectToServer(false);
 		else
 			setStatus(gs);
 	} else if(sstate == SSNONE && gs != ST_OFFLINE) {
-		connectStatus = gs;
 		connectToServer(true);
+	} else if(sstate != SSOK && gs == ST_OFFLINE) {
+		changeSessionState(SSNONE);
 	} else {
-		qWarning() << "Jabber account" << account_id << "status change request while in invalid state - ignored";
+		qWarning() << "Jabber account" << account->account_id << "status change request while in invalid state - ignored";
 	}
 }
 
 void JabberCtx::setStatus(GlobalStatus gs) {
-	currentStatus = gs;
-	emit statusChanged(account_id, gs);
+	account->status = gs;
+	AccountChanged ac(account, account->proto);
+	events_i->fire_event(ac);
 	if(sstate == SSOK)
 		sendPresence();
 }
@@ -199,18 +197,18 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			sslSocket.close();
 			//newRosterItemAction->setEnabled(false);
 			//setAllOffline();
-			clist_i->remove_all_contacts("Jabber", account_id);
+			clist_i->remove_all_contacts(account);
 			roster.clear();
 			break;
 		case SSSTARTSSL:
 			setStatus(ST_CONNECTING);
 			showMessage("Connecting (encrypted)...");
-			sslSocket.connectToHostEncrypted(connectionHost.isEmpty() ? acc_info.host : connectionHost, acc_info.port);
+			sslSocket.connectToHostEncrypted(connectionHost.isEmpty() ? account->host : connectionHost, account->port);
 			break;
 		case SSSTARTTLS:
 			setStatus(ST_CONNECTING);
 			showMessage("Connecting...");
-			sslSocket.connectToHost(connectionHost.isEmpty() ? acc_info.host : connectionHost, acc_info.port);
+			sslSocket.connectToHost(connectionHost.isEmpty() ? account->host : connectionHost, account->port);
 			break;
 		case SSINITIALIZING:
 			setStatus(ST_CONNECTING);
@@ -228,7 +226,7 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			startStream();
 			break;
 		case SSOK:
-			setStatus(connectStatus);
+			setStatus(account->desiredStatus);
 			showMessage("Ok");
 			//newRosterItemAction->setEnabled(true);
 			keepAliveTimer.start();
@@ -372,7 +370,7 @@ void JabberCtx::socketEncrypted() {
 
 void JabberCtx::connectToServer(bool con) {
 	if(con && !sslSocket.isOpen()) {
-		log("Connecting to " + (connectionHost.isEmpty() ? acc_info.host : connectionHost) + "...");
+		log("Connecting to " + (connectionHost.isEmpty() ? account->host : connectionHost) + "...");
 		if(useSSL) changeSessionState(SSSTARTSSL);
 		else changeSessionState(SSSTARTTLS);
 	} else if(!con && sslSocket.isOpen()) {
@@ -391,7 +389,7 @@ void JabberCtx::startStream() {
 
 	writer.writeAttribute("xml:lang", "en" );
 	writer.writeAttribute("version", "1.0" );
-	writer.writeAttribute("to", acc_info.host);
+	writer.writeAttribute("to", account->host);
 	writer.writeCharacters("");// to append '>' to the start element and leave it open
 	sendWriteBuffer();
 }
@@ -471,7 +469,7 @@ void JabberCtx::parseChallenge() {
 	QRegExp rre = QRegExp("realm=\\\"[^\\\"]*"), nre = QRegExp("nonce=\\\"[^\\\"]*");
 	int rrei = rre.indexIn(ch), nrei = nre.indexIn(ch);
 	if(nrei != -1) {
-		QString realm = (rrei == -1 ? acc_info.host : ch.mid(rrei + 7, rre.matchedLength() - 7)),
+		QString realm = (rrei == -1 ? account->host : ch.mid(rrei + 7, rre.matchedLength() - 7)),
 			nonce = ch.mid(nrei + 7, nre.matchedLength() - 7);
 
 		qsrand(QDateTime::currentDateTime().toTime_t());
@@ -483,7 +481,7 @@ void JabberCtx::parseChallenge() {
 		QString cnonce = QString(hash.result().toHex()).rightJustified(32, '0');
 
 		hash.reset();
-		hash.addData((acc_info.username + ":" + realm + ":" + acc_info.password).toUtf8());
+		hash.addData((account->username + ":" + realm + ":" + account->password).toUtf8());
 		QByteArray temp = hash.result();
 
 		hash.reset();
@@ -491,19 +489,19 @@ void JabberCtx::parseChallenge() {
 		temp = hash.result();
 
 		hash.reset();
-		hash.addData(("AUTHENTICATE:xmpp/" + acc_info.host).toUtf8());
+		hash.addData(("AUTHENTICATE:xmpp/" + account->host).toUtf8());
 		QByteArray temp2 = hash.result();
 
 		hash.reset();
 		hash.addData((temp.toHex() + ":" + nonce + ":00000001:" + cnonce + ":auth:" + temp2.toHex()).toUtf8());
 
 		QString res = QString("username=\"%1\",realm=\"%2\",nonce=\"%3\",cnonce=\"%4\",nc=%5,qop=auth,digest-uri=\"xmpp/%6\",charset=utf-8,response=%7")
-			.arg(acc_info.username)
+			.arg(account->username)
 			.arg(realm)
 			.arg(nonce)
 			.arg(cnonce)
 			.arg("00000001")
-			.arg(acc_info.host)
+			.arg(account->host)
 			.arg(QString(hash.result().toHex()).rightJustified(32, '0'));
 
 
@@ -555,7 +553,7 @@ void JabberCtx::parseIq() {
 				}
 			}
 		} else if(reader.attributes().value("id") == "session") {
-			sendIqQueryDiscoInfo(acc_info.host);
+			sendIqQueryDiscoInfo(account->host);
 			getGroupDelimiter();
 		} else if(reader.attributes().value("id") == "group_delimiter_get") {
 			readMoreIfNecessary();
@@ -640,11 +638,11 @@ void JabberCtx::authenticate() {
 		writer.writeAttribute("mechanism", "PLAIN");
 
 		QByteArray resp;
-		resp.append(acc_info.username + "@" + acc_info.host);
+		resp.append(account->username + "@" + account->host);
 		resp.append('\0');
-		resp.append(acc_info.username);
+		resp.append(account->username);
 		resp.append('\0');
-		resp.append(acc_info.password);
+		resp.append(account->password);
 		writer.writeCharacters(resp.toBase64());
 		writer.writeEndElement();
 		sendWriteBuffer();
@@ -717,7 +715,7 @@ void JabberCtx::sendPresence(const QString &to) {
 	QString type, show;
 	if(sstate == SSNONE) return;
 
-	switch(currentStatus) {
+	switch(account->status) {
 		case ST_OFFLINE: type = "unavailable"; break;
 		case ST_INVISIBLE: type = "invisible"; break;
 		case ST_ONLINE: break;
@@ -751,7 +749,7 @@ void JabberCtx::parseGroupDelimiter() {
 		QString groupDelim = reader.text().toString();
 		if(!groupDelim.isEmpty()) {
 			RosterGroup::setDelimiter(groupDelim);
-			clist_i->set_group_delimiter("Jabber", account_id, groupDelim);
+			clist_i->set_group_delimiter(account, groupDelim);
 			log("Delim is " + groupDelim);
 		}
 	}
@@ -775,11 +773,12 @@ void JabberCtx::setDetails(RosterItem *item, const QString &group, const QString
 	if(current_group != new_group) {
 		if(current_group) current_group->removeChild(item);
 		if(new_group) new_group->addChild(item);
-		clist_i->set_group("Jabber", account_id, item->getJID(), group);
 	}
 	item->setName(name);
-	clist_i->set_label("Jabber", account_id, item->getJID(), name);
 	item->setSubscription(sub);
+
+	ContactChanged cc(item->getContact(), this);
+	events_i->fire_event(cc);
 }
 
 void JabberCtx::addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub) {
@@ -807,10 +806,11 @@ void JabberCtx::addItem(const QString &jid, const QString &name, const QString &
 		} else 
 			gr = &roster;
 	}
-	RosterItem *item = new RosterItem(jid, name, sub, gr);
+	RosterItem *item = new RosterItem(account, jid, name, sub, gr);
 	gr->addChild(item);
 
-	clist_i->add_contact("Jabber", account_id, jid, name, ST_OFFLINE, group);
+	ContactChanged cc(item->getContact(), this);
+	events_i->fire_event(cc);
 }
 
 
@@ -831,7 +831,10 @@ void JabberCtx::parseRosterItem() {
 
 	RosterItem *item = roster.get_item(jid);
 	if(subscription == "remove" && item) {
-		clist_i->remove_contact("Jabber", account_id, jid);
+		ContactChanged cc(item->getContact(), this);
+		cc.removed = true;
+		events_i->fire_event(cc);
+
 		item->getGroup()->removeChild(item);
 		delete item;
 	} else if(item) {
@@ -870,6 +873,10 @@ GlobalStatus JabberCtx::getContactStatus(const QString &contact_id) {
 	return ST_OFFLINE;
 }
 
+void JabberCtx::setConnectionHost(const QString &host) {
+	connectionHost = host;
+}
+
 bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, const QString &msg, int prio) {
 	//log("setting presence for resource: " + full_jid);
 	RosterItem *item = roster.get_item(Roster::full_jid2jid(full_jid));
@@ -881,12 +888,19 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 	r->setPresence(presence);
 	r->setPresenceMessage(msg);
 	r->updateLastActivity();
+	r->setPriority(prio);
 
 	// application contact status is based on 'active' resource
 	r = item->get_active_resource();
+	item->getContact()->status = presenceToStatus(r->getPresence());
+	if(r->getPresenceMessage().isEmpty())
+		item->getContact()->properties.remove("status_msg");
+	else
+		item->getContact()->properties["status_msg"] = r->getPresenceMessage();
 
-	emit contactStatusChanged(account_id, Roster::full_jid2jid(full_jid), presenceToStatus(r->getPresence()));
-	clist_i->set_status("Jabber", account_id, Roster::full_jid2jid(full_jid), presenceToStatus(r->getPresence()));
+	ContactChanged cc(item->getContact(), this);
+	events_i->fire_event(cc);
+
 	return true;
 }
 
@@ -902,7 +916,7 @@ void JabberCtx::parsePresence() {
 	presenceType = reader.attributes().value("type").toString();
 
 	if(presenceType == "subscribe") {
-		emit grantRequested(jid, account_id);
+		emit grantRequested(jid, account->account_id);
 	} else if(presenceType == "subscribed") {
 		//sendPresence(jid);
 	} else if(presenceType == "unsubscribe") {
@@ -924,8 +938,10 @@ void JabberCtx::parsePresence() {
 		}
 	}
 
-	if(presenceType.isEmpty() || presenceType == "unavailable") setPresence(jid, Resource::string2pres(presence), msg, prio);
+	if(presenceType.isEmpty() || presenceType == "unavailable") 
+		setPresence(jid, Resource::string2pres(presence), msg, prio);
 
+	/*
 	if(!nick.isEmpty()) {
 		writer.writeStartElement("iq");
 		writer.writeAttribute("type", "set");
@@ -940,6 +956,7 @@ void JabberCtx::parsePresence() {
 		writer.writeEndElement();
 		sendWriteBuffer();
 	}
+	*/
 }
 
 void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
@@ -953,7 +970,6 @@ void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
 	writer.writeEndElement();
 	sendWriteBuffer();
 	log("Sent message to " + cid);
-	emit msgAck(id);
 }
 
 void JabberCtx::parseMessageBody(const QString &source) {
@@ -967,7 +983,8 @@ void JabberCtx::parseMessageBody(const QString &source) {
 		RosterItem *i = r->getItem();
 		QString id = i->getJID();
 
-		emit msgRecv(account_id, id, body);
+		MessageRecv mr(body, 0, i->getContact(), this);
+		events_i->fire_event(mr);
 	} else {
 		log("message from unknown resource ignored: " + source);
 	}
@@ -1014,7 +1031,7 @@ void JabberCtx::sendIqQueryDiscoItems(const QString &entity_jid, const QString &
 
 void JabberCtx::parseDiscoInfoResult(const QString &entity) {
 	DiscoInfo discoInfo;
-	discoInfo.account_id = account_id;
+	discoInfo.account_id = account->account_id;
 	discoInfo.entity = entity;
 	discoInfo.node = reader.attributes().value("node").toString();
 	
@@ -1029,7 +1046,7 @@ void JabberCtx::parseDiscoInfoResult(const QString &entity) {
 			discoInfo.indentities.append(ident);
 
 			if(ident.category == "gateway") {
-				emit gotGateway(account_id, entity);
+				emit gotGateway(account->account_id, entity);
 			}
 
 		} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "feature") {
@@ -1048,7 +1065,7 @@ void JabberCtx::parseDiscoInfoResult(const QString &entity) {
 
 void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 	DiscoItems discoItems;
-	discoItems.account_id = account_id;
+	discoItems.account_id = account->account_id;
 	discoItems.entity = entity;
 	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
 		readMoreIfNecessary();
@@ -1061,7 +1078,7 @@ void JabberCtx::parseDiscoItemsResult(const QString &entity) {
 			discoItems.items.append(item);
 
 			// get info about root host items - necessary to find gateways
-			if(entity == acc_info.host)
+			if(entity == account->host)
 				sendIqQueryDiscoInfo(item.jid, item.node);
 		}
 	}
@@ -1172,7 +1189,7 @@ void JabberCtx::addContact(const QString &jid) {
 		sendWriteBuffer();
 
 	} else
-		qWarning() << "JID" << jid << "already exists for account" << account_id;
+		qWarning() << "JID" << jid << "already exists for account" << account->account_id;
 
 	sendRequestSubscription(jid);
 }
@@ -1181,8 +1198,8 @@ bool JabberCtx::directSend(const QString &text) {
 	QString t = text;
 	if(t.indexOf("^^") != -1) {
 		// aliases
-		t.replace("^^JID", acc_info.username + "@" + acc_info.host);
-		t.replace("^^SERVER", acc_info.host);
+		t.replace("^^JID", account->username + "@" + account->host);
+		t.replace("^^SERVER", account->host);
 		t.replace("^^FJID", jid);
 	}
 	if(sstate == SSOK) {
@@ -1247,9 +1264,7 @@ void JabberCtx::editRosterItem() {
 					writer.writeStartElement("item");
 					writer.writeAttribute("jid", d.getJID());
 					writer.writeAttribute("name", d.getName());
-					if(!d.getGroup().isEmpty()) {
-						writer.writeTextElement("group", d.getGroup());
-					}
+					writer.writeTextElement("group", d.getGroup());
 					writer.writeEndElement();
 				writer.writeEndElement();
 			writer.writeEndElement();
@@ -1332,13 +1347,6 @@ void JabberCtx::requestSubscription() {
 void JabberCtx::setPriority(int p) {
 	priority = p;
 	sendPresence();
-}
-
-void JabberCtx::setAllOffline() {
-	QStringList all_ids = roster.all_items();
-	foreach(QString id, all_ids) {
-		clist_i->set_status("Jabber", account_id, id, ST_OFFLINE);
-	}
 }
 
 bool JabberCtx::gatewayRegister(const QString &gateway) {

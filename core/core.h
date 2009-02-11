@@ -20,6 +20,7 @@ protected:
 	QString plugin_dir, config_dir;
 	double time_offset;
 
+protected slots:
 	void show_help();
 	bool parse_command_line();
 

@@ -18,9 +18,9 @@ public:
 	virtual bool add_alias(const QString &alias, const QString &icon_id, const QString &hr_label) = 0;
 
 	virtual void setup_proto_icons(ProtocolI *proto) = 0;
-	virtual void setup_account_status_icons(ProtocolI *proto, const QString &account_id) = 0;
+	virtual void setup_account_status_icons(Account *account) = 0;
 	
-	virtual QPixmap get_account_status_icon(ProtocolI *proto, const QString &account_id, GlobalStatus gs) = 0;
+	virtual QPixmap get_account_status_icon(Account *account, GlobalStatus gs) = 0;
 };
 
 #endif

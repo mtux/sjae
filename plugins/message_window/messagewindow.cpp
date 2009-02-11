@@ -24,40 +24,25 @@ bool MessageWindow::load(CoreI *core) {
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
+	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
+	events_i->add_event_listener(this, UUID_MSG_RECV);
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
 
 	return true;
 }
 
 bool MessageWindow::modules_loaded() {
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
-
-	QStringList proto_names = accounts_i->protocol_names();
-	foreach(QString proto_name, proto_names) {
-		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-		connect(proto, SIGNAL(message_recv(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_recv(const QString &, const QString &, const QString &, const QString &)));
-		connect(proto, SIGNAL(status_change(const QString &, const QString &, const QString &, GlobalStatus)), this, SLOT(status_change(const QString &, const QString &, const QString &, GlobalStatus)));
-		qDebug() << "message window connecting message_recv signal for protocol" << proto_name;
-	}
-
-	connect(clist_i, SIGNAL(contact_dbl_clicked(const QString &, const QString &, const QString &)), this, SLOT(open_window(const QString &, const QString &, const QString &)));
 	return true;
 }
 
 bool MessageWindow::pre_shutdown() {
-	QMapIterator<QString, QMap<QString, QMap<QString, SplitterWin *> > > i(windows);
-	while(i.hasNext()) {
-		i.next();
-		QMapIterator<QString, QMap<QString, SplitterWin *> > j(i.value());
-		while(j.hasNext()) {
-			j.next();
-			QMapIterator<QString, SplitterWin *> k(j.value());
-			while(k.hasNext()) {
-				k.next();
-				delete k.value();
-			}
-		}
-	}
-	windows.clear();
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->remove_event_listener(this, UUID_MSG_RECV);
+	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->remove_event_listener(this, UUID_CONTACT_DBL_CLICKED);
+
 	return true;
 }
 
@@ -70,60 +55,76 @@ const PluginInfo &MessageWindow::get_plugin_info() {
 }
 
 /////////////////////////////
-bool MessageWindow::window_exists(const QString &proto_name, const QString &account_id, const QString &contact_id) {
-	return (windows.contains(proto_name) && windows[proto_name].contains(account_id) && windows[proto_name][account_id].contains(contact_id));
+bool MessageWindow::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_MSG_RECV) {
+		MessageRecv &mr = static_cast<MessageRecv &>(e);
+		message_recv(mr.contact, mr.message);
+	} else if(e.uuid == UUID_CONTACT_CHANGED) {
+		ContactChanged &cc = static_cast<ContactChanged &>(e);
+		if(windows.contains(cc.contact)) {
+			if(cc.removed) {
+				delete windows[cc.contact];
+				windows.remove(cc.contact);
+			} else {
+				status_change(cc.contact);
+			}
+		}
+	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
+		AccountChanged &ac = static_cast<AccountChanged &>(e);
+		if(ac.removed) account_removed(ac.account);
+	} else if(e.uuid == UUID_CONTACT_DBL_CLICKED) {
+		ContactDblClicked &cd = static_cast<ContactDblClicked &>(e);
+		open_window(cd.contact);
+	}
+	return true;
 }
 
-SplitterWin *MessageWindow::get_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
-	if(!window_exists(proto_name, account_id, contact_id)) {
-		ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-		AccountInfo ai = accounts_i->account_info(proto_name, account_id);
 
-		SplitterWin *win = new SplitterWin(proto_name, account_id, contact_id, clist_i->get_label(proto_name, account_id, contact_id), ai.nick);
-		windows[proto_name][account_id][contact_id] = win;
+bool MessageWindow::window_exists(Contact *contact) {
+	return windows.contains(contact);
+}
 
-		win->setWindowIcon(icons_i->get_account_status_icon(proto, account_id, proto->get_contact_status(account_id, contact_id)));
+SplitterWin *MessageWindow::get_window(Contact *contact) {
+	if(!window_exists(contact)) {
+		SplitterWin *win = new SplitterWin(contact, events_i);
+		windows[contact] = win;
 
-		connect(win, SIGNAL(msgSend(const QString &, const QString &, const QString &, const QString &)), this, SLOT(message_send(const QString &, const QString &, const QString &, const QString &)));
+		win->setWindowIcon(icons_i->get_account_status_icon(contact->account, contact->status));
+
 		connect(core_i, SIGNAL(styleSheetSet(const QString &)), win, SLOT(setLogStyleSheet(const QString &)));
 
 		win->setLogStyleSheet(qApp->styleSheet());
-
-		//win->setWindowIcon(i
 	}
 
-	return windows[proto_name][account_id][contact_id];
+	return windows[contact];
 }
 
-void MessageWindow::account_added(const QString &proto_name, const QString &id) {
+void MessageWindow::account_added(Account *account) {
 }
 
-void MessageWindow::account_removed(const QString &proto_name, const QString &id) {
+void MessageWindow::account_removed(Account *account) {
+	foreach(Contact *c, windows.keys()) {
+		if(c->account == account) {
+			delete windows[c];
+			windows.remove(c);
+		}
+	}
 }
 
-void MessageWindow::message_recv(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg) {
-	SplitterWin *win = get_window(proto_name, account_id, contact_id);
+void MessageWindow::message_recv(Contact *contact, const QString &msg) {
+	SplitterWin *win = get_window(contact);
 	win->msgRecv(msg);
 }
 
-void MessageWindow::status_change(const QString &proto_name, const QString &account_id, const QString &contact_id, GlobalStatus gs) {
-	if(window_exists(proto_name, account_id, contact_id)) {
-		SplitterWin *win = get_window(proto_name, account_id, contact_id);
-		win->setWindowIcon(icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
+void MessageWindow::status_change(Contact *contact) {
+	if(window_exists(contact)) {
+		SplitterWin *win = get_window(contact);
+		win->setWindowIcon(icons_i->get_account_status_icon(contact->account, contact->status));
 	}
 }
 
-void MessageWindow::message_send(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg) {
-	qDebug() << "message_send - proto:" << proto_name << "account_id:" << account_id << "contact_id:" << contact_id << "msg:" << msg;
-	ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-	if(proto)
-		proto->message_send(account_id, contact_id, msg, next_msg_id++);
-	else
-		qDebug() << "no proto interface";
-}
-
-void MessageWindow::open_window(const QString &proto_name, const QString &account_id, const QString &contact_id) {
-	SplitterWin *win = get_window(proto_name, account_id, contact_id);
+void MessageWindow::open_window(Contact *contact) {
+	SplitterWin *win = get_window(contact);
 	win->show();
 	win->activateWindow();
 }

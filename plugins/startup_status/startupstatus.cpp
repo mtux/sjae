@@ -1,6 +1,7 @@
 #include "startupstatus.h"
 #include <QtPlugin>
 #include <QSettings>
+#include <QDebug>
 
 PluginInfo info = {
 	0x1000,
@@ -26,18 +27,14 @@ StartupStatus::~StartupStatus()
 bool StartupStatus::load(CoreI *core) {
 	core_i = core;
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
-	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), this, SLOT(account_added(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
+	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
-	QStringList proto_names = accounts_i->protocol_names();
-	for(int i = 0; i < proto_names.size(); i++) {
-		ProtocolI *proto = accounts_i->get_proto_interface(proto_names.at(i));
-		connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)), this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-	}
 	return true;
 }
 
 bool StartupStatus::modules_loaded() {
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
+
 	QSettings settings;
 	int size = settings.beginReadArray("StartupStatus");
 	for(int i = 0; i < size; i++) {
@@ -45,29 +42,32 @@ bool StartupStatus::modules_loaded() {
 		QString proto = settings.value("protocol").toString(),
 			account_id = settings.value("account_id").toString();
 		GlobalStatus gs = (GlobalStatus)settings.value("status").toInt();
-		if(accounts_i->account_ids(proto).contains(account_id))
-			accounts_i->get_proto_interface(proto)->set_status(account_id, gs);
+		if(accounts_i->account_ids(proto).contains(account_id)) {
+			qDebug() << "setting account " + account_id + " to status" << gs;
+			Account *acc = accounts_i->account_info(proto, account_id);
+			AccountStatusReq as(acc, gs, this);
+			events_i->fire_event(as);
+		}
 	}
 	settings.endArray();
 	return true;
 }
 
 bool StartupStatus::pre_shutdown() {
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
+
 	QSettings settings;
 	settings.beginWriteArray("StartupStatus");
-	QMapIterator<QString, QMap<QString, GlobalStatus> > i(statuses);
+	QMapIterator<Account *, GlobalStatus> i(statuses);
 	int index = 0;
 	while(i.hasNext()) {
 		i.next();
-		QMapIterator<QString, GlobalStatus> j(i.value());
-		while(j.hasNext()) {
-			j.next();
-			settings.setArrayIndex(index);
-			settings.setValue("protocol", i.key());
-			settings.setValue("account_id", j.key());
-			settings.setValue("status", j.value());
-			index++;
-		}
+
+		settings.setArrayIndex(index);
+		settings.setValue("protocol", i.key()->proto->name());
+		settings.setValue("account_id", i.key()->account_id);
+		settings.setValue("status", i.value());
+		index++;
 	}
 	settings.endArray();
 	return true;
@@ -83,21 +83,21 @@ const PluginInfo &StartupStatus::get_plugin_info() {
 
 
 ///////////////////////////////////
-
-void StartupStatus::local_status_change(const QString &proto_name, const QString &account_id, GlobalStatus gs) {
-	if(gs != ST_CONNECTING) statuses[proto_name][account_id] = gs;
+bool StartupStatus::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_ACCOUNT_CHANGED) {
+		AccountChanged &ac = static_cast<AccountChanged &>(e);
+		if(ac.removed) account_removed(ac.account);
+		else account_changed(ac.account);
+	}
+	return true;
 }
 
-void StartupStatus::account_removed(const QString &proto_name, const QString &id) {
-	statuses[proto_name].remove(id);
-	if(statuses[proto_name].size() == 0) statuses.remove(proto_name);
+void StartupStatus::account_removed(Account *account) {
+	statuses.remove(account);
 }
 
-void StartupStatus::account_added(const QString &proto_name, const QString &id) {
-	ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-	connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)), this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-	GlobalStatus gs = proto->get_status(id);
-	if(gs != ST_CONNECTING) statuses[proto_name][id] = gs;
+void StartupStatus::account_changed(Account *account) {
+	statuses[account] = account->desiredStatus;
 }
 
 /////////////////////////////

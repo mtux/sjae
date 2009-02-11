@@ -2,30 +2,30 @@
 #include <QDateTime>
 #include <QSettings>
 
-SplitterWin::SplitterWin(const QString &proto, const QString &account, const QString &contact, const QString &cnik, const QString &my_nik, QWidget *parent)
-	: QSplitter(parent), proto_name(proto), account_id(account), contact_id(contact), contact_nick(cnik), my_nick(my_nik),
-	showDate(true), showTime(true), showNick(false)
+SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
+	: QSplitter(parent), contact(c), events_i(ei),
+		showDate(true), showTime(true), showNick(false)
 {
 	ui.setupUi(this);
 
 	setAttribute(Qt::WA_QuitOnClose, false);
 
-	if(!contact_nick.isEmpty())
-		setWindowTitle(contact_nick + " (" + contact_id + ")");
+	if(!contact->properties.contains("nick"))
+		setWindowTitle(contact->properties["nick"].toString() + " (" + contact->contact_id + ")");
 	else
-		setWindowTitle(contact_id);
+		setWindowTitle(contact->contact_id);
 
 	//ui.edMsgLog->setFont(QFont("tahoma", 12));
 
 	connect(ui.widget, SIGNAL(msgSend(const QString &)), this, SLOT(msgSend(const QString &)));
 
 	QSettings settings;
-	restoreGeometry(settings.value("MessageWindow/geometry/" + proto_name + ":" + account_id + ":" + contact_id).toByteArray());
+	restoreGeometry(settings.value("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id).toByteArray());
 }
 
 SplitterWin::~SplitterWin() {
 	QSettings settings;
-	settings.setValue("MessageWindow/geometry/" + proto_name + ":" + account_id + ":" + contact_id, saveGeometry());
+	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
 }
 
 void SplitterWin::setLogStyleSheet(const QString &styleSheet) {
@@ -55,7 +55,7 @@ void SplitterWin::msgRecv(const QString &msg) {
 	QString text = ts;
 	if(showNick) {
 		if(text.size()) text += " ";
-		text += "<span class='nick'>" + (contact_nick.isEmpty() ? contact_id : contact_nick) + "</span>";
+		text += "<span class='nick'>" + (contact->properties.contains("nick") ? contact->contact_id : contact->properties["nick"].toString()) + "</span>";
 	}
 	if(text.size()) text += ": ";
 	text += "<span class='message'>" + dispMsg + "</span>";
@@ -75,7 +75,7 @@ void SplitterWin::msgSend(const QString &msg) {
 	QString text = ts;
 	if(showNick) {
 		if(text.size()) text += " ";
-		text += "<span class='nick'>" + my_nick + "</span>";
+		text += "<span class='nick'>" + contact->account->nick + "</span>";
 	}
 	if(text.size()) text += ": ";
 	text += "<span class='message'>" + dispMsg + "</span>";
@@ -83,6 +83,7 @@ void SplitterWin::msgSend(const QString &msg) {
 	text.append("</span>");
 	ui.edMsgLog->append(text);
 	
-	emit msgSend(proto_name, account_id, contact_id, msg);
+	MessageSend ms(msg, 0, contact, this);
+	events_i->fire_event(ms);
 }
 

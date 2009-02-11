@@ -2,6 +2,7 @@
 #define _I_MESSAGE_WINDOW_H
 
 #include "plugin_i.h"
+#include "accounts_i.h"
 
 #define INAME_MESSAGE_WINDOW	"MessageWindowInterface"
 
@@ -12,7 +13,7 @@ public:
 	const QString get_interface_name() const {return INAME_MESSAGE_WINDOW;}
 
 public slots:
-	virtual void open_window(const QString &proto, const QString &account_id, const QString &contact_id) = 0;
+	virtual void open_window(Contact *contact) = 0;
 };
 
 #endif
