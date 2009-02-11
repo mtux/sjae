@@ -24,13 +24,12 @@ signals:
 
 protected:
 	QPointer<AccountsI> accounts_i;
-	QMap<QString, QMap<QString, QWidget *> > proto_extra_map;
-	QMap<QString, QMap<QString, AccountInfo> > acc_info;
-	QMap<QString, QList<QString> > deleted_ids;
+	QMap<QString, QMap<QString, AccountExtra *> > account_extra_map;
+	QMap<QString, QMap<QString, Account> > acc_info;
 
 	void enableAccountInfo(bool enable);
-	void setAccInfo(const QString &proto, const QString &acc);
-	bool isValid(const AccountInfo &info);
+	void setAccInfo(const QString &proto, const QString &account_id);
+	bool isValid(const Account &account);
 	void checkValid();
 private:
 	Ui::AccountsOptionsClass ui;

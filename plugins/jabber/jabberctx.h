@@ -22,33 +22,33 @@ typedef enum {LMT_NORMAL, LMT_WARNING, LMT_ERROR, LMT_SEND, LMT_RECV} LogMessage
 
 #define DEFAULT_PRIORITY	48
 
-class JabberCtx : public QObject
-{
+class JabberCtx : public QObject, public EventsI::EventListener {
 	Q_OBJECT
 
 public:
-	JabberCtx(const QString &account_id, const AccountInfo &info, CoreI *core, QObject *parent = 0);
+	JabberCtx(Account *account, CoreI *core, QObject *parent = 0);
 	~JabberCtx();
 	
-	void setAccountInfo(const AccountInfo &info);
+	void setAccountInfo(Account *acc);
 	void showMessage(const QString &message);
 	void log(const QString &message, LogMessageType type = LMT_NORMAL);
 
-	GlobalStatus getCurrentStatus() {return currentStatus;}
+	GlobalStatus getCurrentStatus() {return account->status;}
 	GlobalStatus getContactStatus(const QString &contact_id);
 
 	void setUseSSL(bool f) {useSSL = f;}
 	bool getUseSSL() {return useSSL;}
 
 	QString getConnectionHost() {return connectionHost;}
-	void setConnectionHost(const QString &host) {connectionHost = host;}
+	void setConnectionHost(const QString &host);
 
 	bool directSend(const QString &text);
 	bool gatewayRegister(const QString &gateway);
 	bool gatewayUnregister(const QString &gateway);
 
-	AccountInfo get_account_info();
+	Account *get_account_info();
 
+	bool event_fired(EventsI::Event &e);
 public slots:
 	void msgSend(const QString &jid, const QString &msg, int id);
 	void requestStatus(GlobalStatus gs);
@@ -100,16 +100,16 @@ protected slots:
 
 	void sendRequestSubscription(const QString &to);
 
-	void setAllOffline();
+	//void setAllOffline();
 
-	void aboutToShowContactMenu(const QString &proto_name, const QString &account_id, const QString &id);
-	void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
+	//void aboutToShowContactMenu(const QString &proto_name, const QString &account_id, const QString &id);
+	//void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
 
 	void gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields);
 
 	void sendKeepAlive();
 protected:
-	AccountInfo acc_info;
+	Account *account;
 	bool useSSL;
 	QString connectionHost;
 
@@ -119,10 +119,11 @@ protected:
 
 	void setStatus(GlobalStatus gs);
 
-	QString account_id;
-	QString mid; // contact id for menu signals - set by aboutToShowContactMenu
+	QString mid; // contact id for menu signals
+
 	CoreI *core_i;
 	QPointer<CListI> clist_i;
+	QPointer<EventsI> events_i;
 
 	QAction *newRosterItemAction, *removeRosterItemAction, *editRosterItemAction,
 		*grantAction, *revokeAction, *requestAction;
@@ -143,7 +144,6 @@ protected:
 	QString jid;
 	SessionState sstate;
 	bool sessionRequired, tlsAvailable, tlsRequired;
-	GlobalStatus connectStatus, currentStatus;
 	int priority;
 
 	void startStream();

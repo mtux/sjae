@@ -17,6 +17,10 @@ PluginInfo info = {
 	0x00000001
 };
 
+bool accounts::event_fired(EventsI::Event &e) {
+	return true;
+}
+
 accounts::accounts(): options(0)
 {
 
@@ -30,6 +34,7 @@ accounts::~accounts()
 bool accounts::load(CoreI *core) {
 	core_i = core;
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
+	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
 	return true;
 }
@@ -38,6 +43,7 @@ bool accounts::modules_loaded() {
 	OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
 	if(options_i) options_i->add_page("Accounts", options = new AccountsOptions(this));
 	connect(options, SIGNAL(applied()), this, SLOT(save_data()));
+
 	read_data();
 
 	return true;
@@ -72,26 +78,29 @@ bool accounts::parse_account_node(QDomElement node) {
 		return false;
 	}
 
-	AccountInfo info;
-	info.proto = proto;
-	info.enabled = node.attribute("enabled", "true") != "false";
-	info.host = node.attribute("host", proto->defaultHost());
-	info.nick = node.attribute("nickname", QDir::home().dirName());
-	info.username = node.attribute("username", QDir::home().dirName());
-	info.password = core_i->decrypt(node.attribute("password"), info.username + info.host);
-	info.port = node.attribute("port").toInt();
+	Account *acc = new Account();
+	acc->proto = proto;
+	acc->enabled = node.attribute("enabled", "true") != "false";
+	acc->host = node.attribute("host", proto->defaultHost());
+	acc->nick = node.attribute("nickname", QDir::home().dirName());
+	acc->username = node.attribute("username", QDir::home().dirName());
+	acc->password = core_i->decrypt(node.attribute("password"), acc->username + acc->host);
+	acc->port = node.attribute("port").toInt();
+	acc->account_id = account_id;
+	acc->status = acc->desiredStatus = ST_OFFLINE;
 
-	if(!set_account_info(account_id, info)) {
-		qDebug() << "Accounts: failed to add account info. Protocol:" << proto_name << "Account ID:" << account_id;
-		return false;
-	}
+	account_list[acc->proto][acc->account_id] = acc;
+	icons_i->setup_account_status_icons(acc);			
 
-	proto->parse_extra_data(node, account_id);
+	events_i->fire_event(AccountChanged(acc, this));
+	proto->parse_extra_data(node, acc);
 
 	return true;
 }
 
 bool accounts::read_data() {
+	qDebug() << "reading accound data";
+
 	QFile file(core_i->get_config_dir() + "/" + ACCOUNTS_DATA_FILENAME);
 	QFileInfo info(file);
 	if(!file.exists()) {
@@ -125,20 +134,19 @@ bool accounts::read_data() {
 	return true;
 }
 
-QDomElement accounts::toDOM(QDomDocument &doc, const QString &account_id, const AccountInfo &info) {
+QDomElement accounts::toDOM(QDomDocument &doc, Account *acc) {
 	QDomElement ret = doc.createElement("account-data");
 
-	ret.setAttribute("protocol-name", info.proto->name());
-	ret.setAttribute("id", account_id);
-	ret.setAttribute("enabled", info.enabled ? "true" : "false");
-	ret.setAttribute("host", info.host);
-	ret.setAttribute("nickname", info.nick);
-	ret.setAttribute("password", core_i->encrypt(info.password, info.username + info.host));
-	ret.setAttribute("port", info.port);
-	ret.setAttribute("username", info.username);
+	ret.setAttribute("protocol-name", acc->proto->name());
+	ret.setAttribute("id", acc->account_id);
+	ret.setAttribute("enabled", acc->enabled ? "true" : "false");
+	ret.setAttribute("host", acc->host);
+	ret.setAttribute("nickname", acc->nick);
+	ret.setAttribute("password", core_i->encrypt(acc->password, acc->username + acc->host));
+	ret.setAttribute("port", acc->port);
+	ret.setAttribute("username", acc->username);
 
-	ProtocolI *proto = get_proto_interface(info.proto->name());
-	proto->set_extra_data(ret, account_id);
+	acc->proto->set_extra_data(ret, acc);
 
 	return ret;
 }
@@ -147,13 +155,13 @@ bool accounts::save_data() {
 	QDomDocument doc;
 	QDomElement root = doc.createElement("accounts");
 	doc.appendChild(root);	
-	QMapIterator<QString, QMap<QString, AccountInfo> > i(account_list);
+	QMapIterator<ProtocolI *, QMap<QString, Account *> > i(account_list);
 	while(i.hasNext()) {
 		i.next();
-		QMapIterator<QString, AccountInfo> j(i.value());
+		QMapIterator<QString, Account *> j(i.value());
 		while(j.hasNext()) {
 			j.next();
-			root.appendChild(toDOM(doc, j.key(), j.value()));
+			root.appendChild(toDOM(doc, j.value()));
 		}
 	}
 
@@ -196,39 +204,63 @@ QStringList accounts::protocol_names() const {
 	return protocols.keys();
 }
 
-QStringList accounts::account_ids(const QString &proto_name) const {
-	return account_list[proto_name].keys();
-}
-
 ProtocolI *accounts::get_proto_interface(const QString &proto_name) const {
 	if(!protocols.contains(proto_name)) return 0;
 	return protocols[proto_name];
 }
 
-AccountInfo accounts::account_info(const QString &proto_name, const QString &id) {
-	return account_list[proto_name][id];
+QStringList accounts::account_ids(ProtocolI *proto) const {
+	if(proto && account_list.contains(proto))
+		return account_list[proto].keys();
+	return QStringList();
 }
 
-bool accounts::remove_account(const QString &proto_name, const QString &id) {
-	if(account_list.contains(proto_name) && account_list[proto_name].contains(id)) {
-		account_list[proto_name][id].proto->remove_account_data(id);
-		account_list[proto_name].remove(id);
-		emit account_removed(proto_name, id);
+QStringList accounts::account_ids(const QString &proto_name) const {
+	ProtocolI *proto = get_proto_interface(proto_name);
+	return account_ids(proto);
+}
+
+Account *accounts::account_info(ProtocolI *proto, const QString &id) {
+	if(account_list.contains(proto) && account_list[proto].contains(id))
+		return account_list[proto][id];
+	return 0;
+}
+
+Account *accounts::account_info(const QString &proto_name, const QString &id) {
+	ProtocolI *proto = get_proto_interface(proto_name);
+	return account_info(proto, id);
+}
+
+bool accounts::remove_account(Account *acc) {
+	if(account_list.contains(acc->proto) && account_list[acc->proto].contains(acc->account_id)) {
+		AccountChanged ace(acc, this);
+		ace.removed = true;
+		events_i->fire_event(ace);
+
+		account_list[acc->proto].remove(acc->account_id);
+
+		if(account_list[acc->proto].size() == 0)
+			account_list.remove(acc->proto);
+
+		delete acc;
+
 		return true;
 	}
 	return false;
 }
 
-bool accounts::set_account_info(const QString &id, const AccountInfo &info) {
-	bool new_account = !account_list[info.proto->name()].contains(id);
+Account *accounts::set_account_info(const Account &acc) {
+	bool new_account = account_list.contains(acc.proto) == false || account_list[acc.proto].contains(acc.account_id) == false;
+	if(new_account) {
+		account_list[acc.proto][acc.account_id] = new Account();
+		*account_list[acc.proto][acc.account_id] = acc;
+		icons_i->setup_account_status_icons(account_list[acc.proto][acc.account_id]);			
+	} else
+		*account_list[acc.proto][acc.account_id] = acc;
 
-	if(new_account) icons_i->setup_account_status_icons(info.proto, id);		
-	account_list[info.proto->name()][id] = info;
-	info.proto->update_account_data(id, info);
-	if(new_account) emit account_added(info.proto->name(), id);
-	emit account_changed(info.proto->name(), id);
+	events_i->fire_event(AccountChanged(account_list[acc.proto][acc.account_id], this));
 
-	return true;
+	return account_list[acc.proto][acc.account_id];
 }
 
 /////////////////////////////

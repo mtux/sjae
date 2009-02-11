@@ -25,11 +25,10 @@ AddContact::~AddContact()
 
 bool AddContact::load(CoreI *core) {
 	core_i = core;
-	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	if((main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW)) == 0) return false;
+	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
-	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), this, SLOT(account_added(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 
 	win = new SearchWindow();
 
@@ -44,6 +43,7 @@ bool AddContact::modules_loaded() {
 }
 
 bool AddContact::pre_shutdown() {
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	return true;
 }
 
@@ -58,18 +58,22 @@ const PluginInfo &AddContact::get_plugin_info() {
 
 /////////////////////////////
 
-
-void AddContact::account_added(const QString &proto_name, const QString &id) {
-	ProtocolI * proto = accounts_i->get_proto_interface(proto_name);
-	ProtoSearchWindowI *w = proto->create_search_window();
-	if(w) {
-		win->add_search_window(proto_name, w);
-		win->add_account(proto_name, id);
+bool AddContact::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_ACCOUNT_CHANGED) {
+		AccountChanged &ac = static_cast<AccountChanged &>(e);
+		if(ac.removed)
+			win->remove_account(ac.account->proto->name(), ac.account->account_id);
+		else {
+			if(!win->has_account(ac.account->proto->name(), ac.account->account_id)) {
+				ProtoSearchWindowI *w = ac.account->proto->create_search_window();
+				if(w) {
+					win->add_search_window(ac.account->proto->name(), w);
+					win->add_account(ac.account->proto->name(), ac.account->account_id);
+				}
+			}
+		}
 	}
-}
-
-void AddContact::account_removed(const QString &proto_name, const QString &id) {
-	win->remove_account(proto_name, id);
+	return true;
 }
 
 void AddContact::open_search_window() {

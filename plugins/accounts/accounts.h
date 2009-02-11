@@ -25,27 +25,28 @@ public:
 	bool deregister_protocol(ProtocolI *proto);
 
 	QStringList protocol_names() const;
-	QStringList account_ids(const QString &proto_name) const;
 	ProtocolI *get_proto_interface(const QString &proto_name) const;
-	AccountInfo account_info(const QString &proto_name, const QString &id);
+	QStringList account_ids(ProtocolI *proto) const;
+	QStringList account_ids(const QString &proto_name) const;
+	Account *account_info(ProtocolI *proto, const QString &id);
+	Account *account_info(const QString &proto_name, const QString &id);
 
-	bool remove_account(const QString &proto_name, const QString &id);
-	bool set_account_info(const QString &id, const AccountInfo &info);
+	bool remove_account(Account *acc);
+	Account *set_account_info(const Account &acc);
 
-signals:
-	void account_removed(const QString &proto_name, const QString &id);
-	void account_added(const QString &proto_name, const QString &id);
-	void account_changed(const QString &proto_name, const QString &id);
+	bool event_fired(EventsI::Event &e);
+
 
 protected:
 	CoreI *core_i;
 	QPointer<IconsI> icons_i;
+	QPointer<EventsI> events_i;
 	QMap<QString, ProtocolI *> protocols;
-	QMap<QString, QMap<QString, AccountInfo> > account_list;
+	QMap<ProtocolI *, QMap<QString, Account *> > account_list;
 
 	bool parse_account_node(QDomElement node);
 	bool read_data();
-	QDomElement toDOM(QDomDocument &doc, const QString &account_id, const AccountInfo &info);
+	QDomElement toDOM(QDomDocument &doc, Account *acc);
 
 	AccountsOptions *options;
 protected slots:

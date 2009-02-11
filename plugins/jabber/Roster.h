@@ -8,6 +8,8 @@
 #include <QDateTime>
 #include <QDebug>
 
+#include <accounts_i.h>
+
 typedef enum {ST_NONE, ST_TO, ST_FROM, ST_BOTH, ST_UNKNOWN} SubscriptionType;
 typedef enum {PT_UNAVAILABLE, PT_INVISIBLE, PT_ONLINE, PT_AWAY, PT_DND, PT_XA, PT_CHAT, PT_ERROR, PT_UNKNOWN} PresenceType;
 typedef enum {RTNT_UNKNOWN, RTNT_GROUP, RTNT_ITEM, RTNT_RESOURCE} NodeType;
@@ -17,15 +19,16 @@ class RosterTreeNonLeafNode;
 class RosterTreeNode {
 public:
 	RosterTreeNode(const QString &n, RosterTreeNonLeafNode *p = 0): name(n), parent(p) {}
+	RosterTreeNode(RosterTreeNonLeafNode *p = 0): parent(p) {}
 	virtual ~RosterTreeNode() {}
 
 	virtual NodeType type() const {return RTNT_UNKNOWN;}
 
 	QString getName() const {return name;}
-	void setName(const QString &n) {name = n;}
+	virtual void setName(const QString &n) {name = n;}
 
 	RosterTreeNonLeafNode *getParent() const {return parent;}
-	void setParent(RosterTreeNonLeafNode *p) {parent = p;}
+	virtual void setParent(RosterTreeNonLeafNode *p) {parent = p;}
 
 	virtual int childCount() const {return 0;}
 
@@ -142,11 +145,15 @@ class RosterGroup;
 
 class RosterItem: public RosterTreeNonLeafNode {
 public:
-	RosterItem(const QString &id, const QString &n, SubscriptionType sub, RosterTreeNonLeafNode *g): RosterTreeNonLeafNode(n, g), jid(id), subscription(sub) {}
+	RosterItem(Account *acc, const QString &jid, const QString &n, SubscriptionType sub, RosterGroup *g);
+
 	virtual ~RosterItem() {}
 	virtual NodeType type() const {return RTNT_ITEM;}
 
-	QString getJID() const {return jid;}
+	virtual void setName(const QString &n);
+	virtual void setParent(RosterTreeNonLeafNode *p);
+
+	QString getJID() const {return contact.contact_id;}
 
 	SubscriptionType getSubscription() const {return subscription;}
 	void setSubscription(SubscriptionType sub) {subscription = sub;}
@@ -172,10 +179,12 @@ public:
 	RosterGroup *getGroup() const;
 	Resource *get_active_resource() const;
 
+	Contact *getContact() {return &contact;}
+
 	bool is_offline() const;
 protected:
-	QString jid;
 	SubscriptionType subscription;
+	Contact contact;
 };
 
 class RosterGroup: public RosterTreeNonLeafNode {

@@ -13,6 +13,10 @@ SearchWindow::SearchWindow(QWidget *parent)
 SearchWindow::~SearchWindow() {
 }
 
+bool SearchWindow::has_account(const QString &proto_name, const QString &id) {
+	return (accounts.contains(proto_name) && accounts[proto_name].accounts.contains(id));
+}
+
 void SearchWindow::add_search_window(const QString &proto_name, ProtoSearchWindowI *search_window) {
 	qDebug() << "adding search window for" << proto_name;
 	accounts[proto_name].search_win = search_window;

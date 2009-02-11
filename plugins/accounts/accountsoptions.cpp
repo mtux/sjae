@@ -22,47 +22,53 @@ AccountsOptions::~AccountsOptions()
 	}
 }
 
-bool AccountsOptions::isValid(const AccountInfo &info) {
+bool AccountsOptions::isValid(const Account &account) {
 	int pos = 0;
-	return (info.host.isEmpty() == false
+	return (account.host.isEmpty() == false
 		//&& info.password.isEmpty() == false
-		&& info.port >= 0
-		&& info.port <= 65535
-		&& info.nick.isEmpty() == false
-		&& info.username.isEmpty() == false
-		&& info.proto != 0);
+		&& account.port >= 0
+		&& account.port <= 65535
+		&& account.nick.isEmpty() == false
+		&& account.username.isEmpty() == false
+		&& account.proto != 0);
 }
 
 bool AccountsOptions::apply() {
-	{
-		QMapIterator<QString, QList<QString> > i(deleted_ids);
-		while(i.hasNext()) {
-			i.next();
-			QListIterator<QString> j(i.value());
-			while(j.hasNext()) {
-				QString id = j.next();
-				accounts_i->remove_account(i.key(), id);
-				ui.stackedWidget->removeWidget(proto_extra_map[i.key()][id]);
-			}
+	QList<Account *> deleted_accounts;
+	QStringList proto_names = accounts_i->protocol_names();
+	foreach(QString proto_name, proto_names) {
+		QStringList account_names = accounts_i->account_ids(proto_name);
+		foreach(QString account_id, account_names) {
+			if(acc_info.contains(proto_name) == false || acc_info[proto_name].contains(account_id) == false)
+				deleted_accounts.append(accounts_i->account_info(proto_name, account_id));
 		}
-		deleted_ids.clear();
 	}
 
 	{
-		QMapIterator<QString, QMap<QString, AccountInfo> > i(acc_info);
+		QListIterator<Account *> i(deleted_accounts);
+		while(i.hasNext()) {
+			Account *ap = i.next();
+			ui.stackedWidget->removeWidget(account_extra_map[ap->proto->name()][ap->account_id]);
+			accounts_i->remove_account(ap);
+		}
+	}
+
+	{
+		QMapIterator<QString, QMap<QString, Account> > i(acc_info);
 		while(i.hasNext()) {
 			i.next();
-			QMapIterator<QString, AccountInfo> j(i.value());
+			QMapIterator<QString, Account> j(i.value());
 			while(j.hasNext()) {
 				j.next();
-				accounts_i->set_account_info(j.key(), j.value());
+				Account *a = accounts_i->set_account_info(j.value());
+				if(account_extra_map.contains(a->proto->name()) && account_extra_map[a->proto->name()].contains(a->account_id) && account_extra_map[a->proto->name()][a->account_id] != 0) {
+					account_extra_map[a->proto->name()][a->account_id]->set_account_info(a);
+					account_extra_map[a->proto->name()][a->account_id]->apply();
+				}
 			}
 		}
 	}
 
-	for(int i = 1; i < ui.stackedWidget->count(); i++) {
-		static_cast<AccountExtra *>(ui.stackedWidget->widget(i))->apply();
-	}
 	emit applied();
 
 	return true;
@@ -95,27 +101,26 @@ void AccountsOptions::reset() {
 		disconnect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
 		delete w;
 	}
-	proto_extra_map.clear();
+	account_extra_map.clear();
 	acc_info.clear();
-	deleted_ids.clear();
 
 	QStringList proto_names = accounts_i->protocol_names();
 	for(int i = 0; i < proto_names.size(); i++) {
 		ProtocolI *pi = accounts_i->get_proto_interface(proto_names.at(i));
 
-		QStringList acc_ids = accounts_i->account_ids(proto_names.at(i));
+		QStringList acc_ids = accounts_i->account_ids(pi);
 		for(int j = 0; j < acc_ids.size(); j++) {
 			//qDebug() << "Added proto" << proto_names.at(i) << "account" << acc_ids.at(j);
-			acc_info[proto_names.at(i)][acc_ids.at(j)] = accounts_i->account_info(proto_names.at(i), acc_ids.at(j));
+			Account *acc = accounts_i->account_info(pi, acc_ids.at(j));
+			acc_info[proto_names.at(i)][acc->account_id] = *acc;
 
-			AccountExtra *w = pi->create_account_extra(acc_ids.at(j));
+			AccountExtra *w = pi->create_account_extra(acc);
 			if(w) {
 				connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
-				proto_extra_map[proto_names.at(i)][acc_ids.at(j)] = w;
+				account_extra_map[proto_names.at(i)][acc->account_id] = w;
 				ui.stackedWidget->addWidget(w);
-				w->set_info(acc_info[proto_names.at(i)][acc_ids.at(j)]);
 			} else 
-				proto_extra_map[proto_names.at(i)][acc_ids.at(j)] = 0;
+				account_extra_map[proto_names.at(i)][acc->account_id] = 0;
 		}
 	}
 
@@ -157,22 +162,23 @@ void AccountsOptions::reset() {
 	setEnabled(enableWindow);
 }
 
-void AccountsOptions::setAccInfo(const QString &proto, const QString &acc) {
-	if(proto_extra_map.contains(proto) && proto_extra_map[proto].contains(acc) && proto_extra_map[proto][acc] != 0)
-		ui.stackedWidget->setCurrentWidget(proto_extra_map[proto][acc]);
-	else
-		ui.stackedWidget->setCurrentIndex(0);
-	if(acc_info.contains(proto) && acc_info[proto].contains(acc)) {
-		AccountInfo &info = acc_info[proto][acc];
+void AccountsOptions::setAccInfo(const QString &proto, const QString &account_id) {
+	
+	if(acc_info.contains(proto) && acc_info[proto].contains(account_id)) {
+		if(account_extra_map.contains(proto) && account_extra_map[proto].contains(account_id) && account_extra_map[proto][account_id] != 0)
+			ui.stackedWidget->setCurrentWidget(account_extra_map[proto][account_id]);
+		else
+			ui.stackedWidget->setCurrentIndex(0);
+		Account &account = acc_info[proto][account_id];
 
-		ui.edHost->setText(info.host);
-		ui.edPass->setText(info.password);
-		ui.edPort->setText(QString("%1").arg(info.port));
-		ui.edNick->setText(info.nick);
-		ui.edUname->setText(info.username);
+		ui.edHost->setText(account.host);
+		ui.edPass->setText(account.password);
+		ui.edPort->setText(QString("%1").arg(account.port));
+		ui.edNick->setText(account.nick);
+		ui.edUname->setText(account.username);
 
-		ui.edHost->setEnabled(info.proto->allowSetHost());
-		ui.edPort->setEnabled(info.proto->allowSetPort());
+		ui.edHost->setEnabled(account.proto->allowSetHost());
+		ui.edPort->setEnabled(account.proto->allowSetPort());
 	}
 }
 
@@ -188,24 +194,21 @@ void AccountsOptions::on_btnCreate_clicked() {
 			QMessageBox::information(this, tr("New Account"), tr("That account name is already in use"));
 		} else {
 			// make new account
-			AccountInfo info;
+			Account &info = acc_info[proto->name()][text];
+			info.account_id = text;
+			info.proto = proto;
 			info.host = proto->defaultHost();
 			info.nick = text;
 			info.port = proto->defaultPort();
-			info.proto = proto;
 			info.enabled = true;
 
-			acc_info[proto->name()][text] = info;
-			proto->update_account_data(text, info);
-
-			AccountExtra *w = proto->create_account_extra(text);
+			AccountExtra *w = proto->create_account_extra(0);
 			if(w) {
 				connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
-				proto_extra_map[proto->name()][text] = w;
+				account_extra_map[proto->name()][text] = w;
 				ui.stackedWidget->addWidget(w);
-				w->set_info(acc_info[proto->name()][text]);
 			} else 
-				proto_extra_map[proto->name()][text] = 0;
+				account_extra_map[proto->name()][text] = 0;
 
 			QStringList acc_ids = acc_info[proto->name()].keys();
 			ui.cmbAccount->clear();
@@ -223,10 +226,10 @@ void AccountsOptions::on_btnCreate_clicked() {
 void AccountsOptions::checkValid() {
 	bool valid = true;
 
-	QMapIterator<QString, QMap<QString, AccountInfo> > i(acc_info);
+	QMapIterator<QString, QMap<QString, Account> > i(acc_info);
 	while(valid && i.hasNext()) {
 		i.next();
-		QMapIterator<QString, AccountInfo> j(i.value());
+		QMapIterator<QString, Account> j(i.value());
 		while(valid && j.hasNext()) {
 			j.next();
 			valid = isValid(j.value()) && valid;
@@ -236,7 +239,6 @@ void AccountsOptions::checkValid() {
 }
 
 void AccountsOptions::on_btnDel_clicked() {
-	deleted_ids[ui.cmbProto->currentText()].append(ui.cmbAccount->currentText());
 	acc_info[ui.cmbProto->currentText()].remove(ui.cmbAccount->currentText());
 
 	QStringList acc_ids = acc_info[ui.cmbProto->currentText()].keys();

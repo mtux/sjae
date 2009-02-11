@@ -19,6 +19,9 @@ public:
 	void add_search_window(const QString &proto_name, ProtoSearchWindowI *search_window);
 	void add_account(const QString &proto_name, const QString &id);
 	void remove_account(const QString &proto_name, const QString &id);
+
+	bool has_account(const QString &proto_name, const QString &id);
+
 protected slots:
 	void select_protocol(const QString &proto);
 	void select_account(const QString &account);

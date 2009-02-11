@@ -23,10 +23,16 @@ StatusBar::~StatusBar()
 }
 
 bool StatusBar::load(CoreI *core) {
+	menuMapper = new QSignalMapper(this);
+	connect(menuMapper, SIGNAL(mapped(QObject *)), this, SLOT(actionTriggered(QObject *)));
+
 	core_i = core;
 	if((main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW)) == 0) return false;
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
+
+	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 
 	status_bar = new QStatusBar();
 	main_win_i->set_status_bar(status_bar);
@@ -37,55 +43,51 @@ bool StatusBar::modules_loaded() {
 	//OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
 	//if(options_i)
 		//options_i->add_page("User Interface/Contact List", new CListOptions(this));
-
-	menuMapper = new QSignalMapper(this);
-	connect(menuMapper, SIGNAL(mapped(QObject *)), this, SLOT(actionTriggered(QObject *)));
 	
-	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), this, SLOT(account_added(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
-
-	QStringList proto_names = accounts_i->protocol_names();
-	foreach(QString proto_name, proto_names) {
-		QStringList account_ids = accounts_i->account_ids(proto_name);
-		foreach(QString account_id, account_ids) {
-			account_added(proto_name, account_id);
-		}
-	}
 	return true;
 }
 
-void StatusBar::account_added(const QString &proto_name, const QString &account_id) {
-	ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-	QToolButton *tb = new QToolButton();
-	tb->setIcon(icons_i->get_account_status_icon(proto, account_id, proto->get_status(account_id)));
-	tb->setToolTip(proto->name() + ": " + account_id);
-	QMenu *menu = new QMenu();
-	connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-	menu->addAction(icons_i->get_icon("Proto/" + proto->name()), proto->name() + ": " + account_id);
-	menu->addSeparator();
-	QList<GlobalStatus> statuses = proto->statuses();
-	foreach(GlobalStatus gs, statuses) {
-		QAction *a = menu->addAction(icons_i->get_account_status_icon(proto, account_id, gs), hr_status_name[gs]);
-		a->setData(QVariantList() << proto->name() << account_id << gs);
-		connect(a, SIGNAL(triggered()), menuMapper, SLOT(map()));
-		menuMapper->setMapping(a, a);
-	}
-	tb->setMenu(menu);
-	tb->setPopupMode(QToolButton::InstantPopup);
-	status_bar->addWidget(tb);
-	account_buttons[proto_name][account_id] = tb;
-}
 
-void StatusBar::account_removed(const QString &proto_name, const QString &account_id) {
-	if(account_buttons.contains(proto_name) && account_buttons[proto_name].contains(account_id)) {
-		QToolButton *tb = account_buttons[proto_name][account_id];
-		status_bar->removeWidget(tb);
-		menuMapper->removeMappings(tb->menu());
-		delete tb;
-		account_buttons[proto_name].remove(account_id);
-		if(account_buttons[proto_name].size() == 0)
-			account_buttons.remove(proto_name);
+bool StatusBar::event_fired(EventsI::Event &e) {
+	AccountChanged &ac = static_cast<AccountChanged &>(e);
+	QString proto_name = ac.account->proto->name(),
+		account_id = ac.account->account_id;
+	if(ac.removed) {
+		if(account_buttons.contains(proto_name) && account_buttons[proto_name].contains(account_id)) {
+			QToolButton *tb = account_buttons[proto_name][account_id];
+			status_bar->removeWidget(tb);
+			menuMapper->removeMappings(tb->menu());
+			delete tb;
+			account_buttons[proto_name].remove(account_id);
+			if(account_buttons[proto_name].size() == 0)
+				account_buttons.remove(proto_name);
+		}
+	} else {
+		bool new_account = account_buttons.contains(proto_name) == false || account_buttons[proto_name].contains(account_id) == false;
+		if(new_account) {
+			QToolButton *tb = new QToolButton();
+			tb->setIcon(icons_i->get_account_status_icon(ac.account, ac.account->status));
+			tb->setToolTip(proto_name + ": " + account_id);
+			QMenu *menu = new QMenu();
+			//connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
+			menu->addAction(icons_i->get_icon("Proto/" + proto_name), proto_name + ": " + account_id);
+			menu->addSeparator();
+			QList<GlobalStatus> statuses = ac.account->proto->statuses();
+			foreach(GlobalStatus gs, statuses) {
+				QAction *a = menu->addAction(icons_i->get_account_status_icon(ac.account, gs), hr_status_name[gs]);
+				a->setData(QVariantList() << proto_name << account_id << gs);
+				connect(a, SIGNAL(triggered()), menuMapper, SLOT(map()));
+				menuMapper->setMapping(a, a);
+			}
+			tb->setMenu(menu);
+			tb->setPopupMode(QToolButton::InstantPopup);
+			status_bar->addWidget(tb);
+			account_buttons[proto_name][account_id] = tb;
+		} else {
+			account_buttons[proto_name][account_id]->setIcon(icons_i->get_account_status_icon(ac.account, ac.account->status));
+		}
 	}
+	return true;
 }
 
 void StatusBar::actionTriggered(QObject *action) {
@@ -94,17 +96,14 @@ void StatusBar::actionTriggered(QObject *action) {
 	QString proto_name = vl.at(0).toString(),
 		account_id = vl.at(1).toString();
 	GlobalStatus gs = (GlobalStatus)vl.at(2).toInt();
-	ProtocolI *proto = accounts_i->get_proto_interface(proto_name);
-	proto->set_status(account_id, gs);
-}
+	Account *acc = accounts_i->account_info(proto_name, account_id);
 
-void StatusBar::local_status_change(const QString &proto_name, const QString &account_id, GlobalStatus gs) {
-	if(account_buttons.contains(proto_name) && account_buttons[proto_name].contains(account_id)) {
-		account_buttons[proto_name][account_id]->setIcon(icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
-	}
+	AccountStatusReq as(acc, gs, this);
+	events_i->fire_event(as);
 }
 
 bool StatusBar::pre_shutdown() {
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	return true;
 }
 

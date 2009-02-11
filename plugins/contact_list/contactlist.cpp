@@ -33,6 +33,11 @@ bool ContactList::load(CoreI *core) {
 	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
 	icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS);
+	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
+
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->add_event_listener(this, UUID_MSG_RECV);
 
 	win = new CListWin();
 
@@ -40,7 +45,7 @@ bool ContactList::load(CoreI *core) {
 	connect(win->tree(), SIGNAL(itemCollapsed(QTreeWidgetItem *)), this, SLOT(treeItemCollapsed(QTreeWidgetItem *)));
 
 	connect(win->tree(), SIGNAL(show_tip(QTreeWidgetItem *, const QPoint &)), this, SLOT(treeShowTip(QTreeWidgetItem *, const QPoint &)));
-	connect(win->tree(), SIGNAL(hide_tip()), this, SIGNAL(hide_tip()));
+	connect(win->tree(), SIGNAL(hide_tip()), this, SLOT(treeHideTip()));
 
 	connect(win->tree(), SIGNAL(itemClicked(QTreeWidgetItem *, int)), this, SLOT(treeItemClicked(QTreeWidgetItem *, int)));
 	connect(win->tree(), SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(treeItemDoubleClicked(QTreeWidgetItem *, int)));
@@ -64,6 +69,9 @@ bool ContactList::modules_loaded() {
 }
 
 bool ContactList::pre_shutdown() {
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->remove_event_listener(this, UUID_MSG_RECV);
 	return true;
 }
 
@@ -92,33 +100,38 @@ bool SortedTreeWidgetItem::operator<( const QTreeWidgetItem &other) const {
 	ContactInfo ci = data(0, Qt::UserRole).value<ContactInfo>(),
 		ci_other = other.data(0, Qt::UserRole).value<ContactInfo>();
 	//const SortedTreeWidgetItem *o = (SortedTreeWidgetItem *)(&other);
-	if(ci.gs == ST_OFFLINE && ci_other.gs != ST_OFFLINE) return false;
-	if(ci.gs != ST_OFFLINE && ci_other.gs == ST_OFFLINE) return true;
-	if(ci.gs != ci_other.gs)
-		return ci.gs < ci_other.gs;
+	if(ci.contact->status == ST_OFFLINE && ci_other.contact->status != ST_OFFLINE) return false;
+	if(ci.contact->status != ST_OFFLINE && ci_other.contact->status == ST_OFFLINE) return true;
+	if(ci.contact->status != ci_other.contact->status)
+		return ci.contact->status < ci_other.contact->status;
 
 	return QTreeWidgetItem::operator<(other);
 }
 
 /////////////////////////////
 
-QString ContactList::make_uid(const QString &proto_name, const QString &account_id, const QString &id) {
-	//QString pn(proto_name), ai(account_id), i(id);
-	//QString ret = pn.replace(QString("::"), QString("<-->")) + "::" + ai.replace(QString("::"), QString("<-->")) + "::" 
-	//	+ i.replace(QString("::"), QString("<-->"));
-	//return ret;
-	return (proto_name + account_id + id);
-}
+bool ContactList::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_CONTACT_CHANGED) {
+		ContactChanged &cc = static_cast<ContactChanged &>(e);
+		if(cc.removed) remove_contact(cc.contact);
+		else {
+			list_mutex.lock();
+			bool new_contact = id_item_map.contains(cc.contact) == false;
+			list_mutex.unlock();
 
-/*
-QStringList ContactList::break_id(const QString &id) {
-	QStringList l = id.split("::"), ret;
-	foreach(QString s, l) {
-		ret << s.replace("<-->", "::");
+			if(new_contact) add_contact(cc.contact);
+			else {
+				update_label(cc.contact);
+				update_group(cc.contact);
+				update_status(cc.contact);
+			}
+		}
+	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
+		AccountChanged &ac = static_cast<AccountChanged &>(e);
+		if(ac.removed) remove_all_contacts(ac.account);
 	}
-	return ret;
+	return true;
 }
-*/
 
 QTreeWidgetItem *findGroup(QTreeWidgetItem *parent, const QString &name) {
 	for(int i = 0; i < parent->childCount(); i++) {
@@ -128,32 +141,32 @@ QTreeWidgetItem *findGroup(QTreeWidgetItem *parent, const QString &name) {
 	return 0;
 }
 
-QTreeWidgetItem *ContactList::add_contact(const QString &proto_name, const QString &account_id, const QString &id, const QString &label, GlobalStatus gs, const QString &group) {
+QTreeWidgetItem *ContactList::add_contact(Contact *contact) {
 	SortedTreeWidgetItem *si = 0;
 
 	{ // scope locker
 		QMutexLocker locker(&list_mutex);
 
 		ContactInfo ci;
-		ci.proto_name = proto_name;
-		ci.account_id = account_id;
-		ci.id = id;
-		ci.group = group;
-		ci.label = label;
-		ci.gs = gs;
+		ci.contact = contact;
 		ci.parent = 0;
 
-		if(group_delim.contains(proto_name) == false || group_delim[proto_name].contains(account_id) == false)
-			group_delim[proto_name][account_id] = "\\";
+		QString proto_name = contact->account->proto->name(),
+			account_id = contact->account->account_id;
+
+		if(group_delim.contains(contact->account) == false)
+			group_delim[contact->account] = "\\";
+
+		QString group = (contact->properties.contains("group") ? contact->properties["group"].toString() : "");
 
 		QSettings settings;
 		QTreeWidgetItem *i, *parent = win->tree()->invisibleRootItem();
 		QString full_gn;
 		if(!group.isEmpty()) {
-			QStringList subgroups = group.split(group_delim[proto_name][account_id]);
+			QStringList subgroups = group.split(group_delim[contact->account]);
 			while(subgroups.size() && (i = findGroup(parent, subgroups.at(0))) != 0) {
 				parent = i;
-				full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
+				full_gn += group_delim[contact->account] + subgroups.at(0);
 				subgroups.removeAt(0);
 			}
 			while(subgroups.size()) {
@@ -162,10 +175,17 @@ QTreeWidgetItem *ContactList::add_contact(const QString &proto_name, const QStri
 				parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
 				//if(hide_offline) set_hide_offline(parent);
 				parent = i;
-				full_gn += group_delim[proto_name][account_id] + subgroups.at(0);
+				full_gn += group_delim[contact->account] + subgroups.at(0);
 				subgroups.removeAt(0);
 			}
 		}
+		QString label = contact->contact_id;
+		if(contact->properties.contains("name"))
+			label = contact->properties["name"].toString();
+		if(contact->properties.contains("nick"))
+			label = contact->properties["nick"].toString();
+		if(contact->properties.contains("handle"))
+			label = contact->properties["handle"].toString();
 			
 		si = new SortedTreeWidgetItem(parent, QStringList() << label, TWIT_CONTACT);
 		ci.item = si;
@@ -175,8 +195,8 @@ QTreeWidgetItem *ContactList::add_contact(const QString &proto_name, const QStri
 		if(parent && !full_gn.isEmpty())
 			parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
 
-		si->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
-		id_item_map[make_uid(proto_name, account_id, id)] = si;
+		si->setIcon(0, icons_i->get_account_status_icon(contact->account, contact->status));
+		id_item_map[contact] = si;
 	}
 
 	update_hide_offline();
@@ -184,11 +204,11 @@ QTreeWidgetItem *ContactList::add_contact(const QString &proto_name, const QStri
 	return si;
 }
 
-QAction *ContactList::add_contact_action(const QString &proto_name, const QString &account_id, const QString &label, const QString &icon) {
+QAction *ContactList::add_contact_action(Account *account, const QString &label, const QString &icon) {
 	QMutexLocker locker(&list_mutex);
 
 	QAction *action = new QAction(QIcon(icons_i->get_icon(icon)), label, 0);
-	action->setData(QVariantList() << proto_name << account_id);
+	action->setData(QVariantList() << account->proto->name() << account->account_id);
 	win->contact_menu()->addAction(action);
 	connect(win, SIGNAL(aboutToShowMenu(QTreeWidgetItem *)), this, SLOT(aboutToShowMenuSlot(QTreeWidgetItem *)));
 
@@ -209,20 +229,19 @@ QString get_full_gn(QTreeWidgetItem *i, const QString &group_delim = "\\") {
 	return ret;
 }
 
-void ContactList::remove_contact(const QString &proto_name, const QString &account_id, const QString &id) {
+void ContactList::remove_contact(Contact *contact) {
 	{
 		QMutexLocker locker(&list_mutex);
 
-		QString cid = make_uid(proto_name, account_id, id);
-		if(id_item_map.contains(cid)) {
+		if(id_item_map.contains(contact)) {
 			QSettings settings;
-			QTreeWidgetItem *i = id_item_map[cid];
-			id_item_map.remove(cid);
+			QTreeWidgetItem *i = id_item_map[contact];
+			id_item_map.remove(contact);
 
 			QString full_gn;
 			while(i->parent() && i->parent()->childCount() == 1) {
 				i = i->parent();
-				full_gn = get_full_gn(i, group_delim[proto_name][account_id]);
+				full_gn = get_full_gn(i, group_delim[contact->account]);
 				settings.remove("CList/group_expand" + full_gn);
 			}
 
@@ -234,32 +253,15 @@ void ContactList::remove_contact(const QString &proto_name, const QString &accou
 	update_hide_offline();
 }
 
-void ContactList::get_all_contacts(QTreeWidgetItem *root, QList<QString> &cids, const QString &proto_name, const QString &account_id) {
-	for(int i = 0; i < root->childCount(); i++) {
-		if(root->child(i)->type() == TWIT_CONTACT) {
-			ContactInfo ci = root->child(i)->data(0, Qt::UserRole).value<ContactInfo>();
-			if(ci.proto_name == proto_name && ci.account_id == account_id)
-				cids << make_uid(proto_name, account_id, ci.id);
-		} else {
-			get_all_contacts(root->child(i), cids, proto_name, account_id);
-		}
-	}
-}
-
-void ContactList::remove_all_contacts(const QString &proto_name, const QString &account_id) {
+void ContactList::remove_all_contacts(Account *account) {
 	{
 		QMutexLocker locker(&list_mutex);
 
-		QList<QString> cids;
-		get_all_contacts(win->tree()->invisibleRootItem(), cids, proto_name, account_id);
+		foreach(Contact *cp, id_item_map.keys()) {
+			if(cp->account == account) {
+				QTreeWidgetItem *i = id_item_map[cp];
+				id_item_map.remove(cp);
 
-		foreach(QString cid, cids) {
-			if(id_item_map.contains(cid)) {
-				QSettings settings;
-				QTreeWidgetItem *i = id_item_map[cid];
-				id_item_map.remove(cid);
-
-				QString full_gn;
 				while(i->parent() && i->parent()->childCount() == 1)
 					i = i->parent();
 
@@ -271,61 +273,47 @@ void ContactList::remove_all_contacts(const QString &proto_name, const QString &
 	update_hide_offline();
 }
 
-QString ContactList::get_label(const QString &proto_name, const QString &account_id, const QString &id) {
-	QMutexLocker locker(&list_mutex);
-
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid))
-		return id_item_map[cid]->text(0);
-
-	return "Unknown";
-}
-
-void ContactList::set_label(const QString &proto_name, const QString &account_id, const QString &id, const QString &label) {
+void ContactList::update_label(Contact *contact) {
+	QString label = contact->contact_id;
+	if(contact->properties.contains("name"))
+		label = contact->properties["name"].toString();
+	if(contact->properties.contains("nick"))
+		label = contact->properties["nick"].toString();
+	if(contact->properties.contains("handle"))
+		label = contact->properties["handle"].toString();
 	{
+
 		QMutexLocker locker(&list_mutex);
 
-		QString cid = make_uid(proto_name, account_id, id);
-		if(id_item_map.contains(cid))
-			id_item_map[cid]->setText(0, label);
+		if(id_item_map.contains(contact))
+			id_item_map[contact]->setText(0, label);
 	}
 
 	update_hide_offline();
 }
 
-void ContactList::set_group(const QString &proto_name, const QString &account_id, const QString &id, const QString &group) {
+void ContactList::update_group(Contact *contact) {
 	list_mutex.lock();
 
-	qDebug() << "set_group: id = " << id;
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid)) {
-		QTreeWidgetItem *i = id_item_map[cid];
-		QIcon icon = i->icon(0);
-		QString label = i->text(0);
-		GlobalStatus gs = i->data(0, Qt::UserRole).value<ContactInfo>().gs;
-
+	if(id_item_map.contains(contact)) {
+		QTreeWidgetItem *i = id_item_map[contact];
+		QString current_group = get_full_gn(i->parent()),
+			new_group = (contact->properties.contains("group") ? contact->properties["group"].toString() : "");
 		list_mutex.unlock();
-		remove_contact(proto_name, account_id, id);
-		add_contact(proto_name, account_id, id, label, gs, group);
-		
-		//i = id_item_map[cid].item;
-		//i->setIcon(0, icon);
+		if(current_group != new_group) {
+			remove_contact(contact);
+			add_contact(contact);
+		}
 	} else
 		list_mutex.unlock();
 }
 
-void ContactList::set_status(const QString &proto_name, const QString &account_id, const QString &id, GlobalStatus gs) {
+void ContactList::update_status(Contact *contact) {
 	{ // scope locker
 		QMutexLocker locker(&list_mutex);
 
-		QString cid = make_uid(proto_name, account_id, id);
-		if(id_item_map.contains(cid)) {
-			qDebug() << "Setting status for id" << id << "to" << (int)gs;
-			ContactInfo ci = id_item_map[cid]->data(0, Qt::UserRole).value<ContactInfo>();
-			ci.gs = gs;
-			QVariant var; var.setValue(ci);
-			id_item_map[cid]->setData(0, Qt::UserRole, var);
-			id_item_map[cid]->setIcon(0, icons_i->get_account_status_icon(accounts_i->get_proto_interface(proto_name), account_id, gs));
+		if(id_item_map.contains(contact)) {
+			id_item_map[contact]->setIcon(0, icons_i->get_account_status_icon(contact->account, contact->status));
 		}
 	}
 
@@ -340,10 +328,9 @@ bool allChildrenHidden(QTreeWidgetItem *item) {
 	return true;
 }
 
-void ContactList::set_hidden(const QString &proto_name, const QString &account_id, const QString &id, bool hide) {
-	QString cid = make_uid(proto_name, account_id, id);
-	if(id_item_map.contains(cid)) {
-		QTreeWidgetItem *i = id_item_map[cid], *p = i->parent();
+void ContactList::set_hidden(Contact *contact, bool hide) {
+	if(id_item_map.contains(contact)) {
+		QTreeWidgetItem *i = id_item_map[contact], *p = i->parent();
 
 		if(hide) {
 			i->setHidden(true);
@@ -377,11 +364,10 @@ void ContactList::set_hide_offline(bool hide) {
 	CListI::set_hide_offline(hide);
 
 	ContactInfo ci;
-	QMapIterator<QString, SortedTreeWidgetItem *> i(id_item_map);
+	QMapIterator<Contact *, SortedTreeWidgetItem *> i(id_item_map);
 	while(i.hasNext()) {
 		i.next();
-		ci = i.value()->data(0, Qt::UserRole).value<ContactInfo>();
-		set_hidden(ci.proto_name, ci.account_id, ci.id, hide && ci.gs == ST_OFFLINE);
+		set_hidden(i.key(), hide && i.key()->status == ST_OFFLINE);
 	}
 }
 
@@ -390,22 +376,25 @@ void ContactList::aboutToShowMenuSlot(QTreeWidgetItem *i) {
 	if(i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
 		list_mutex.unlock();
-		emit aboutToShowContactMenu(ci.proto_name, ci.account_id, ci.id);
+
+		events_i->fire_event(ShowContactMenu(ci.contact, this));
 	} else if(i->type() == TWIT_GROUP) {
 		list_mutex.unlock();
-		emit aboutToShowGroupMenu(i->text(1), i->text(2), get_full_gn(i));
+		events_i->fire_event(ShowGroupMenu(get_full_gn(i), this));
 	}
 }
 
 void ContactList::treeItemExpanded(QTreeWidgetItem *i) {
 	QSettings settings;
-	QString full_gn = get_full_gn(i, group_delim[i->text(1)][i->text(2)]);
+	Account *acc = accounts_i->account_info(i->text(1), i->text(2));
+	QString full_gn = get_full_gn(i, group_delim[acc]);
 	settings.setValue("CList/group_expand" + full_gn, true);
 }
 
 void ContactList::treeItemCollapsed(QTreeWidgetItem *i) {
 	QSettings settings;
-	QString full_gn = get_full_gn(i, group_delim[i->text(1)][i->text(2)]);
+	Account *acc = accounts_i->account_info(i->text(1), i->text(2));
+	QString full_gn = get_full_gn(i, group_delim[acc]);
 	settings.setValue("CList/group_expand" + full_gn, false);
 }
 
@@ -414,7 +403,7 @@ void ContactList::treeItemClicked(QTreeWidgetItem *i, int col) {
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
 		list_mutex.unlock();
-		emit contact_clicked(ci.proto_name, ci.account_id, ci.id);
+		events_i->fire_event(ContactClicked(ci.contact, this));
 	} else
 		list_mutex.unlock();
 }
@@ -424,7 +413,7 @@ void ContactList::treeItemDoubleClicked(QTreeWidgetItem *i, int col) {
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
 		list_mutex.unlock();
-		emit contact_dbl_clicked(ci.proto_name, ci.account_id, ci.id);
+		events_i->fire_event(ContactDblClicked(ci.contact, this));
 	} else
 		list_mutex.unlock();
 }
@@ -434,9 +423,13 @@ void ContactList::treeShowTip(QTreeWidgetItem *i, const QPoint &pos) {
 	if(i && i->type() == TWIT_CONTACT) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
 		list_mutex.unlock();
-		emit show_tip(ci.proto_name, ci.account_id, ci.id, pos);
+		events_i->fire_event(ShowTip(ci.contact, this));
 	} else
 		list_mutex.unlock();
+}
+
+void ContactList::treeHideTip() {
+	events_i->fire_event(HideTip(this));
 }
 
 /////////////////////////////

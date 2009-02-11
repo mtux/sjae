@@ -3,26 +3,26 @@
 
 #include <QSplitter>
 #include "ui_splitterwin.h"
+#include <accounts_i.h>
+#include <events_i.h>
 
-class SplitterWin : public QSplitter
-{
+class SplitterWin : public QSplitter { 
 	Q_OBJECT
 
 public:
-	SplitterWin(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &contact_nick = "", const QString &local_nick = "", QWidget *parent = 0);
+	SplitterWin(Contact *contact, EventsI *events_i, QWidget *parent = 0);
 	~SplitterWin();
 public slots:
 	void msgRecv(const QString &msg);
 	void msgSend(const QString &msg);
 
 	void setLogStyleSheet(const QString &styleSheet);
-signals:
-	void msgSend(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg);
 
 private:
 	Ui::SplitterWinClass ui;
-	QString proto_name, account_id, contact_id, contact_nick, my_nick;
+	Contact *contact;
 	QString timestamp();
+	QPointer<EventsI> events_i;
 	bool showDate, showTime, showNick;
 };
 

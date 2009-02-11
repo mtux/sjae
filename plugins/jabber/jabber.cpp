@@ -17,7 +17,7 @@ PluginInfo info = {
 };
 
 
-jabber::jabber(): proto(0), send_direct(0)
+jabber::jabber(): proto(0)
 {
 
 }
@@ -31,66 +31,18 @@ bool jabber::load(CoreI *core) {
 	registerDiscoMetaTypes();
 
 	core_i = core;
-	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	IconsI *icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	if(icons_i) icons_i->add_icon("Proto/Jabber", QPixmap(":/icons/Resources/bulb.PNG"), "Protocols/Jabber");
 
-	send_direct = new SendDirect();
-	connect(this, SIGNAL(destroyed()), send_direct, SLOT(deleteLater()));
+	proto = new JabberProto(core_i);
 
-	connect(accounts_i, SIGNAL(account_changed(const QString &, const QString &)), this, SLOT(account_changed(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_added(const QString &, const QString &)), this, SLOT(account_added(const QString &, const QString &)));
-	connect(accounts_i, SIGNAL(account_removed(const QString &, const QString &)), this, SLOT(account_removed(const QString &, const QString &)));
-
-	proto = new JabberProto(this);
-	accounts_i->register_protocol(proto);
-
-	connect(send_direct, SIGNAL(send_direct(const QString &, const QString &)), proto, SLOT(direct_send(const QString &, const QString &)));
 	return true;
 }
 
 bool jabber::modules_loaded() {
-	//OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
-	//if(options_i)
-	//	options_i->add_page("User Interface/Contact List", new CListOptions(this));
-
-	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
-	if(main_win_i) {
-		menu = new QMenu(tr("Jabber"));
-
-		QAction *act = menu->addAction("Send Direct to Server");
-		connect(act, SIGNAL(triggered()), send_direct, SLOT(show()));
-
-		main_win_i->manage_window_position(send_direct);
-
-		main_win_i->add_submenu(menu);
-	} else {
-		send_direct->show();
-	}
-
 	proto->modules_loaded();
 
 	return true;
-}
-
-void jabber::account_changed(const QString &proto_name, const QString &account_id) {
-	if(proto_name == "Jabber") {
-		proto->account_changed(account_id);
-	}
-}
-
-void jabber::account_added(const QString &proto_name, const QString &account_id) {
-	if(proto_name == "Jabber") {
-		proto->account_added(account_id);
-		if(send_direct) send_direct->add_account(account_id);
-	}
-}
-
-void jabber::account_removed(const QString &proto_name, const QString &account_id) {
-	if(proto_name == "Jabber") {
-		proto->account_removed(account_id);
-		if(send_direct) send_direct->remove_account(account_id);
-	}
 }
 
 bool jabber::pre_shutdown() {
@@ -100,7 +52,6 @@ bool jabber::pre_shutdown() {
 }
 
 bool jabber::unload() {
-	accounts_i->deregister_protocol(proto);
 	delete proto;
 	return true;
 }
@@ -110,7 +61,18 @@ const PluginInfo &jabber::get_plugin_info() {
 }
 
 ///////////////////////////////////////////
-JabberProto::JabberProto(jabber *jabberPlugin): plugin(jabberPlugin) {
+JabberProto::JabberProto(CoreI *core) {
+	core_i = core;
+	accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS);
+	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
+
+	accounts_i->register_protocol(this);
+
+	events_i->add_event_listener(this, UUID_MSG_SEND);
+	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->add_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
+
 	service_discovery = new ServiceDiscovery();
 	connect(this, SIGNAL(destroyed()), service_discovery, SLOT(deleteLater()));
 	connect(service_discovery, SIGNAL(queryInfo(const QString &, const QString &, const QString &)), this, SLOT(contextQueryDiscoInfo(const QString &, const QString &, const QString &)));
@@ -122,39 +84,61 @@ JabberProto::JabberProto(jabber *jabberPlugin): plugin(jabberPlugin) {
 	connect(this, SIGNAL(destroyed()), ask_subscribe, SLOT(deleteLater()));
 	connect(ask_subscribe, SIGNAL(grant(const QString &, const QString &)), this, SLOT(handleGranted(const QString &, const QString &)));
 	connect(ask_subscribe, SIGNAL(deny(const QString &, const QString &)), this, SLOT(handleDenied(const QString &, const QString &)));
+	send_direct = new SendDirect();
+	connect(this, SIGNAL(destroyed()), send_direct, SLOT(deleteLater()));
+	connect(send_direct, SIGNAL(send_direct(const QString &, const QString &)), this, SLOT(direct_send(const QString &, const QString &)));
 }
 
 void JabberProto::modules_loaded() {
-	if(plugin->main_win_i) {
-		QAction *act = plugin->menu->addAction(tr("Service Discovery"));
-		connect(act, SIGNAL(triggered()), service_discovery, SLOT(show()));
-		plugin->main_win_i->manage_window_position(service_discovery);
+	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
+	if(main_win_i) {
+		menu = new QMenu(tr("Jabber"));
 
-		act = plugin->menu->addAction(tr("Gateways"));
+		QAction *act = menu->addAction(tr("Service Discovery"));
+		connect(act, SIGNAL(triggered()), service_discovery, SLOT(show()));
+		main_win_i->manage_window_position(service_discovery);
+
+		act = menu->addAction(tr("Gateways"));
 		connect(act, SIGNAL(triggered()), gateways, SLOT(show()));
-		plugin->main_win_i->manage_window_position(gateways);
+		main_win_i->manage_window_position(gateways);
+
+		act = menu->addAction(tr("Send Direct"));
+		connect(act, SIGNAL(triggered()), send_direct, SLOT(show()));
+		main_win_i->manage_window_position(send_direct);
+
+		main_win_i->add_submenu(menu);
 	} else {
 		service_discovery->show();
 		gateways->show();
+		send_direct->show();
 	}
 }
 
 JabberProto::~JabberProto() {
+	events_i->remove_event_listener(this, UUID_MSG_SEND);
+	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
+	events_i->remove_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
+	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
+
+	accounts_i->deregister_protocol(this);
+
 	deleteContexts();
 }
 
 void JabberProto::handleGranted(const QString &contact_id, const QString &account_id) {
-	if(ctx.contains(account_id))
-		ctx[account_id]->sendGrant(contact_id);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc))
+		ctx[acc]->sendGrant(contact_id);
 }
 
 void JabberProto::handleDenied(const QString &contact_id, const QString &account_id) {
-	if(ctx.contains(account_id))
-		ctx[account_id]->sendRevoke(contact_id);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc))
+		ctx[acc]->sendRevoke(contact_id);
 }
 
 void JabberProto::deleteContexts() {
-	QMapIterator<QString, JabberCtx *> i(ctx);
+	QMapIterator<Account *, JabberCtx *> i(ctx);
 	while(i.hasNext()) {
 		i.next();
 		delete i.value();
@@ -163,18 +147,14 @@ void JabberProto::deleteContexts() {
 }
 
 void JabberProto::contextQueryDiscoInfo(const QString &account_id, const QString &entity_jid, const QString &node) {
-	if(ctx.contains(account_id))
-		ctx[account_id]->sendIqQueryDiscoInfo(entity_jid, node);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc))
+		ctx[acc]->sendIqQueryDiscoInfo(entity_jid, node);
 	else
 		qDebug() << "contextQueryDiscoInfo: no such account id -" << account_id;
 }
 
 void JabberProto::connect_context(JabberCtx *context) {
-	connect(context, SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
-	connect(context, SIGNAL(contactStatusChanged(const QString &, const QString &, GlobalStatus)), this, SLOT(context_contact_status_change(const QString &, const QString &, GlobalStatus)));
-	connect(context, SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
-	connect(context, SIGNAL(msgAck(int)), this, SIGNAL(msgAck(int)));
-
 	if(service_discovery) {
 		connect(context, SIGNAL(gotDiscoInfo(const DiscoInfo &)), service_discovery, SLOT(gotDiscoInfo(const DiscoInfo &)));
 		connect(context, SIGNAL(gotDiscoItems(const DiscoItems &)), service_discovery, SLOT(gotDiscoItems(const DiscoItems &)));
@@ -206,11 +186,21 @@ const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 	return ST_OFFLINE;
 }
 
-bool JabberProto::message_send(const QString &account_id, const QString &contact_id, const QString &msg, int id) {
-	if(ctx.contains(account_id)) {
-		ctx[account_id]->msgSend(contact_id, msg, id);
+bool JabberProto::event_fired(EventsI::Event &e) {
+	if(e.uuid == UUID_MSG_SEND) {
+		MessageSend &ms = static_cast<MessageSend &>(e);
+		if(ctx.contains(ms.contact->account))
+			ctx[ms.contact->account]->msgSend(ms.contact->contact_id, ms.message, ms.id);
+	} else if(e.uuid == UUID_ACCOUNT_STATUS_REQ) {
+		AccountStatusReq &as = static_cast<AccountStatusReq &>(e);
+		if(ctx.contains(as.account))
+			ctx[as.account]->requestStatus(as.status);
+	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
+		AccountChanged &ac = static_cast<AccountChanged &>(e);
+		if(ac.removed) remove_account_data(ac.account);
+		else update_account_data(ac.account);
 	}
-	return false;
+	return true;
 }
 
 const QList<GlobalStatus> JabberProto::statuses() const {
@@ -224,41 +214,19 @@ const QList<GlobalStatus> JabberProto::statuses() const {
 		<< ST_DND;
 }
 
-
-const GlobalStatus JabberProto::get_status(const QString &account_id) const {
-	if(ctx.contains(account_id)) return ctx[account_id]->getCurrentStatus();
-	return ST_OFFLINE;
-}
-
-const GlobalStatus JabberProto::get_contact_status(const QString &account_id, const QString &contact_id) const {
-	if(ctx.contains(account_id)) return ctx[account_id]->getContactStatus(contact_id);
-	return ST_OFFLINE;
-}
-
-bool JabberProto::set_status(const QString &account_id, GlobalStatus gs) {
-	qDebug() << "set status called," << hr_status_name[gs];
-
-	if(!ctx.contains(account_id)) {
-		ctx[account_id] = new JabberCtx(account_id, plugin->accounts_i->account_info(name(), account_id), plugin->core_i, this);
-		connect_context(ctx[account_id]);
-	}
-
-	ctx[account_id]->requestStatus(gs);
-
-	return true;
-}
-
 void JabberProto::add_contact(const QString &account_id, const QString &contact_id) {
-	if(ctx.contains(account_id)) {
-		ctx[account_id]->addContact(contact_id);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc)) {
+		ctx[acc]->addContact(contact_id);
 	} else
 		qWarning() << "add_contact: no account called" << account_id;
 
 }
 
 bool JabberProto::direct_send(const QString &account_id, const QString &text) {
-	if(ctx.contains(account_id)) {
-		return ctx[account_id]->directSend(text);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc)) {
+		return ctx[acc]->directSend(text);
 	} else {
 		qWarning() << "direct_send: no account called" << account_id;
 		return false;
@@ -266,8 +234,9 @@ bool JabberProto::direct_send(const QString &account_id, const QString &text) {
 }
 
 bool JabberProto::gateway_register(const QString &account_id, const QString &gateway) {
-	if(ctx.contains(account_id)) {
-		return ctx[account_id]->gatewayRegister(gateway);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc)) {
+		return ctx[acc]->gatewayRegister(gateway);
 	} else {
 		qWarning() << "gateway_register: no account called" << account_id;
 		return false;
@@ -275,97 +244,81 @@ bool JabberProto::gateway_register(const QString &account_id, const QString &gat
 }
 
 bool JabberProto::gateway_unregister(const QString &account_id, const QString &gateway) {
-	if(ctx.contains(account_id)) {
-		return ctx[account_id]->gatewayUnregister(gateway);
+	Account *acc = accounts_i->account_info(this, account_id);
+	if(ctx.contains(acc)) {
+		return ctx[acc]->gatewayUnregister(gateway);
 	} else {
 		qWarning() << "gateway_unregister: no account called" << account_id;
 		return false;
 	}
 }
 
-void JabberProto::context_status_change(const QString &account_id, GlobalStatus gs) {
-	emit local_status_change(name(), account_id, gs);
-	if(gs == ST_OFFLINE) {
-		if(gateways) gateways->remove_account(account_id);
-		//if(service_discovery)  ???
-	}
-}
-
-void JabberProto::context_contact_status_change(const QString &account_id, const QString &contact_id, GlobalStatus gs) {
-	emit status_change(name(), account_id, contact_id, gs);
-}
-
-void JabberProto::context_message_recv(const QString &account_id, const QString &contact_id, const QString &msg) {
-	emit message_recv(name(), account_id, contact_id, msg);
-}
-
-bool JabberProto::remove_account_data(const QString &account_id) {
-	if(ctx.contains(account_id)) {
-		delete ctx[account_id];
-		ctx.remove(account_id);
+bool JabberProto::remove_account_data(Account *acc) {
+	if(ctx.contains(acc)) {
+		if(gateways)
+			gateways->remove_account(acc->account_id);
+		delete ctx[acc];
+		ctx.remove(acc);
 		return true;
 	}
-	if(gateways)
-		gateways->remove_account(account_id);
 
 	return false;
 }
 
-bool JabberProto::update_account_data(const QString &account_id, const AccountInfo &info) {
-	if(ctx.contains(account_id)) {
-		ctx[account_id]->setAccountInfo(info);
+bool JabberProto::update_account_data(Account *acc) {
+	if(ctx.contains(acc)) {
+		ctx[acc]->setAccountInfo(acc);
 	} else {
-		ctx[account_id] = new JabberCtx(account_id, info, plugin->core_i, this);
-		connect_context(ctx[account_id]);
+		ctx[acc] = new JabberCtx(acc, core_i, this);
+		connect_context(ctx[acc]);
 	}
+	if(acc->status == ST_OFFLINE)
+		if(gateways) gateways->remove_account(acc->account_id);
 
 	return true;
 }
 
-bool JabberProto::get_account_data(const QString &account_id, AccountInfo &account_info) {
-	if(ctx.contains(account_id)) {
-		account_info = ctx[account_id]->get_account_info();
-		return true;
+void JabberProto::parse_extra_data(QDomElement &node, Account *acc) {
+	if(ctx.contains(acc)) {
+		ctx[acc]->setUseSSL(node.attribute("useSSL", "false") == "true");
+		ctx[acc]->setConnectionHost(node.attribute("connectionHost", ""));
 	}
+}
+
+void JabberProto::set_extra_data(QDomElement &node, Account *acc) {
+	if(ctx.contains(acc)) {
+		node.setAttribute("useSSL", ctx[acc]->getUseSSL() ? "true" : "false");
+		if(!ctx[acc]->getConnectionHost().isEmpty())
+			node.setAttribute("connectionHost", ctx[acc]->getConnectionHost());
+	}
+}
+
+AccountExtra *JabberProto::create_account_extra(Account *acc) {
+	ProtoOptions *po = new ProtoOptions(this);
+	po->set_info(acc);
+	return po;
+}
+
+void JabberProto::setUseSSL(Account *account, bool on) {
+	if(ctx.contains(account))
+		ctx[account]->setUseSSL(on);
+}
+
+void JabberProto::setConnectionHost(Account *account, const QString &host) {
+	if(ctx.contains(account))
+		ctx[account]->setConnectionHost(host);
+}
+
+bool JabberProto::getUseSSL(Account *account) {
+	if(ctx.contains(account))
+		return ctx[account]->getUseSSL();
 	return false;
 }
 
-void JabberProto::account_added(const QString &account_id) {
-	/*
-	if(!ctx.contains(account_id)) {
-		ctx[account_id] = new JabberCtx(account_id, plugin->accounts_i->account_info(name(), account_id), plugin->core_i, this);
-		connect(ctx[account_id], SIGNAL(statusChanged(const QString &, GlobalStatus)), this, SLOT(context_status_change(const QString &, GlobalStatus)));
-		connect(ctx[account_id], SIGNAL(msgRecv(const QString &, const QString &, const QString &)), this, SLOT(context_message_recv(const QString &, const QString &, const QString &)));
-	}
-	*/
-}
-
-void JabberProto::account_removed(const QString &account_id) {
-}
-
-void JabberProto::account_changed(const QString &account_id) {
-}
-
-void JabberProto::parse_extra_data(QDomElement &node, const QString &account_id) {
-	if(ctx.contains(account_id)) {
-		ctx[account_id]->setUseSSL(node.attribute("useSSL", "false") == "true");
-		ctx[account_id]->setConnectionHost(node.attribute("connectionHost", ""));
-	}
-}
-
-void JabberProto::set_extra_data(QDomElement &node, const QString &account_id) {
-	if(ctx.contains(account_id)) {
-		node.setAttribute("useSSL", ctx[account_id]->getUseSSL() ? "true" : "false");
-		if(!ctx[account_id]->getConnectionHost().isEmpty())
-			node.setAttribute("connectionHost", ctx[account_id]->getConnectionHost());
-	}
-}
-
-AccountExtra *JabberProto::create_account_extra(const QString &account_id) {
-	ProtoOptions *po = new ProtoOptions();
-	if(ctx.contains(account_id))
-		po->setContext(ctx[account_id]);
-	return po;
+QString JabberProto::getConnectionHost(Account *account) {
+	if(ctx.contains(account))
+		return ctx[account]->getConnectionHost();
+	return "";
 }
 
 ProtoSearchWindowI *JabberProto::create_search_window() {

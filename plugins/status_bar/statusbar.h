@@ -2,6 +2,7 @@
 #define STATUSBAR_H
 
 #include <icons_i.h>
+#include <events_i.h>
 #include <main_window_i.h>
 #include <accounts_i.h>
 #include <QPointer>
@@ -9,7 +10,7 @@
 #include <QToolButton>
 #include <QMap>
 
-class StatusBar: public PluginI
+class StatusBar: public PluginI, public EventsI::EventListener
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
@@ -23,16 +24,17 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
+	bool event_fired(EventsI::Event &e);
+
 protected slots:
 	void actionTriggered(QObject *action);
-	void local_status_change(const QString &proto_name, const QString &account_id, GlobalStatus gs);
-	void account_added(const QString &proto_name, const QString &id);
-	void account_removed(const QString &proto_name, const QString &id);
+
 protected:
 	CoreI *core_i;
 	QPointer<MainWindowI> main_win_i;
 	QPointer<IconsI> icons_i;
 	QPointer<AccountsI> accounts_i;
+	QPointer<EventsI> events_i;
 
 	QStatusBar *status_bar;
 	QSignalMapper *menuMapper, *protoMapper;

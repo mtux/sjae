@@ -2,15 +2,15 @@
 #define MESSAGEWINDOW_H
 
 #include <message_window_i.h>
-#include <accounts_i.h>
 #include <clist_i.h>
 #include <icons_i.h>
+#include <events_i.h>
 #include "splitterwin.h"
 
 #include <QPointer>
 #include <QMap>
 
-class MessageWindow: public MessageWindowI {
+class MessageWindow: public MessageWindowI, EventsI::EventListener {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
 public:
@@ -22,26 +22,30 @@ public:
 	bool pre_shutdown();
 	bool unload();
 	const PluginInfo &get_plugin_info();
+
+	bool event_fired(EventsI::Event &e);
 protected:
 	CoreI *core_i;
 	QPointer<AccountsI> accounts_i;
 	QPointer<CListI> clist_i;
 	QPointer<IconsI> icons_i;
+	QPointer<EventsI> events_i;
 	
-	QMap<QString, QMap<QString, QMap<QString, SplitterWin *> > > windows;
-	bool window_exists(const QString &proto_name, const QString &account_id, const QString &contact_id);
+	QMap<Contact *, SplitterWin *> windows;
+	bool window_exists(Contact *contact);
 
-	SplitterWin *get_window(const QString &proto_name, const QString &account_id, const QString &contact_id);
+	SplitterWin *get_window(Contact *contact);
 
 	unsigned long next_msg_id;
+
 protected slots:
-	void account_added(const QString &proto_name, const QString &id);
-	void account_removed(const QString &proto_name, const QString &id);
-	void message_recv(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg);
-	void message_send(const QString &proto_name, const QString &account_id, const QString &contact_id, const QString &msg);
-	void status_change(const QString &proto_name, const QString &account_id, const QString &contact_id, GlobalStatus gs);
+	void account_added(Account *account);
+	void account_removed(Account *account);
+	void message_recv(Contact *contact, const QString &msg);
+	void status_change(Contact *contact);
+
 public slots:
-	void open_window(const QString &proto_name, const QString &account_id, const QString &contact_id);
+	void open_window(Contact *contact);
 };
 
 #endif // MESSAGEWINDOW_H
