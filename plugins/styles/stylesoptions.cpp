@@ -21,6 +21,11 @@ StylesOptions::~StylesOptions()
 void StylesOptions::loadStyleSheet(int i) {
 	if(i == 0) {
 		ui.edStyleSheet->setText(savedStyle);
+	} else if(i == 1) {
+		QFile f(":/Resources/default.ss");
+		if(f.open(QIODevice::ReadOnly)) {
+			ui.edStyleSheet->setText(f.readAll());
+		}
 	} else {
 		QFile f(qApp->applicationDirPath() + "/styles/" + ui.cmbFiles->currentText());
 		if(f.open(QIODevice::ReadOnly)) {
@@ -44,7 +49,8 @@ void StylesOptions::reset() {
 
 	QDir d(qApp->applicationDirPath() + "/styles");
 	ui.cmbFiles->addItem("Current Style");
-	ui.cmbFiles->addItems(d.entryList());
+	ui.cmbFiles->addItem("Default");
+	ui.cmbFiles->addItems(d.entryList(QDir::Files | QDir::Readable));
 	ui.cmbFiles->setCurrentIndex(0);
 
 	savedStyle = qApp->styleSheet();

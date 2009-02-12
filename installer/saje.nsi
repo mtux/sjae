@@ -57,6 +57,7 @@ Section "Qt Runtime Libraries"
   File "${QTDIR}\bin\QtNetwork4.dll"
   File "${QTDIR}\bin\QtXml4.dll"
   File "${QTDIR}\bin\QtScript4.dll"
+  File "${QTDIR}\bin\QtWebKit4.dll"
  
 SectionEnd
 
@@ -73,6 +74,7 @@ Section "Saje (required)"
   File "..\bin\release\plugins\accounts.dll"
   File "..\bin\release\plugins\add_contact.dll"
   File "..\bin\release\plugins\contact_list.dll"
+  File "..\bin\release\plugins\events.dll"
   File "..\bin\release\plugins\icons.dll"
   File "..\bin\release\plugins\jabber.dll"
   File "..\bin\release\plugins\main_window.dll"
@@ -80,6 +82,7 @@ Section "Saje (required)"
   File "..\bin\release\plugins\options.dll"
   File "..\bin\release\plugins\startup_status.dll"
   File "..\bin\release\plugins\status_bar.dll"
+  File "..\bin\release\plugins\styles.dll"
 	
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_SAJE "Install_Dir" "$INSTDIR"

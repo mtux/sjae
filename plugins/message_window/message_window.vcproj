@@ -39,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\GeneratedFiles;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;..\..\include;$(QTDIR)\include\QtXml"
+				AdditionalIncludeDirectories=".\GeneratedFiles;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;..\..\include;$(QTDIR)\include\QtXml;$(QTDIR)\include\QtWebKit"
 				PreprocessorDefinitions="UNICODE,WIN32,QT_THREAD_SUPPORT,QT_NO_DEBUG,NDEBUG,QT_CORE_LIB,QT_GUI_LIB,MESSAGE_WINDOW_LIB,QT_XML_LIB"
 				RuntimeLibrary="2"
 				TreatWChar_tAsBuiltInType="false"
@@ -56,7 +56,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies=" qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib"
+				AdditionalDependencies=" qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib QtWebKit4.lib"
 				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="false"
@@ -110,7 +110,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\GeneratedFiles;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;..\..\include;$(QTDIR)\include\QtXml"
+				AdditionalIncludeDirectories=".\GeneratedFiles;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;..\..\include;$(QTDIR)\include\QtXml;$(QTDIR)\include\QtWebKit"
 				PreprocessorDefinitions="UNICODE,WIN32,QT_THREAD_SUPPORT,QT_CORE_LIB,QT_GUI_LIB,MESSAGE_WINDOW_LIB,QT_XML_LIB"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies=" qtmaind.lib QtCored4.lib QtGuid4.lib QtXmld4.lib"
+				AdditionalDependencies=" qtmaind.lib QtCored4.lib QtGuid4.lib QtXmld4.lib QtWebKitd4.lib"
 				OutputFile="..\..\bin\$(ConfigurationName)\plugins\$(ProjectName).dll"
 				AdditionalLibraryDirectories="$(QTDIR)\lib"
 				GenerateDebugInformation="true"
@@ -197,7 +197,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing chatinput.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; &quot;.\chatinput.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\chatinput.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\chatinput.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;"
 					/>
@@ -208,7 +208,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing chatinput.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; &quot;.\chatinput.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\chatinput.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\chatinput.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_chatinput.cpp&quot;"
 					/>
@@ -223,7 +223,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing message_window_i.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;..\..\include\message_window_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;..\..\include\message_window_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;..\..\include\message_window_i.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;"
 					/>
@@ -234,7 +234,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing message_window_i.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;..\..\include\message_window_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;..\..\include\message_window_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;..\..\include\message_window_i.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_message_window_i.cpp&quot;"
 					/>
@@ -249,7 +249,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing messagewin.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;.\messagewin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewin.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;"
 					/>
@@ -260,7 +260,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing messagewin.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;.\messagewin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewin.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewin.cpp&quot;"
 					/>
@@ -275,7 +275,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing messagewindow.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;.\messagewindow.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewindow.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewindow.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;"
 					/>
@@ -286,7 +286,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing messagewindow.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -I&quot;.\GeneratedFiles&quot; -I&quot;$(QTDIR)\include&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)&quot; -I&quot;.&quot; -I&quot;$(QTDIR)\include\QtCore&quot; -I&quot;$(QTDIR)\include\QtGui&quot; -I&quot;.\..\..\include&quot; -I&quot;$(QTDIR)\include\QtXml&quot; &quot;.\messagewindow.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewindow.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewindow.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindow.cpp&quot;"
 					/>
@@ -301,7 +301,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing splitterwin.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; &quot;.\splitterwin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\splitterwin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\splitterwin.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;"
 					/>
@@ -312,7 +312,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing splitterwin.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; &quot;.\splitterwin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL  -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\splitterwin.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\splitterwin.h"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_splitterwin.cpp&quot;"
 					/>
@@ -417,6 +417,18 @@
 			SourceControlFiles="false"
 			>
 			<File
+				RelativePath=".\GeneratedFiles\Release\moc_chatinput.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_chatinput.cpp"
 				>
 				<FileConfiguration
@@ -429,7 +441,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_chatinput.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -464,7 +476,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -499,18 +511,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_messagewindow.cpp"
 				>
 				<FileConfiguration
@@ -535,10 +535,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_splitterwin.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_splitterwin.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -547,10 +547,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_splitterwin.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_splitterwin.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

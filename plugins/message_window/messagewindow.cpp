@@ -58,7 +58,7 @@ const PluginInfo &MessageWindow::get_plugin_info() {
 bool MessageWindow::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG_RECV) {
 		MessageRecv &mr = static_cast<MessageRecv &>(e);
-		message_recv(mr.contact, mr.message);
+		message_recv(mr.contact, mr.message, mr.timestamp);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
 		if(windows.contains(cc.contact)) {
@@ -111,9 +111,9 @@ void MessageWindow::account_removed(Account *account) {
 	}
 }
 
-void MessageWindow::message_recv(Contact *contact, const QString &msg) {
+void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime &time) {
 	SplitterWin *win = get_window(contact);
-	win->msgRecv(msg);
+	win->msgRecv(msg, time);
 }
 
 void MessageWindow::status_change(Contact *contact) {
