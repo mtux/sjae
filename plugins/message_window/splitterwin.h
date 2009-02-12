@@ -6,6 +6,8 @@
 #include <accounts_i.h>
 #include <events_i.h>
 #include <QList>
+#include <QWebPage>
+#include <QUrl>
 
 class SplitterWin : public QSplitter { 
 	Q_OBJECT
@@ -30,6 +32,9 @@ protected:
 	void update_log();
 	QString getNick(Contact *contact);
 	QString getContent();
+
+protected slots:
+	void openLink(const QUrl &url);
 
 private:
 	Ui::SplitterWinClass ui;
