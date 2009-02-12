@@ -45,7 +45,7 @@ bool Styles::load(CoreI *core) {
 	}
 
 	optionsWin = new StylesOptions();
-	options_i->add_page(get_plugin_info().name, optionsWin);
+	options_i->add_page("Appearance/" + get_plugin_info().name, optionsWin);
 	connect(optionsWin, SIGNAL(applied()), this, SLOT(applyStyleSheet()));
 	return true;
 }
