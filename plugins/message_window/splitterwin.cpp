@@ -2,9 +2,15 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QWebFrame>
+#include <QDesktopServices>
 #include <QDebug>
 
 #define MAX_MESSAGES		100
+#define LINK_PATTERN		"\\b(http://\\S+|\\S+.co(?:m)?(?:.[a-zA-Z]{2})?\\S+" \
+	"|\\S+.org(?:\\.[a-zA-Z]{2})?\\S+|\\S+.net(?:\\.[a-zA-Z]{2})?\\S+" \
+	"|\\S+.gov(?:\\.[a-zA-Z]{2})?\\S+|\\S+.biz(?:\\.[a-zA-Z]{2})?\\S+" \
+	"|\\S+.info(?:\\.[a-zA-Z]{2})?\\S+|\\S+.travel(?:\\.[a-zA-Z]{2})?\\S+" \
+	"|www.\\S+)\\b"
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
@@ -25,11 +31,18 @@ SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 
 	QSettings settings;
 	restoreGeometry(settings.value("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id).toByteArray());
+
+	ui.edMsgLog->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+	connect(ui.edMsgLog, SIGNAL(linkClicked(const QUrl &)), this, SLOT(openLink(const QUrl &)));
 }
 
 SplitterWin::~SplitterWin() {
 	QSettings settings;
 	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
+}
+
+void SplitterWin::openLink(const QUrl &url) {
+	QDesktopServices::openUrl(url);
 }
 
 QString SplitterWin::getContent() {
@@ -90,6 +103,7 @@ QString SplitterWin::timestamp(QDateTime &dt) {
 void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='\\1'>\\1</a>");
 	
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
@@ -113,6 +127,7 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 void SplitterWin::msgSend(const QString &msg) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='\\1'>\\1</a>");
 
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
