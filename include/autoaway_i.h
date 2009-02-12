@@ -6,7 +6,7 @@
 #include <QUuid>
 #include <QDateTime>
 
-#define INAME_AUTOAWAY		"EventsInterface"
+#define INAME_AUTOAWAY		"AutoAwayInterface"
 
 #define UUID_IDLE_STATUS	"{41F273DF-68A4-477e-96C8-B0F1F20260B3}"
 
