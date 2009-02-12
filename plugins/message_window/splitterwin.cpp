@@ -20,10 +20,7 @@ SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 
 	setAttribute(Qt::WA_QuitOnClose, false);
 
-	if(getNick(contact) != contact->contact_id)
-		setWindowTitle(getNick(contact) + " (" + contact->contact_id + ")");
-	else
-		setWindowTitle(contact->contact_id);
+	update_title();
 
 	//ui.edMsgLog->setFont(QFont("tahoma", 12));
 
@@ -39,6 +36,13 @@ SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 SplitterWin::~SplitterWin() {
 	QSettings settings;
 	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
+}
+
+void SplitterWin::update_title() {
+	if(getNick(contact) != contact->contact_id)
+		setWindowTitle(getNick(contact) + " (" + contact->contact_id + ")");
+	else
+		setWindowTitle(contact->contact_id);
 }
 
 void SplitterWin::openLink(const QUrl &url) {

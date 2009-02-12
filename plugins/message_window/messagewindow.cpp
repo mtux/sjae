@@ -66,7 +66,7 @@ bool MessageWindow::event_fired(EventsI::Event &e) {
 				delete windows[cc.contact];
 				windows.remove(cc.contact);
 			} else {
-				status_change(cc.contact);
+				contact_change(cc.contact);
 			}
 		}
 	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
@@ -116,10 +116,11 @@ void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime
 	win->msgRecv(msg, time);
 }
 
-void MessageWindow::status_change(Contact *contact) {
+void MessageWindow::contact_change(Contact *contact) {
 	if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
 		win->setWindowIcon(icons_i->get_account_status_icon(contact->account, contact->status));
+		win->update_title();
 	}
 }
 

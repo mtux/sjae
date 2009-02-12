@@ -21,6 +21,7 @@ public slots:
 
 	void setLogStyleSheet(const QString &styleSheet);
 
+	void update_title();
 protected:
 	class MessageData {
 	public:
