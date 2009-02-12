@@ -31,6 +31,9 @@
      <property name="text" >
       <string>Enable auto away</string>
      </property>
+     <property name="checked" >
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
@@ -108,6 +111,9 @@
      <property name="text" >
       <string>Restore my old status when I return</string>
      </property>
+     <property name="checked" >
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
@@ -135,5 +141,54 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>chkEnable</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>spnMin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>97</x>
+     <y>69</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>194</x>
+     <y>137</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>chkEnable</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>cmbStatus</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>284</x>
+     <y>65</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>311</x>
+     <y>157</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>chkEnable</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>chkRestore</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>54</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>42</x>
+     <y>233</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

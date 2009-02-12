@@ -10,10 +10,9 @@
 #include <QDateTime>
 #include <QMap>
 
-class AutoAway: public AutoAwayI
-{
+class AutoAway: public AutoAwayI {
 	Q_OBJECT
-	Q_INTERFACES(PluginI)
+
 public:
 	AutoAway();
 	~AutoAway();
