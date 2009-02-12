@@ -6,11 +6,11 @@
 #include <QDebug>
 
 #define MAX_MESSAGES		100
-#define LINK_PATTERN		"\\b(http://\\S+|\\S+.co(?:m)?(?:.[a-zA-Z]{2})?\\S+" \
-	"|\\S+.org(?:\\.[a-zA-Z]{2})?\\S+|\\S+.net(?:\\.[a-zA-Z]{2})?\\S+" \
-	"|\\S+.gov(?:\\.[a-zA-Z]{2})?\\S+|\\S+.biz(?:\\.[a-zA-Z]{2})?\\S+" \
-	"|\\S+.info(?:\\.[a-zA-Z]{2})?\\S+|\\S+.travel(?:\\.[a-zA-Z]{2})?\\S+" \
-	"|www.\\S+)\\b"
+#define LINK_PATTERN		"\\b(http://\\S+|\\S+\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|\\S+\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|\\S+\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|\\S+\\.info(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.travel(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|www\\.\\S+\\.\\S+)\\b"
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
@@ -42,7 +42,10 @@ SplitterWin::~SplitterWin() {
 }
 
 void SplitterWin::openLink(const QUrl &url) {
-	QDesktopServices::openUrl(url);
+	QUrl myUrl = url;
+	if(myUrl.scheme().isEmpty())
+		myUrl.setScheme("http");
+	QDesktopServices::openUrl(myUrl);
 }
 
 QString SplitterWin::getContent() {
@@ -103,7 +106,7 @@ QString SplitterWin::timestamp(QDateTime &dt) {
 void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='\\1'>\\1</a>");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\1'>\\1</a>");
 	
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
@@ -127,7 +130,7 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 void SplitterWin::msgSend(const QString &msg) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='\\1'>\\1</a>");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\1'>\\1</a>");
 
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
