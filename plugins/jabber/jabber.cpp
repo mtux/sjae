@@ -171,8 +171,6 @@ const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 	switch(gs) {
 		case ST_OFFLINE: 
 		case ST_ONLINE: 
-		case ST_INVISIBLE: 
-		case ST_FREETOCHAT: 
 		case ST_SHORTAWAY: 
 		case ST_LONGAWAY:
 		case ST_DND:
@@ -181,7 +179,9 @@ const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 		case ST_OUTTOLUNCH:
 		case ST_ONTHEPHONE:
 			return ST_SHORTAWAY;
-
+		case ST_INVISIBLE: 
+		case ST_FREETOCHAT: 
+			return ST_ONLINE;
 	}
 	return ST_OFFLINE;
 }
@@ -194,7 +194,7 @@ bool JabberProto::event_fired(EventsI::Event &e) {
 	} else if(e.uuid == UUID_ACCOUNT_STATUS_REQ) {
 		AccountStatusReq &as = static_cast<AccountStatusReq &>(e);
 		if(ctx.contains(as.account))
-			ctx[as.account]->requestStatus(as.status);
+			ctx[as.account]->requestStatus(closest_status_to(as.status));
 	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
 		AccountChanged &ac = static_cast<AccountChanged &>(e);
 		if(ac.removed) remove_account_data(ac.account);
