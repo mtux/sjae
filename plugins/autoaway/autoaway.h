@@ -24,9 +24,6 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
-signals:
-	void idle_status(bool isIdle);
-
 protected slots:
 	void options_applied();
 	void checkIdle();

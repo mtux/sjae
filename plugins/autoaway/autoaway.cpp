@@ -104,7 +104,7 @@ void AutoAway::checkIdle() {
 
 void AutoAway::goIdle() {
 	idle = true;
-	emit idle_status(true);
+	events_i->fire_event(AutoAwayStatus(idle, idle_time, this));
 
 	if(current_settings.enable) {
 		QStringList protos = accounts_i->protocol_names();
@@ -123,7 +123,7 @@ void AutoAway::goIdle() {
 
 void AutoAway::returnFromIdle() {
 	idle = false;
-	emit idle_status(false);
+	events_i->fire_event(AutoAwayStatus(idle, idle_time, this));
 
 	if(current_settings.enable && current_settings.restore) 
 		foreach(Account *acc, saved_status.keys()) {
