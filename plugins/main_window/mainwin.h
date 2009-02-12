@@ -7,6 +7,7 @@
 #include <QPointer>
 #include <QSystemTrayIcon>
 #include <QPoint>
+#include "mainwinoptions.h"
 
 class MainWin : public QMainWindow
 {
@@ -14,18 +15,14 @@ class MainWin : public QMainWindow
 
 public:
 	MainWin(CoreI *core, QWidget *parent = 0);
-	~MainWin();
+	virtual ~MainWin();
 
 	void add_window(QWidget *w);
 	void manage_window_position(QWidget *w);
 	void add_submenu(QMenu *menu);
 	void restoreHiddenState();
 
-	void set_hide_toolbar(bool hide);
-	void set_hide_frame(bool hide);
-	void set_tool_window(bool tool);
-	void set_transparency(int trans_percent);
-	void set_round_corners(bool round);
+	void set_options(MainWinOptions::Settings settings);
 
 public slots:
 	void toggleHidden();
@@ -51,7 +48,7 @@ protected:
 
 	bool mousePressed;
 	QPoint cursorOffset;
-	bool hideFrame, toolWindow, roundCorners;
+	bool hideFrame, toolWindow, roundCorners, onTop;
 	void updateFlags();
 
 protected slots:

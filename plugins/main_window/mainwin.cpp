@@ -29,7 +29,8 @@ QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 }
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
-	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), hideFrame(false), toolWindow(false), roundCorners(false)
+	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), 
+		hideFrame(false), toolWindow(false), roundCorners(false), onTop(false)
 {
 	ui.setupUi(this);
 
@@ -79,35 +80,27 @@ void MainWin::updateFlags() {
 	//Qt::WindowFlags flags = windowFlags();
 
 	bool hidden = isHidden();
-	setWindowFlags((toolWindow ? Qt::Tool : Qt::Window) | (hideFrame ? Qt::FramelessWindowHint : Qt::Widget));
+	setWindowFlags((toolWindow ? Qt::Tool : Qt::Window) 
+		| (hideFrame ? Qt::FramelessWindowHint : Qt::Widget)
+		| (onTop ? Qt::WindowStaysOnTopHint : Qt::Widget));
+
 	if(!hidden) show();	
 }
 
-void MainWin::set_hide_toolbar(bool hide) {
-	ui.toolBar->setVisible(!hide);
-}
-
-void MainWin::set_hide_frame(bool hide) {
-	hideFrame = hide;
-	updateFlags();
-}
-
-void MainWin::set_tool_window(bool tool) {
-	toolWindow = tool;
-	updateFlags();
-}
-
-void MainWin::set_transparency(int trans_percent) {
-	setWindowOpacity(1 - (trans_percent / 100.0));
-}
-
-void MainWin::set_round_corners(bool round) {
-	roundCorners = round;
+void MainWin::set_options(MainWinOptions::Settings settings) {
+	ui.toolBar->setVisible(!settings.hide_toolbar);
+	hideFrame = settings.hide_frame;
+	toolWindow = settings.tool_window;
+	setWindowOpacity(1 - (settings.trans_percent / 100.0));
+	roundCorners = settings.round_corners;
 	if(roundCorners && hideFrame) {
 		QRegion r = roundRectRegion(0, 0, width(), height(), 10);
 		setMask(r);
 	} else
 		clearMask();
+	onTop = settings.on_top;
+
+	updateFlags();
 }
 
 void MainWin::quit() {
