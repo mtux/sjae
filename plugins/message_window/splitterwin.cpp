@@ -1,17 +1,21 @@
 #include "splitterwin.h"
 #include <QDateTime>
 #include <QSettings>
+#include <QWebFrame>
+#include <QDebug>
+
+#define MAX_MESSAGES		100
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
-		showDate(true), showTime(true), showNick(false)
+		showDate(true), showTime(true), showNick(true)
 {
 	ui.setupUi(this);
 
 	setAttribute(Qt::WA_QuitOnClose, false);
 
-	if(!contact->properties.contains("nick"))
-		setWindowTitle(contact->properties["nick"].toString() + " (" + contact->contact_id + ")");
+	if(getNick(contact) != contact->contact_id)
+		setWindowTitle(getNick(contact) + " (" + contact->contact_id + ")");
 	else
 		setWindowTitle(contact->contact_id);
 
@@ -28,40 +32,78 @@ SplitterWin::~SplitterWin() {
 	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
 }
 
-void SplitterWin::setLogStyleSheet(const QString &styleSheet) {
-	ui.edMsgLog->document()->setDefaultStyleSheet(styleSheet);
-	ui.edMsgLog->setHtml(ui.edMsgLog->document()->toHtml());
-}
+QString SplitterWin::getContent() {
+	QString ret;
+	bool first = true, last_incomming;
+	foreach(MessageData item, content) {
+		if(first || item.incomming != last_incomming) {
+			if(first)
+				ret += QString("<div class='") + (item.incomming ? "incomming" : "outgoing") + "'>";
+			else
+				ret += QString("</div>\n<div class='") + (item.incomming ? "incomming" : "outgoing") + "'>";
+		}
+		ret += item.message;
+		first = false;
+		last_incomming = item.incomming;
+	}
 
-QString SplitterWin::timestamp() {
-	QDateTime dt = QDateTime::currentDateTime();
-	QString ret = "";
-	if(showDate) ret += "<span class='date'>" + dt.toString("dd/MM/yy") + "</span>";
-	if(showTime) {
-		if(ret.size()) ret += " ";
-		ret += "<span class='time'>" + dt.toString("hh:mm") + "</span>";
-	}
-	if(ret.size()) {
-		ret.prepend("<span class='timestamp'>");
-		ret.append("</span>");
-	}
+	if(!first) ret += "</div>\n";
+
 	return ret;
 }
 
-void SplitterWin::msgRecv(const QString &msg) {
+void SplitterWin::update_log() {
+	QString page = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Saje Message Log</title><style type='text/css'>" + style + "</style></head>\n<body>\n" + getContent() + "</body>\n</html>";
+	qDebug() << "webview content:" << page;
+	ui.edMsgLog->setContent(page.toUtf8(), "application/xhtml+xml");
+	ui.edMsgLog->page()->mainFrame()->setScrollBarValue(Qt::Vertical, ui.edMsgLog->page()->mainFrame()->scrollBarMaximum(Qt::Vertical));
+}
+
+QString SplitterWin::getNick(Contact *contact) {
+	if(contact->properties.contains("handle")) return contact->properties["handle"].toString();
+	if(contact->properties.contains("nick")) return contact->properties["nick"].toString();
+	if(contact->properties.contains("name")) return contact->properties["name"].toString();
+	return contact->contact_id;
+}
+
+void SplitterWin::setLogStyleSheet(const QString &styleSheet) {
+	//ui.edMsgLog->document()->setDefaultStyleSheet(styleSheet);
+	//ui.edMsgLog->setHtml(ui.edMsgLog->toHtml());
+	style = styleSheet;
+	update_log();
+}
+
+QString SplitterWin::timestamp(QDateTime &dt) {
+	QString dateClass = "date";
+	if(dt.date() == QDate::currentDate())
+		dateClass = "date_today";
+
+	QString ret = "<span class='timestamp'>";
+	ret += "<span class='" + dateClass + "'>" + Qt::escape(dt.date().toString(Qt::SystemLocaleShortDate)) + " </span>";
+	ret += "<span class='time'>" + Qt::escape(dt.time().toString(Qt::SystemLocaleShortDate)) + "</span>";
+	ret += " </span>";
+
+	return ret;
+}
+
+void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br>");
-	QString ts = timestamp();
-	QString text = ts;
-	if(showNick) {
-		if(text.size()) text += " ";
-		text += "<span class='nick'>" + (contact->properties.contains("nick") ? contact->contact_id : contact->properties["nick"].toString()) + "</span>";
-	}
-	if(text.size()) text += ": ";
-	text += "<span class='message'>" + dispMsg + "</span>";
-	text.prepend("<span class='incomming'>");
-	text.append("</span>");
-	ui.edMsgLog->append(text);
+	dispMsg.replace("\n", "<br />");
+	
+	QString text = "<div class='message'>";
+	text += "<span class='info'>";
+	text += timestamp(time);
+	text += "<span class='nick'>" + Qt::escape(getNick(contact)) + " </span>";
+	text += "<span class='separator'>: </span></span>";
+	text += "<span class='text'>" + dispMsg + "</span>";
+	text += "</div>";
+
+	content << MessageData(true, text);
+	while(content.size() > MAX_MESSAGES)
+		content.removeFirst();
+
+	update_log();
 	
 	show();
 	activateWindow();
@@ -70,18 +112,20 @@ void SplitterWin::msgRecv(const QString &msg) {
 
 void SplitterWin::msgSend(const QString &msg) {
 	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br>");
-	QString ts = timestamp();
-	QString text = ts;
-	if(showNick) {
-		if(text.size()) text += " ";
-		text += "<span class='nick'>" + contact->account->nick + "</span>";
-	}
-	if(text.size()) text += ": ";
-	text += "<span class='message'>" + dispMsg + "</span>";
-	text.prepend("<span class='outgoing'>");
-	text.append("</span>");
-	ui.edMsgLog->append(text);
+	dispMsg.replace("\n", "<br />");
+
+	QString text = "<div class='message'>";
+	text += "<span class='info'>";
+	text += timestamp(QDateTime::currentDateTime());
+	text += "<span class='nick'>" + Qt::escape(contact->account->nick) + " </span>";
+	text += "<span class='separator'>: </span></span>";
+	text += "<span class='text'>" + dispMsg + "</span>";
+	text += "</div>";
+
+	content << MessageData(false, text);
+	while(content.size() > MAX_MESSAGES)
+		content.removeFirst();
+	update_log();
 	
 	MessageSend ms(msg, 0, contact, this);
 	events_i->fire_event(ms);

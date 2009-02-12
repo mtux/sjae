@@ -3,6 +3,7 @@
 
 #include "plugin_i.h"
 #include <QUuid>
+#include <QDateTime>
 
 #define INAME_EVENTS	"EventsInterface"
 
@@ -14,8 +15,11 @@ public:
 	class Event {
 	public:
 		QUuid uuid;
+		QDateTime timestamp;
 		QObject *source;
-		Event(const QUuid &uuid, QObject *s = 0): uuid(uuid), source(s) {}
+		Event(const QUuid &uuid, QObject *s = 0): uuid(uuid), source(s) {
+			timestamp = QDateTime::currentDateTime();
+		}
 	};
 
 	class EventListener {

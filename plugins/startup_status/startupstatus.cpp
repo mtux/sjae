@@ -35,6 +35,7 @@ bool StartupStatus::load(CoreI *core) {
 bool StartupStatus::modules_loaded() {
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 
+#ifdef QT_NO_DEBUG
 	QSettings settings;
 	int size = settings.beginReadArray("StartupStatus");
 	for(int i = 0; i < size; i++) {
@@ -43,19 +44,21 @@ bool StartupStatus::modules_loaded() {
 			account_id = settings.value("account_id").toString();
 		GlobalStatus gs = (GlobalStatus)settings.value("status").toInt();
 		if(accounts_i->account_ids(proto).contains(account_id)) {
-			qDebug() << "setting account " + account_id + " to status" << gs;
+			//qDebug() << "setting account " + account_id + " to status" << gs;
 			Account *acc = accounts_i->account_info(proto, account_id);
 			AccountStatusReq as(acc, gs, this);
 			events_i->fire_event(as);
 		}
 	}
 	settings.endArray();
+#endif
 	return true;
 }
 
 bool StartupStatus::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 
+#ifdef QT_NO_DEBUG
 	QSettings settings;
 	settings.beginWriteArray("StartupStatus");
 	QMapIterator<Account *, GlobalStatus> i(statuses);
@@ -70,6 +73,7 @@ bool StartupStatus::pre_shutdown() {
 		index++;
 	}
 	settings.endArray();
+#endif
 	return true;
 }
 

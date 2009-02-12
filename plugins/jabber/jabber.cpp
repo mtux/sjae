@@ -255,8 +255,8 @@ bool JabberProto::gateway_unregister(const QString &account_id, const QString &g
 
 bool JabberProto::remove_account_data(Account *acc) {
 	if(ctx.contains(acc)) {
-		if(gateways)
-			gateways->remove_account(acc->account_id);
+		if(gateways) gateways->remove_account(acc->account_id);
+		if(send_direct) send_direct->remove_account(acc->account_id);
 		delete ctx[acc];
 		ctx.remove(acc);
 		return true;
@@ -272,8 +272,12 @@ bool JabberProto::update_account_data(Account *acc) {
 		ctx[acc] = new JabberCtx(acc, core_i, this);
 		connect_context(ctx[acc]);
 	}
-	if(acc->status == ST_OFFLINE)
+	if(acc->status == ST_OFFLINE) {
 		if(gateways) gateways->remove_account(acc->account_id);
+		if(send_direct) send_direct->remove_account(acc->account_id);
+	} else {
+		if(send_direct) send_direct->add_account(acc->account_id);
+	}
 
 	return true;
 }
