@@ -73,6 +73,7 @@ Section "Saje (required)"
   SetOutPath $INSTDIR\plugins  
   File "..\bin\release\plugins\accounts.dll"
   File "..\bin\release\plugins\add_contact.dll"
+  File "..\bin\release\plugins\autoaway.dll"
   File "..\bin\release\plugins\contact_list.dll"
   File "..\bin\release\plugins\events.dll"
   File "..\bin\release\plugins\icons.dll"
