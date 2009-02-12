@@ -207,8 +207,8 @@ const QList<GlobalStatus> JabberProto::statuses() const {
 	return QList<GlobalStatus>() 
 		<< ST_OFFLINE
 		<< ST_ONLINE
-		<< ST_INVISIBLE
-		<< ST_FREETOCHAT
+//		<< ST_INVISIBLE
+//		<< ST_FREETOCHAT
 		<< ST_SHORTAWAY
 		<< ST_LONGAWAY
 		<< ST_DND;
