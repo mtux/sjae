@@ -15,6 +15,7 @@ public:
 		bool tool_window;
 		int trans_percent;
 		bool round_corners;
+		bool on_top;
 	};
 
 	MainWinOptions(const Settings &settings, QWidget *parent = 0);
