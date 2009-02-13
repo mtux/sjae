@@ -7,11 +7,12 @@
 
 #define MAX_MESSAGES		500
 
-#define LINK_PATTERN		"\\b(http://\\S+|\\S+\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\S+\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\S+\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\S+\\.info(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.travel(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|www\\.\\S+\\.\\S+)\\b"
+#define LINK_PATTERN		"\\b((?:http://)?(?!http://)" \
+	"((?:\\w|\\w+\\.\\w+)+\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|(?:\\w|\\w+\\.\\w+)+\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|(?:\\w|\\w+\\.\\w+)+\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|(?:\\w|\\w+\\.\\w+)+\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|(?:\\w|\\w+\\.\\w+)+\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|(?:\\w|\\w+\\.\\w+)+\\.info(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|(?:\\w|\\w+\\.\\w+)+\\.travel(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
+	"|www\\.(?:\\w|\\w+\\.\\w+)+\\.\\S+))\\b"
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
@@ -85,10 +86,7 @@ void SplitterWin::update_title() {
 }
 
 void SplitterWin::openLink(const QUrl &url) {
-	QUrl myUrl = url;
-	if(myUrl.scheme().isEmpty())
-		myUrl.setScheme("http");
-	QDesktopServices::openUrl(myUrl);
+	QDesktopServices::openUrl(url);
 }
 
 QString SplitterWin::getContent() {
@@ -166,7 +164,7 @@ QString SplitterWin::timestamp(QDateTime &dt) {
 void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\1'>\\1</a>");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\2'>\\1</a>");
 	
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
@@ -195,7 +193,7 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 void SplitterWin::msgSend(const QString &msg) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\1'>\\1</a>");
+	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\2'>\\1</a>");
 
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
