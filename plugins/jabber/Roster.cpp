@@ -12,7 +12,8 @@ QString Resource::full_jid() const {
 }
 
 RosterItem::RosterItem(Account *acc, const QString &jid, const QString &n, SubscriptionType sub, RosterGroup *g)
-	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(acc, jid)
+	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(acc, jid),
+	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE)
 {
 	contact.properties["name"] = n;
 	contact.properties["group"] = g->getFullName();

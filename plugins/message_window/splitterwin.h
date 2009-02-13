@@ -45,12 +45,12 @@ protected:
 	void showEvent(QShowEvent *e);
 	void hideEvent(QHideEvent *e);
 
-	void fireChatStateEvent();
+	void setUserChatState(ChatStateType state);
 protected slots:
 	void openLink(const QUrl &url);
 	
 	// chat state
-	void active(bool notify);
+	void active();
 	void composing();
 	void paused();
 	void inactive();

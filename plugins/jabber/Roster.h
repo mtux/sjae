@@ -158,6 +158,11 @@ public:
 	SubscriptionType getSubscription() const {return subscription;}
 	void setSubscription(SubscriptionType sub) {subscription = sub;}
 
+	ChatStateType getUserChatState() const {return userChatState;}
+	void setUserChatState(ChatStateType t) {userChatState = t;}
+	ChatStateType getContactChatState() const {return contactChatState;}
+	void setContactChatState(ChatStateType t) {contactChatState = t;}
+
 	static SubscriptionType string2sub(const QString &s) {
 		if(s == "none") return ST_NONE;
 		else if(s == "to") return ST_TO;
@@ -184,6 +189,7 @@ public:
 	bool is_offline() const;
 protected:
 	SubscriptionType subscription;
+	ChatStateType userChatState, contactChatState;
 	Contact contact;
 };
 
