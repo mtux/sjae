@@ -66,6 +66,9 @@ public:
 	/// decrypt a string
 	virtual Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "bad key") = 0;
 
+	// return platform info
+	virtual Q_INVOKABLE QString platform() = 0;
+
 	// return version info
 	virtual Q_INVOKABLE QString version() = 0;
 

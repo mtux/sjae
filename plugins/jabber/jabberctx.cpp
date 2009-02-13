@@ -133,7 +133,11 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 }
 
 void JabberCtx::setUserChatState(Contact *contact, ChatStateType type) {
-	sendChatState(contact->contact_id, type);
+	RosterItem *item = roster.get_item(contact->contact_id);
+	if(item && item->getUserChatState() != type) {
+		item->setUserChatState(type);
+		sendChatState(contact->contact_id, type);
+	}
 }
 
 void JabberCtx::showMessage(const QString &message) {
@@ -997,27 +1001,38 @@ void JabberCtx::parseMessageBody(const QString &source) {
 }
 
 void JabberCtx::parseMessage() {
-	QString source = reader.attributes().value("from").toString(), body;
-	Resource *r = roster.get_resource(source,  false);
-	if(r) {
-		RosterItem *i = r->getItem();
-		if(i) {
-			while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "message")) {
-				readMoreIfNecessary();
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "body")
-					parseMessageBody(source);
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "active")
-					events_i->fire_event(ContactChatState(i->getContact(), CS_ACTIVE, this));
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "inactive")
-					events_i->fire_event(ContactChatState(i->getContact(), CS_INACTIVE, this));
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "composing")
-					events_i->fire_event(ContactChatState(i->getContact(), CS_COMPOSING, this));
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "paused")
-					events_i->fire_event(ContactChatState(i->getContact(), CS_PAUSED, this));
-				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "gone")
-					events_i->fire_event(ContactChatState(i->getContact(), CS_GONE, this));
+	QString source = reader.attributes().value("from").toString(), 
+		type = reader.attributes().value("type").toString(),
+		body;
+	if(type == "chat") {
+		Resource *r = roster.get_resource(source,  false);
+		if(r) {
+			RosterItem *i = r->getItem();
+			if(i) {
+				ChatStateType state = CS_ACTIVE;
+				while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "message")) {
+					readMoreIfNecessary();
+					if(!reader.atEnd() && reader.isStartElement() && reader.name() == "body") {
+						parseMessageBody(source);
+					}
+					if(!reader.atEnd() && reader.isStartElement() && reader.name() == "active") {
+						state = CS_ACTIVE;
+					} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "inactive") {
+						state = CS_INACTIVE;
+					} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "composing") {
+						state = CS_COMPOSING;
+					} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "paused") {
+						state = CS_PAUSED;
+					} else if(!reader.atEnd() && reader.isStartElement() && reader.name() == "gone") {
+						state = CS_GONE;
+					}
+				}
+				events_i->fire_event(ContactChatState(i->getContact(), state, this));
 			}
 		}
+	} else {
+		while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "message"))
+			readMoreIfNecessary();
 	}
 }
 
@@ -1145,7 +1160,7 @@ void JabberCtx::sendVersionInfoResult(const QString &id, const QString &sender) 
 	writer.writeAttribute("type", "result");
 		writer.writeStartElement("query");
 		writer.writeDefaultNamespace("jabber:iq:version");
-			writer.writeTextElement("name", "saje (saje.googlecode.com)");
+			writer.writeTextElement("name", core_i->platform());
 			writer.writeTextElement("version", core_i->version());
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq

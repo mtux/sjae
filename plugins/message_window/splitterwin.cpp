@@ -6,6 +6,7 @@
 #include <QDebug>
 
 #define MAX_MESSAGES		500
+
 #define LINK_PATTERN		"\\b(http://\\S+|\\S+\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
 	"|\\S+\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
 	"|\\S+\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
@@ -62,8 +63,18 @@ void SplitterWin::setSendChatState(bool f) {
 }
 
 void SplitterWin::setContactChatState(ChatStateType state) {
-	contactChatState = state;
-	update_log();
+	if(state != contactChatState) {
+		contactChatState = state;
+		update_log();
+	}
+}
+
+void SplitterWin::setUserChatState(ChatStateType state) {
+	if(state != chatState) {
+		chatState = state;
+		if(sendChatState)
+			events_i->fire_event(UserChatState(contact, chatState, this));
+	}
 }
 
 void SplitterWin::update_title() {
@@ -108,7 +119,7 @@ QString SplitterWin::getContent() {
 			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> is typing</span></div>";
 			break;
 		case CS_PAUSED:
-			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> has entered text</div>";
+			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> has entered text</span></div>";
 			break;
 		case CS_GONE:
 			//ret += "<div class='chat_state'>Gone</div>";
@@ -169,13 +180,16 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	while(content.size() > MAX_MESSAGES)
 		content.removeFirst();
 
-	update_log();
+	if(contactChatState != CS_ACTIVE)
+		setContactChatState(CS_ACTIVE);
+	else
+		update_log();
 	
 	show();
 	activateWindow();
 	raise();
 
-	active(true);
+	active();
 }
 
 void SplitterWin::msgSend(const QString &msg) {
@@ -199,21 +213,15 @@ void SplitterWin::msgSend(const QString &msg) {
 	MessageSend ms(msg, 0, contact, this);
 	events_i->fire_event(ms);
 
-	active(false);
+	active();
 }
 
 ////////////////////////
-void SplitterWin::fireChatStateEvent() {
-	if(sendChatState)
-		events_i->fire_event(UserChatState(contact, chatState, this));
-}
-
-void SplitterWin::active(bool notify) {
+void SplitterWin::active() {
 	inactiveTimer.stop();
 	pauseTimer.stop();
 
-	chatState = CS_ACTIVE;
-	if(notify) fireChatStateEvent();
+	setUserChatState(CS_ACTIVE);
 	
 	inactiveTimer.start();
 }
@@ -223,29 +231,25 @@ void SplitterWin::composing() {
 		pauseTimer.stop();
 		inactiveTimer.stop();
 
-		chatState = CS_COMPOSING;
-		fireChatStateEvent();
+		setUserChatState(CS_COMPOSING);
 
 		pauseTimer.start();
 		inactiveTimer.start();
 	} else
-		active(true);
+		active();
 }
 
 void SplitterWin::paused() {
-	chatState = CS_PAUSED;
-	fireChatStateEvent();
+	setUserChatState(CS_PAUSED);
 }
 
 void SplitterWin::inactive() {
-	chatState = CS_INACTIVE;
-	fireChatStateEvent();
+	setUserChatState(CS_INACTIVE);
 }
 
 void SplitterWin::gone() {
 	pauseTimer.stop();
 	inactiveTimer.stop();
 
-	chatState = CS_GONE;
-	fireChatStateEvent();
+	setUserChatState(CS_GONE);
 }
