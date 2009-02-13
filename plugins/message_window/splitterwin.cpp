@@ -14,7 +14,7 @@
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
-		showDate(true), showTime(true), showNick(true)
+		showDate(true), showTime(true), showNick(true), sendChatState(true), contactChatState(CS_INACTIVE), chatState(CS_INACTIVE)
 {
 	ui.setupUi(this);
 
@@ -31,6 +31,16 @@ SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 
 	ui.edMsgLog->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 	connect(ui.edMsgLog, SIGNAL(linkClicked(const QUrl &)), this, SLOT(openLink(const QUrl &)));
+
+	connect(&pauseTimer, SIGNAL(timeout()), this, SLOT(paused()));
+	connect(&inactiveTimer, SIGNAL(timeout()), this, SLOT(inactive()));
+
+	pauseTimer.setInterval(5000);
+	inactiveTimer.setInterval(30000);
+	
+	connect(ui.widget, SIGNAL(textChanged()), this, SLOT(composing()));
+
+	update_log();
 }
 
 SplitterWin::~SplitterWin() {
@@ -38,9 +48,27 @@ SplitterWin::~SplitterWin() {
 	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
 }
 
+void SplitterWin::hideEvent(QHideEvent *e) {
+	gone();
+	QSplitter::hideEvent(e);
+}
+
+void SplitterWin::showEvent(QShowEvent *e) {
+	QSplitter::showEvent(e);
+}
+
+void SplitterWin::setSendChatState(bool f) {
+	sendChatState = f;
+}
+
+void SplitterWin::setContactChatState(ChatStateType state) {
+	contactChatState = state;
+	update_log();
+}
+
 void SplitterWin::update_title() {
-	if(getNick(contact) != contact->contact_id)
-		setWindowTitle(getNick(contact) + " (" + contact->contact_id + ")");
+	if(getNick() != contact->contact_id)
+		setWindowTitle(getNick() + " (" + contact->contact_id + ")");
 	else
 		setWindowTitle(contact->contact_id);
 }
@@ -69,18 +97,35 @@ QString SplitterWin::getContent() {
 
 	if(!first) ret += "</div>\n";
 
+	switch(contactChatState) {
+		case CS_INACTIVE:
+			//ret += "<div class='chat_state'>Inactive</div>";
+			break;
+		case CS_ACTIVE:
+			//ret += "<div class='chat_state'>Active</div>";
+			break;
+		case CS_COMPOSING:
+			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> is typing</span></div>";
+			break;
+		case CS_PAUSED:
+			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> has entered text</div>";
+			break;
+		case CS_GONE:
+			//ret += "<div class='chat_state'>Gone</div>";
+			break;
+	}
+
 	return ret;
 }
 
 void SplitterWin::update_log() {
 	QString page = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Saje Message Log</title><style type='text/css'>" + style + "</style></head>\n<body>\n" + getContent() + "</body>\n</html>";
-	qDebug() << "webview content:" << page;
 	ui.edMsgLog->setContent(page.toUtf8(), "application/xhtml+xml");
 	ui.edMsgLog->page()->mainFrame()->setScrollBarValue(Qt::Vertical, ui.edMsgLog->page()->mainFrame()->scrollBarMaximum(Qt::Vertical));
 }
 
-QString SplitterWin::getNick(Contact *contact) {
+QString SplitterWin::getNick() {
 	if(contact->properties.contains("handle")) return contact->properties["handle"].toString();
 	if(contact->properties.contains("nick")) return contact->properties["nick"].toString();
 	if(contact->properties.contains("name")) return contact->properties["name"].toString();
@@ -115,7 +160,7 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
 	text += timestamp(time);
-	text += "<span class='nick'>" + Qt::escape(getNick(contact)) + " </span>";
+	text += "<span class='nick'>" + Qt::escape(getNick()) + " </span>";
 	text += "<span class='separator'>: </span></span>";
 	text += "<span class='text'>" + dispMsg + "</span>";
 	text += "</div>";
@@ -129,6 +174,8 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	show();
 	activateWindow();
 	raise();
+
+	active(true);
 }
 
 void SplitterWin::msgSend(const QString &msg) {
@@ -151,5 +198,54 @@ void SplitterWin::msgSend(const QString &msg) {
 	
 	MessageSend ms(msg, 0, contact, this);
 	events_i->fire_event(ms);
+
+	active(false);
 }
 
+////////////////////////
+void SplitterWin::fireChatStateEvent() {
+	if(sendChatState)
+		events_i->fire_event(UserChatState(contact, chatState, this));
+}
+
+void SplitterWin::active(bool notify) {
+	inactiveTimer.stop();
+	pauseTimer.stop();
+
+	chatState = CS_ACTIVE;
+	if(notify) fireChatStateEvent();
+	
+	inactiveTimer.start();
+}
+
+void SplitterWin::composing() {
+	if(ui.widget->okToSend()) {
+		pauseTimer.stop();
+		inactiveTimer.stop();
+
+		chatState = CS_COMPOSING;
+		fireChatStateEvent();
+
+		pauseTimer.start();
+		inactiveTimer.start();
+	} else
+		active(true);
+}
+
+void SplitterWin::paused() {
+	chatState = CS_PAUSED;
+	fireChatStateEvent();
+}
+
+void SplitterWin::inactive() {
+	chatState = CS_INACTIVE;
+	fireChatStateEvent();
+}
+
+void SplitterWin::gone() {
+	pauseTimer.stop();
+	inactiveTimer.stop();
+
+	chatState = CS_GONE;
+	fireChatStateEvent();
+}

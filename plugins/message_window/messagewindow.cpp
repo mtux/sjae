@@ -29,6 +29,7 @@ bool MessageWindow::load(CoreI *core) {
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
+	events_i->add_event_listener(this, UUID_CONTACT_CHAT_STATE);
 
 	return true;
 }
@@ -42,6 +43,7 @@ bool MessageWindow::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_MSG_RECV);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->remove_event_listener(this, UUID_CONTACT_DBL_CLICKED);
+	events_i->remove_event_listener(this, UUID_CONTACT_CHAT_STATE);
 
 	return true;
 }
@@ -61,7 +63,7 @@ bool MessageWindow::event_fired(EventsI::Event &e) {
 		message_recv(mr.contact, mr.message, mr.timestamp);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
-		if(windows.contains(cc.contact)) {
+		if(window_exists(cc.contact)) {
 			if(cc.removed) {
 				delete windows[cc.contact];
 				windows.remove(cc.contact);
@@ -75,6 +77,11 @@ bool MessageWindow::event_fired(EventsI::Event &e) {
 	} else if(e.uuid == UUID_CONTACT_DBL_CLICKED) {
 		ContactDblClicked &cd = static_cast<ContactDblClicked &>(e);
 		open_window(cd.contact);
+	} else if(e.uuid == UUID_CONTACT_CHAT_STATE) {
+		ContactChatState &cs = static_cast<ContactChatState&>(e);
+		if(window_exists(cs.contact)) {
+			windows[cs.contact]->setContactChatState(cs.type);
+		}
 	}
 	return true;
 }

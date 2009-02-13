@@ -28,6 +28,7 @@ div classes are:
     message
   outgoing
     message
+  chat_state
 
 span classes (in message div) are:
   info
@@ -37,11 +38,17 @@ span classes (in message div) are:
     nick
     separator
   text
+
+span classes (in chat_state div) are:
+  nick
+  state_text
+  
 */
 
 .date_today { display: none }
-//.nick { display: none }
+/* div.message > span.nick { display: none } */
 
+div.chat_state { color: lightgray }
 div.outgoing { color: gray }
 
 div.incomming > div.message > span.text { color: red }

@@ -20,6 +20,9 @@
 #define UUID_ACCOUNT_CHANGED		"{33A2C7A3-2F82-46b1-B56E-511D9A6D7ED2}"
 #define UUID_ACCOUNT_STATUS_REQ		"{1DCBB288-0686-40bb-9118-C184D9125A9F}"
 
+#define UUID_USER_CHAT_STATE		"{AC8F9710-54B5-40af-9CA1-779AB4ED59DB}"
+#define UUID_CONTACT_CHAT_STATE		"{C00E8853-CF13-4a7d-AF60-2684FF4D8FE9}"
+
 class ProtocolI;
 
 class Account {
@@ -96,6 +99,25 @@ public:
 	AccountStatusReq(Account *a, GlobalStatus gs, QObject *source = 0): EventsI::Event(UUID_ACCOUNT_STATUS_REQ, source), account(a), status(gs) {}
 	Account *account;
 	GlobalStatus status;
+};
+
+typedef enum {CS_ACTIVE, CS_COMPOSING, CS_PAUSED, CS_INACTIVE, CS_GONE}  ChatStateType;
+
+class UserChatState: public EventsI::Event {
+public:
+
+	UserChatState(Contact *c, ChatStateType t, QObject *source = 0): 
+		EventsI::Event(UUID_USER_CHAT_STATE, source), contact(c), type(t) {}
+	Contact *contact;
+	ChatStateType type;
+};
+
+class ContactChatState: public EventsI::Event {
+public:
+	ContactChatState(Contact *c, ChatStateType t, QObject *source = 0): 
+		EventsI::Event(UUID_CONTACT_CHAT_STATE, source), contact(c), type(t) {}
+	Contact *contact;
+	ChatStateType type;
 };
 
 class QDomElement;

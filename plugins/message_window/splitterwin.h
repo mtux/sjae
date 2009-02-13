@@ -8,6 +8,9 @@
 #include <QList>
 #include <QWebPage>
 #include <QUrl>
+#include <QTimer>
+#include <QHideEvent>
+#include <QShowEvent>
 
 class SplitterWin : public QSplitter { 
 	Q_OBJECT
@@ -22,6 +25,11 @@ public slots:
 	void setLogStyleSheet(const QString &styleSheet);
 
 	void update_title();
+
+	void setContactChatState(ChatStateType state);
+
+	void setSendChatState(bool f);
+
 protected:
 	class MessageData {
 	public:
@@ -31,11 +39,22 @@ protected:
 	};
 
 	void update_log();
-	QString getNick(Contact *contact);
+	QString getNick();
 	QString getContent();
 
+	void showEvent(QShowEvent *e);
+	void hideEvent(QHideEvent *e);
+
+	void fireChatStateEvent();
 protected slots:
 	void openLink(const QUrl &url);
+	
+	// chat state
+	void active(bool notify);
+	void composing();
+	void paused();
+	void inactive();
+	void gone();
 
 private:
 	Ui::SplitterWinClass ui;
@@ -46,6 +65,12 @@ private:
 
 	QList<MessageData> content;
 	QString style;
+
+	ChatStateType chatState, contactChatState;
+	QTimer pauseTimer;
+	QTimer inactiveTimer;
+
+	bool sendChatState;
 };
 
 #endif // SPLITTERWIN_H

@@ -72,6 +72,7 @@ JabberProto::JabberProto(CoreI *core) {
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
+	events_i->add_event_listener(this, UUID_USER_CHAT_STATE);
 
 	service_discovery = new ServiceDiscovery();
 	connect(this, SIGNAL(destroyed()), service_discovery, SLOT(deleteLater()));
@@ -119,6 +120,7 @@ JabberProto::~JabberProto() {
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->remove_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->remove_event_listener(this, UUID_USER_CHAT_STATE);
 
 	accounts_i->deregister_protocol(this);
 
@@ -199,6 +201,10 @@ bool JabberProto::event_fired(EventsI::Event &e) {
 		AccountChanged &ac = static_cast<AccountChanged &>(e);
 		if(ac.removed) remove_account_data(ac.account);
 		else update_account_data(ac.account);
+	} else if(e.uuid == UUID_USER_CHAT_STATE) {
+		UserChatState &cs = static_cast<UserChatState &>(e);
+		if(ctx.contains(cs.contact->account))
+			ctx[cs.contact->account]->setUserChatState(cs.contact, cs.type);
 	}
 	return true;
 }
