@@ -12,6 +12,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 	EndGlobalSection
 	ProjectSection(ProjectDependencies) = postProject
 		{D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314} = {D96F1202-81DB-4C5E-9FC7-A3A8AD1EF314}
+		{FEAD6707-F356-4EDA-AC12-C03B0F4B7847} = {FEAD6707-F356-4EDA-AC12-C03B0F4B7847}
 		{954CB916-3B4E-495A-BC1F-EBAAE4F5F079} = {954CB916-3B4E-495A-BC1F-EBAAE4F5F079}
 		{37A94F2B-7798-4519-AD42-689169234896} = {37A94F2B-7798-4519-AD42-689169234896}
 		{F6CA5A48-880A-4E92-A08F-5FEEF03EA1BE} = {F6CA5A48-880A-4E92-A08F-5FEEF03EA1BE}
@@ -92,6 +93,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "autoaway", "plugins\autoawa
 		Integration = True
 	EndGlobalSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "autoreconnect", "plugins\autoreconnect\autoreconnect.vcproj", "{FEAD6707-F356-4EDA-AC12-C03B0F4B7847}"
+	GlobalSection(Qt) = preSolution
+		Integration = True
+	EndGlobalSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -158,6 +164,10 @@ Global
 		{37A94F2B-7798-4519-AD42-689169234896}.Debug|Win32.Build.0 = Debug|Win32
 		{37A94F2B-7798-4519-AD42-689169234896}.Release|Win32.ActiveCfg = Release|Win32
 		{37A94F2B-7798-4519-AD42-689169234896}.Release|Win32.Build.0 = Release|Win32
+		{FEAD6707-F356-4EDA-AC12-C03B0F4B7847}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FEAD6707-F356-4EDA-AC12-C03B0F4B7847}.Debug|Win32.Build.0 = Debug|Win32
+		{FEAD6707-F356-4EDA-AC12-C03B0F4B7847}.Release|Win32.ActiveCfg = Release|Win32
+		{FEAD6707-F356-4EDA-AC12-C03B0F4B7847}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

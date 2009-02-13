@@ -50,7 +50,7 @@ bool AutoAway::modules_loaded() {
 	}
 
 
-	timer.setInterval(1000);
+	timer.setInterval(15000);
 	connect(&timer, SIGNAL(timeout()), this, SLOT(checkIdle()));
 	timer.start();
 
