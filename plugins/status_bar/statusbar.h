@@ -9,6 +9,7 @@
 #include <QSignalMapper>
 #include <QToolButton>
 #include <QMap>
+#include <QHBoxLayout>
 
 class StatusBar: public PluginI, public EventsI::EventListener
 {
@@ -37,9 +38,13 @@ protected:
 	QPointer<EventsI> events_i;
 
 	QStatusBar *status_bar;
+	QWidget *toolbuttons;
+	QHBoxLayout *toolButtonLayout;
+	QToolButton *globalButton;
 	QSignalMapper *menuMapper, *protoMapper;
 
 	QMap<QString, QMap<QString, QToolButton *> > account_buttons;
+	int button_count;
 };
 
 #endif // STATUSBAR_H

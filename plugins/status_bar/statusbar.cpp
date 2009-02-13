@@ -1,6 +1,7 @@
 #include "statusbar.h"
 #include <QtPlugin>
 #include <QMenu>
+#include <QSizePolicy>
 
 PluginInfo info = {
 	0x600,
@@ -12,7 +13,8 @@ PluginInfo info = {
 	0x00000001
 };
 
-StatusBar::StatusBar()
+StatusBar::StatusBar():
+	button_count(0)
 {
 
 }
@@ -36,6 +38,34 @@ bool StatusBar::load(CoreI *core) {
 
 	status_bar = new QStatusBar();
 	main_win_i->set_status_bar(status_bar);
+
+	toolbuttons = new QWidget(status_bar);
+	toolbuttons->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+	toolButtonLayout = new QHBoxLayout(status_bar);
+	toolButtonLayout->setSpacing(6);
+	toolButtonLayout->setMargin(4);
+	toolbuttons->setLayout(toolButtonLayout);
+	status_bar->addWidget(toolbuttons);
+
+	QToolButton *tb = new QToolButton();
+	tb->setIcon(icons_i->get_icon("generic"));
+	tb->setToolTip("Global Status");
+	QMenu *menu = new QMenu();
+	//connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
+	menu->addAction(icons_i->get_icon("generic"), "Global Status");
+	menu->addSeparator();
+	each_contact_status(gs) {
+		QAction *a = menu->addAction(icons_i->get_icon(status_name[gs]), hr_status_name[gs]);
+		a->setData(gs);
+		connect(a, SIGNAL(triggered()), menuMapper, SLOT(map()));
+		menuMapper->setMapping(a, a);
+	}
+	tb->setMenu(menu);
+	tb->setPopupMode(QToolButton::InstantPopup);
+	tb->hide();
+	status_bar->addPermanentWidget(tb);
+	globalButton = tb;
+
 	return true;
 }
 
@@ -61,6 +91,9 @@ bool StatusBar::event_fired(EventsI::Event &e) {
 			account_buttons[proto_name].remove(account_id);
 			if(account_buttons[proto_name].size() == 0)
 				account_buttons.remove(proto_name);
+			button_count--;
+			if(button_count <= 1)
+				globalButton->hide();
 		}
 	} else {
 		bool new_account = account_buttons.contains(proto_name) == false || account_buttons[proto_name].contains(account_id) == false;
@@ -81,8 +114,12 @@ bool StatusBar::event_fired(EventsI::Event &e) {
 			}
 			tb->setMenu(menu);
 			tb->setPopupMode(QToolButton::InstantPopup);
-			status_bar->addWidget(tb);
+			//status_bar->addWidget(tb);
+			toolButtonLayout->addWidget(tb);
 			account_buttons[proto_name][account_id] = tb;
+			button_count++;
+			if(button_count > 1)
+				globalButton->show();
 		} else {
 			account_buttons[proto_name][account_id]->setIcon(icons_i->get_account_status_icon(ac.account, ac.account->status));
 		}
@@ -93,13 +130,26 @@ bool StatusBar::event_fired(EventsI::Event &e) {
 void StatusBar::actionTriggered(QObject *action) {
 	QAction *a = static_cast<QAction *>(action);
 	QVariantList vl = a->data().toList();
-	QString proto_name = vl.at(0).toString(),
-		account_id = vl.at(1).toString();
-	GlobalStatus gs = (GlobalStatus)vl.at(2).toInt();
-	Account *acc = accounts_i->account_info(proto_name, account_id);
+	if(vl.size() == 3) {
+		QString proto_name = vl.at(0).toString(),
+			account_id = vl.at(1).toString();
+		GlobalStatus gs = (GlobalStatus)vl.at(2).toInt();
+		Account *acc = accounts_i->account_info(proto_name, account_id);
 
-	AccountStatusReq as(acc, gs, this);
-	events_i->fire_event(as);
+		AccountStatusReq as(acc, gs, this);
+		events_i->fire_event(as);
+	} else {
+		GlobalStatus gs = (GlobalStatus)a->data().toInt();
+
+		QStringList protos = accounts_i->protocol_names();
+		foreach(QString proto_name, protos) {
+			QStringList account_ids = accounts_i->account_ids(proto_name);
+			foreach(QString account_id, account_ids) {
+				Account *acc = accounts_i->account_info(proto_name, account_id);
+				events_i->fire_event(AccountStatusReq(acc, gs, this));
+			}
+		}
+	}
 }
 
 bool StatusBar::pre_shutdown() {
