@@ -46,6 +46,8 @@ public:
 	bool gatewayRegister(const QString &gateway);
 	bool gatewayUnregister(const QString &gateway);
 
+	void setUserChatState(Contact *contact, ChatStateType type);
+
 	Account *get_account_info();
 
 	bool event_fired(EventsI::Event &e);
@@ -193,6 +195,7 @@ protected:
 	void sendVersionInfoResult(const QString &id, const QString &sender);
 	void sendDiscoInfoResult(const QString &id, const QString &sender);
 
+	void sendChatState(const QString &id, ChatStateType type);
 };
 
 #endif // JABBERCTX_H

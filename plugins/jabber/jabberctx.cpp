@@ -132,6 +132,10 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 	return true;
 }
 
+void JabberCtx::setUserChatState(Contact *contact, ChatStateType type) {
+	sendChatState(contact->contact_id, type);
+}
+
 void JabberCtx::showMessage(const QString &message) {
 	qDebug() << ("Jabber message (" + account->account_id + "):") << message;
 	//QMessageBox::information(0, tr("Jabber Message"), message);
@@ -967,6 +971,8 @@ void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
 	writer.writeAttribute("id", QString("%1").arg(id));
 	writer.writeAttribute("xml:lang", "en");
 		writer.writeTextElement("body", msg);
+		writer.writeEmptyElement("active");
+		writer.writeDefaultNamespace("http://jabber.org/protocol/chatstates");
 	writer.writeEndElement();
 	sendWriteBuffer();
 	log("Sent message to " + cid);
@@ -992,10 +998,26 @@ void JabberCtx::parseMessageBody(const QString &source) {
 
 void JabberCtx::parseMessage() {
 	QString source = reader.attributes().value("from").toString(), body;
-	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "message")) {
-		readMoreIfNecessary();
-		if(!reader.atEnd() && reader.isStartElement() && reader.name() == "body")
-			parseMessageBody(source);
+	Resource *r = roster.get_resource(source,  false);
+	if(r) {
+		RosterItem *i = r->getItem();
+		if(i) {
+			while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "message")) {
+				readMoreIfNecessary();
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "body")
+					parseMessageBody(source);
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "active")
+					events_i->fire_event(ContactChatState(i->getContact(), CS_ACTIVE, this));
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "inactive")
+					events_i->fire_event(ContactChatState(i->getContact(), CS_INACTIVE, this));
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "composing")
+					events_i->fire_event(ContactChatState(i->getContact(), CS_COMPOSING, this));
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "paused")
+					events_i->fire_event(ContactChatState(i->getContact(), CS_PAUSED, this));
+				if(!reader.atEnd() && reader.isStartElement() && reader.name() == "gone")
+					events_i->fire_event(ContactChatState(i->getContact(), CS_GONE, this));
+			}
+		}
 	}
 }
 
@@ -1155,6 +1177,8 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 			writer.writeAttribute("var", "http://jabber.org/protocol/disco#info");
 			writer.writeEmptyElement("feature");
 			writer.writeAttribute("var", "jabber:iq:version");
+			writer.writeEmptyElement("feature");
+			writer.writeAttribute("var", "http://jabber.org/protocol/chatstates");
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq
 	sendWriteBuffer();
@@ -1419,4 +1443,25 @@ bool JabberCtx::gatewayUnregister(const QString &gateway) {
 
 	removeContact(gateway);
 	return true;
+}
+
+void JabberCtx::sendChatState(const QString &id, ChatStateType type) {
+	writer.writeStartElement("message");
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("to", id);
+	writer.writeAttribute("type", "chat");
+	writer.writeAttribute("xml:lang", "en");
+		QString state;
+		switch(type) {
+			case CS_INACTIVE: state = "inactive"; break;
+			case CS_ACTIVE: state = "active"; break;
+			case CS_COMPOSING: state = "composing"; break;
+			case CS_PAUSED: state = "paused"; break;
+			case CS_GONE: state = "gone"; break;
+		}
+		writer.writeEmptyElement(state);
+		writer.writeDefaultNamespace("http://jabber.org/protocol/chatstates");
+	writer.writeEndElement();
+	sendWriteBuffer();
+	log("Sent chat state " + state + " to " + id);
 }
