@@ -45,7 +45,7 @@ public:
 	Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "");
 
 	Q_INVOKABLE QString platform() {return "Saje";}
-	Q_INVOKABLE QString version() {return "Alpha 8";}
+	Q_INVOKABLE QString version() {return "Alpha 9";}
 };
 
 
