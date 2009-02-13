@@ -4,7 +4,7 @@ Unified application and message log style sheet
 
 /* some things to try */
 
-/* SplitterWin > #edMsgLog { background-color: gray } */
+/* SplitterWin { background-color: green } */
 /* 
 QTreeWidget { 
   background-color: transparent;
@@ -28,7 +28,7 @@ div classes are:
     message
   outgoing
     message
-  chat_state
+  chat_state (with id inactive, active, composing, paused, or gone)
 
 span classes (in message div) are:
   info
@@ -41,12 +41,16 @@ span classes (in message div) are:
 
 span classes (in chat_state div) are:
   nick
-  state_text
+  state_text 
   
 */
 
+div.chat_state#active { display: none }
+div.chat_state#inactive { display: none }
+div.chat_state#gone { display: none }
+
 .date_today { display: none }
-/* div.message > span.nick { display: none } */
+/* span.info > span.nick { display: none } */
 
 div.chat_state { color: lightgray }
 div.outgoing { color: gray }
@@ -55,13 +59,12 @@ div.incomming > div.message > span.text { color: red }
 div.outgoing > div.message > span.text { color: blue }
 
 
-/* group blocks */
+/* group multiple consecutive messages */
 
 span.info { display: none }
-
 div.message { margin-left: 20px}
 
-div.incomming > div.message:first-child > span.info {   display: inline }
+div.incomming > div.message:first-child > span.info { display: inline }
 div.incomming > div.message:first-child { margin-left: 0px }
 div.outgoing > div.message:first-child > span.info { display: inline }
 div.outgoing > div.message:first-child { margin-left: 0px }

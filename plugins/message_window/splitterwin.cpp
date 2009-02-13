@@ -110,19 +110,19 @@ QString SplitterWin::getContent() {
 
 	switch(contactChatState) {
 		case CS_INACTIVE:
-			//ret += "<div class='chat_state'>Inactive</div>";
+			ret += "<div class='chat_state' id='inactive'><span class='nick'>" + getNick() + "</span><span class='state_text'> is inactive</span></div>";
 			break;
 		case CS_ACTIVE:
-			//ret += "<div class='chat_state'>Active</div>";
+			ret += "<div class='chat_state' id='active'><span class='nick'>" + getNick() + "</span><span class='state_text'> is active</span></div>";
 			break;
 		case CS_COMPOSING:
-			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> is typing</span></div>";
+			ret += "<div class='chat_state' id='composing'><span class='nick'>" + getNick() + "</span><span class='state_text'> is typing</span></div>";
 			break;
 		case CS_PAUSED:
-			ret += "<div class='chat_state'><span class='nick'>" + getNick() + "</span><span class='state_text'> has entered text</span></div>";
+			ret += "<div class='chat_state' id='paused'><span class='nick'>" + getNick() + "</span><span class='state_text'> has entered text</span></div>";
 			break;
 		case CS_GONE:
-			//ret += "<div class='chat_state'>Gone</div>";
+			ret += "<div class='chat_state' id='gone'><span class='nick'>" + getNick() + "</span><span class='state_text'> is gone</span></div>";
 			break;
 	}
 
