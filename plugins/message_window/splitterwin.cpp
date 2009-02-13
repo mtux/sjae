@@ -5,7 +5,7 @@
 #include <QDesktopServices>
 #include <QDebug>
 
-#define MAX_MESSAGES		100
+#define MAX_MESSAGES		500
 #define LINK_PATTERN		"\\b(http://\\S+|\\S+\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
 	"|\\S+\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
 	"|\\S+\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\S+\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
