@@ -7,12 +7,12 @@
 
 #define MAX_MESSAGES		500
 
-#define LINK_PATTERN		"\\b((?:http://)?(?!http://)" \
-	"(\\w+(?:\\.\\w+)*\\.co(?:m)?(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\w+(?:\\.\\w+)*\\.org(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\w+(?:\\.\\w+)*\\.net(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\w+(?:\\.\\w+)*\\.gov(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\w+(?:\\.\\w+)*\\.biz(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|\\w+(?:\\.\\w+)*\\.info(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?|\\w+(?:\\.\\w+)*\\.travel(?:\\.[a-zA-Z]{2})?(?:[/\\?]\\S*)?" \
-	"|www\\.\\S+))\\b"
+#define RX_DOMAIN		"(?:\\.co(?:m)?|\\.org|\\.net|\\.gov|\\.biz|\\.info|\\.travel)(?:\\.[a-z]{2})?"
+#define RX_PROTOS		"(?:http(?:s)?://|ftp://|mailto:|file://)?"
+#define RX_PORT			"(?:\\:\\d{0,5})?"
+#define RX_EMAIL		"\\w+@\\w+(?:\\.\\w+)*" RX_DOMAIN
+#define RX_OTHER		"\\w+(?:\\.\\w+)*" RX_DOMAIN RX_PORT "(?:[/\\?]\\S*)?"
+#define LP				"\\b(" RX_PROTOS ")(" RX_EMAIL "|" RX_OTHER ")\\b"
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
@@ -161,10 +161,45 @@ QString SplitterWin::timestamp(QDateTime &dt) {
 	return ret;
 }
 
+void SplitterWin::linkUrls(QString &str) {
+	//dispMsg.replace(QRegExp(LP), "<a href='http://\\2'>\\1</a>");
+
+	QRegExp rx(LP), rx_email("^" RX_EMAIL);
+	int pos = 0, len;
+	QString scheme, after;
+	bool valid;
+	while ((pos = rx.indexIn(str, pos)) != -1) {
+		len = rx.matchedLength();
+
+		//rx.cap(0) is whole match, rx.cap(1) is url scheme, rx.cap(2) is the rest
+		
+		scheme = rx.cap(1);
+		valid = true;
+		if(scheme.isEmpty()) {
+			if(rx_email.indexIn(rx.cap(2)) != -1)
+				scheme = "mailto:";
+			else
+				scheme = "http://";
+		} else 
+		if((scheme == "mailto:" && rx_email.indexIn(rx.cap(2)) == -1)
+			|| (scheme != "mailto:" && rx_email.indexIn(rx.cap(2)) != -1)) 
+		{
+			valid = false;
+		}
+		if(valid) {
+			after = "<a href='" + scheme + rx.cap(2) + "'>" + rx.cap(0) + "</a>";
+			str.replace(pos, len, after);
+			len = after.length();
+		}
+
+		pos += len;
+	}
+}
+
 void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\2'>\\1</a>");
+	dispMsg.replace("\n", "<br />\n");
+	linkUrls(dispMsg);
 	
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
@@ -192,8 +227,8 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 
 void SplitterWin::msgSend(const QString &msg) {
 	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br />");
-	dispMsg.replace(QRegExp(LINK_PATTERN), "<a href='http://\\2'>\\1</a>");
+	dispMsg.replace("\n", "<br />\n");
+	linkUrls(dispMsg);
 
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";

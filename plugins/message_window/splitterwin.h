@@ -46,6 +46,8 @@ protected:
 	void hideEvent(QHideEvent *e);
 
 	void setUserChatState(ChatStateType state);
+	void linkUrls(QString &s);
+
 protected slots:
 	void openLink(const QUrl &url);
 	
