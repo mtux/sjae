@@ -37,7 +37,7 @@ bool ContactList::load(CoreI *core) {
 
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
-	events_i->add_event_listener(this, UUID_MSG_RECV);
+	events_i->add_event_listener(this, UUID_MSG);
 
 	win = new CListWin();
 
@@ -71,7 +71,7 @@ bool ContactList::modules_loaded() {
 bool ContactList::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
-	events_i->remove_event_listener(this, UUID_MSG_RECV);
+	events_i->remove_event_listener(this, UUID_MSG);
 	return true;
 }
 

@@ -14,8 +14,7 @@
 #define INAME_ACCOUNTS	"AccountsInterface"
 
 // event UUIDs
-#define UUID_MSG_RECV				"{DB769558-BF1F-41a8-83F9-C4374F5B613A}"
-#define UUID_MSG_SEND				"{4C514167-A03A-4a9c-AE92-0E1E1471AAEF}"
+#define UUID_MSG					"{99D59C72-F5C6-4a20-84CF-1BAA6612E945}"
 #define UUID_CONTACT_CHANGED		"{3602C4D5-2589-4be5-AC4D-A2DCA5A4F8F0}"
 #define UUID_ACCOUNT_CHANGED		"{33A2C7A3-2F82-46b1-B56E-511D9A6D7ED2}"
 #define UUID_ACCOUNT_STATUS_REQ		"{1DCBB288-0686-40bb-9118-C184D9125A9F}"
@@ -64,18 +63,17 @@ public:
 	QMap<QString, QVariant> properties; // should be property cache?
 };
 
-class MessageSend: public EventsI::Event {
+class Message: public EventsI::Event {
 public:
-	MessageSend(const QString &msg, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG_SEND, source), message(msg), id(i), contact(c) {}
-	QString message;
-	Contact *contact;
-	int id;
-};
+	class MessageData {
+	public:
+		MessageData(const QString msg, bool in): message(msg), incomming(in) {}
+		QString message;
+		bool incomming;
+	};
 
-class MessageRecv: public EventsI::Event {
-public:
-	MessageRecv(const QString &msg, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG_RECV, source), message(msg), id(i), contact(c) {}
-	QString message;
+	Message(const QString &msg, bool incomming, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG, source), data(msg, incomming), id(i), contact(c) {}
+	MessageData data;
 	Contact *contact;
 	int id;
 };

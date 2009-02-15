@@ -25,7 +25,7 @@ bool MessageWindow::load(CoreI *core) {
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_listener(this, UUID_MSG_RECV);
+	events_i->add_event_listener(this, UUID_MSG);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
@@ -35,12 +35,13 @@ bool MessageWindow::load(CoreI *core) {
 }
 
 bool MessageWindow::modules_loaded() {
+	history_i = (HistoryI *)core_i->get_interface(INAME_HISTORY);
 	return true;
 }
 
 bool MessageWindow::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
-	events_i->remove_event_listener(this, UUID_MSG_RECV);
+	events_i->remove_event_listener(this, UUID_MSG);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->remove_event_listener(this, UUID_CONTACT_DBL_CLICKED);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHAT_STATE);
@@ -58,9 +59,10 @@ const PluginInfo &MessageWindow::get_plugin_info() {
 
 /////////////////////////////
 bool MessageWindow::event_fired(EventsI::Event &e) {
-	if(e.uuid == UUID_MSG_RECV) {
-		MessageRecv &mr = static_cast<MessageRecv &>(e);
-		message_recv(mr.contact, mr.message, mr.timestamp);
+	if(e.uuid == UUID_MSG) {
+		Message &m = static_cast<Message &>(e);
+		if(m.data.incomming)
+			message_recv(m.contact, m.data.message, m.timestamp);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
 		if(window_exists(cc.contact)) {
@@ -101,6 +103,8 @@ SplitterWin *MessageWindow::get_window(Contact *contact) {
 		connect(core_i, SIGNAL(styleSheetSet(const QString &)), win, SLOT(setLogStyleSheet(const QString &)));
 
 		win->setLogStyleSheet(qApp->styleSheet());
+		if(history_i)
+			win->addEvents(history_i->get_latest_events(contact, QDateTime::currentDateTime().addDays(-7)));
 	}
 
 	return windows[contact];

@@ -68,7 +68,7 @@ JabberProto::JabberProto(CoreI *core) {
 
 	accounts_i->register_protocol(this);
 
-	events_i->add_event_listener(this, UUID_MSG_SEND);
+	events_i->add_event_listener(this, UUID_MSG);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
@@ -116,7 +116,7 @@ void JabberProto::modules_loaded() {
 }
 
 JabberProto::~JabberProto() {
-	events_i->remove_event_listener(this, UUID_MSG_SEND);
+	events_i->remove_event_listener(this, UUID_MSG);
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->remove_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
@@ -189,10 +189,10 @@ const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 }
 
 bool JabberProto::event_fired(EventsI::Event &e) {
-	if(e.uuid == UUID_MSG_SEND) {
-		MessageSend &ms = static_cast<MessageSend &>(e);
-		if(ctx.contains(ms.contact->account))
-			ctx[ms.contact->account]->msgSend(ms.contact->contact_id, ms.message, ms.id);
+	if(e.uuid == UUID_MSG) {
+		Message &m = static_cast<Message &>(e);
+		if(m.data.incomming == false && ctx.contains(m.contact->account))
+			ctx[m.contact->account]->msgSend(m.contact->contact_id, m.data.message, m.id);
 	} else if(e.uuid == UUID_ACCOUNT_STATUS_REQ) {
 		AccountStatusReq &as = static_cast<AccountStatusReq &>(e);
 		if(ctx.contains(as.account))

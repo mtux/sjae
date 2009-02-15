@@ -993,8 +993,8 @@ void JabberCtx::parseMessageBody(const QString &source) {
 		RosterItem *i = r->getItem();
 		QString id = i->getJID();
 
-		MessageRecv mr(body, 0, i->getContact(), this);
-		events_i->fire_event(mr);
+		Message m(body, true, 0, i->getContact(), this);
+		events_i->fire_event(m);
 	} else {
 		log("message from unknown resource ignored: " + source);
 	}

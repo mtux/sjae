@@ -5,6 +5,7 @@
 #include <clist_i.h>
 #include <icons_i.h>
 #include <events_i.h>
+#include <history_i.h>
 #include "splitterwin.h"
 
 #include <QPointer>
@@ -30,6 +31,7 @@ protected:
 	QPointer<CListI> clist_i;
 	QPointer<IconsI> icons_i;
 	QPointer<EventsI> events_i;
+	QPointer<HistoryI> history_i;
 	
 	QMap<Contact *, SplitterWin *> windows;
 	bool window_exists(Contact *contact);

@@ -50,6 +50,13 @@ SplitterWin::~SplitterWin() {
 	settings.setValue("MessageWindow/geometry/" + contact->account->proto->name() + ":" + contact->account->account_id + ":" + contact->contact_id, saveGeometry());
 }
 
+void SplitterWin::addEvents(QList<Message> &events) {
+	foreach(Message m, events) {
+		addToLog(m.data.message, m.data.incomming, m.timestamp);
+	}
+	update_log();
+}
+
 void SplitterWin::hideEvent(QHideEvent *e) {
 	gone();
 	QSplitter::hideEvent(e);
@@ -92,7 +99,7 @@ void SplitterWin::openLink(const QUrl &url) {
 QString SplitterWin::getContent() {
 	QString ret;
 	bool first = true, last_incomming;
-	foreach(MessageData item, content) {
+	foreach(Message::MessageData item, content) {
 		if(first || item.incomming != last_incomming) {
 			if(first)
 				ret += QString("<div class='") + (item.incomming ? "incomming" : "outgoing") + "'>";
@@ -196,7 +203,7 @@ void SplitterWin::linkUrls(QString &str) {
 	}
 }
 
-void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
+void SplitterWin::addToLog(QString msg, bool incomming, QDateTime time) {
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />\n");
 	linkUrls(dispMsg);
@@ -204,14 +211,18 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
 	text += timestamp(time);
-	text += "<span class='nick'>" + Qt::escape(getNick()) + " </span>";
+	text += "<span class='nick'>" + (incomming ? Qt::escape(getNick()) : Qt::escape(contact->account->nick)) + " </span>";
 	text += "<span class='separator'>: </span></span>";
 	text += "<span class='text'>" + dispMsg + "</span>";
 	text += "</div>";
 
-	content << MessageData(true, text);
+	content << Message::MessageData(text, incomming);
 	while(content.size() > MAX_MESSAGES)
 		content.removeFirst();
+}
+
+void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
+	addToLog(msg, true, time);
 
 	if(contactChatState != CS_ACTIVE)
 		setContactChatState(CS_ACTIVE);
@@ -226,25 +237,12 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 }
 
 void SplitterWin::msgSend(const QString &msg) {
-	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br />\n");
-	linkUrls(dispMsg);
+	addToLog(msg, false, QDateTime::currentDateTime());
 
-	QString text = "<div class='message'>";
-	text += "<span class='info'>";
-	text += timestamp(QDateTime::currentDateTime());
-	text += "<span class='nick'>" + Qt::escape(contact->account->nick) + " </span>";
-	text += "<span class='separator'>: </span></span>";
-	text += "<span class='text'>" + dispMsg + "</span>";
-	text += "</div>";
-
-	content << MessageData(false, text);
-	while(content.size() > MAX_MESSAGES)
-		content.removeFirst();
 	update_log();
 	
-	MessageSend ms(msg, 0, contact, this);
-	events_i->fire_event(ms);
+	Message m(msg, false, 0, contact, this);
+	events_i->fire_event(m);
 
 	active();
 }

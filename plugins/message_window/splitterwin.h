@@ -18,6 +18,8 @@ class SplitterWin : public QSplitter {
 public:
 	SplitterWin(Contact *contact, EventsI *events_i, QWidget *parent = 0);
 	~SplitterWin();
+
+	void addEvents(QList<Message> &events);
 public slots:
 	void msgRecv(const QString &msg, QDateTime &time);
 	void msgSend(const QString &msg);
@@ -31,16 +33,10 @@ public slots:
 	void setSendChatState(bool f);
 
 protected:
-	class MessageData {
-	public:
-		MessageData(bool in, const QString &msg): incomming(in), message(msg) {}
-		bool incomming;
-		QString message;
-	};
-
 	void update_log();
 	QString getNick();
 	QString getContent();
+	void addToLog(QString msg, bool incomming, QDateTime time);
 
 	void showEvent(QShowEvent *e);
 	void hideEvent(QHideEvent *e);
@@ -65,7 +61,7 @@ private:
 	QPointer<EventsI> events_i;
 	bool showDate, showTime, showNick;
 
-	QList<MessageData> content;
+	QList<Message::MessageData> content;
 	QString style;
 
 	ChatStateType chatState, contactChatState;
