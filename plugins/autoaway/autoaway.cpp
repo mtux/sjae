@@ -63,6 +63,7 @@ bool AutoAway::modules_loaded() {
 
 bool AutoAway::pre_shutdown() {
 	timer.stop();
+	returnFromIdle();
 	return true;
 }
 
