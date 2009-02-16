@@ -255,8 +255,14 @@ Account *accounts::set_account_info(const Account &acc) {
 		account_list[acc.proto][acc.account_id] = new Account();
 		*account_list[acc.proto][acc.account_id] = acc;
 		icons_i->setup_account_status_icons(account_list[acc.proto][acc.account_id]);			
-	} else
+	} else {
+		// don't change proto status
+		GlobalStatus gs = account_list[acc.proto][acc.account_id]->status,
+			dgs = account_list[acc.proto][acc.account_id]->desiredStatus;
 		*account_list[acc.proto][acc.account_id] = acc;
+		account_list[acc.proto][acc.account_id]->status = gs;
+		account_list[acc.proto][acc.account_id]->desiredStatus = dgs;
+	}
 
 	events_i->fire_event(AccountChanged(account_list[acc.proto][acc.account_id], this));
 
