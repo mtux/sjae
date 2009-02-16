@@ -2,7 +2,7 @@
 #define _I_MESSAGE_WINDOW_H
 
 #include "plugin_i.h"
-#include "accounts_i.h"
+#include "contact_info_i.h"
 
 #define INAME_MESSAGE_WINDOW	"MessageWindowInterface"
 

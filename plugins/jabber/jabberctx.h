@@ -126,6 +126,7 @@ protected:
 	CoreI *core_i;
 	QPointer<CListI> clist_i;
 	QPointer<EventsI> events_i;
+	QPointer<ContactInfoI> contact_info_i;
 
 	QAction *newRosterItemAction, *removeRosterItemAction, *editRosterItemAction,
 		*grantAction, *revokeAction, *requestAction;

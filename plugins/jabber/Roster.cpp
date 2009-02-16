@@ -11,22 +11,25 @@ QString Resource::full_jid() const {
 	return getItem()->getJID() + "/" + name;
 }
 
-RosterItem::RosterItem(Account *acc, const QString &jid, const QString &n, SubscriptionType sub, RosterGroup *g)
-	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(acc, jid),
+RosterItem::RosterItem(Contact *contact, const QString &n, SubscriptionType sub, RosterGroup *g)
+	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(contact),
 	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE)
 {
-	contact.properties["name"] = n;
-	contact.properties["group"] = g->getFullName();
+	contact->set_property("name", n);
+	contact->set_property("group", g->getFullName());
 }
 
 void RosterItem::setName(const QString &n) {
 	RosterTreeNonLeafNode::setName(n);
-	contact.properties["name"] = n;
+	contact->set_property("name", n);
 }
 
 void RosterItem::setParent(RosterTreeNonLeafNode *p) {
 	RosterTreeNonLeafNode::setParent(p);
-	contact.properties["group"] = getGroup()->getFullName();
+	if(p)
+		contact->set_property("group", getGroup()->getFullName());
+	else
+		contact->remove_property("group");
 }
 
 RosterGroup *RosterItem::getGroup() const {

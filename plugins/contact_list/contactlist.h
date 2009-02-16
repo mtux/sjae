@@ -83,6 +83,7 @@ protected:
 
 	QMutex list_mutex;
 
+	QString getNick(Contact *contact);
 protected slots:
 	void aboutToShowMenuSlot(QTreeWidgetItem *i);
 

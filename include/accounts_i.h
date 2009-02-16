@@ -1,7 +1,6 @@
 #ifndef _I_ACCOUNTS_H
 #define _I_ACCOUNTS_H
 
-#include "plugin_i.h"
 #include "options_i.h"
 #include "add_contact_i.h"
 #include "events_i.h"
@@ -14,13 +13,9 @@
 #define INAME_ACCOUNTS	"AccountsInterface"
 
 // event UUIDs
-#define UUID_MSG					"{99D59C72-F5C6-4a20-84CF-1BAA6612E945}"
-#define UUID_CONTACT_CHANGED		"{3602C4D5-2589-4be5-AC4D-A2DCA5A4F8F0}"
 #define UUID_ACCOUNT_CHANGED		"{33A2C7A3-2F82-46b1-B56E-511D9A6D7ED2}"
 #define UUID_ACCOUNT_STATUS_REQ		"{1DCBB288-0686-40bb-9118-C184D9125A9F}"
 
-#define UUID_USER_CHAT_STATE		"{AC8F9710-54B5-40af-9CA1-779AB4ED59DB}"
-#define UUID_CONTACT_CHAT_STATE		"{C00E8853-CF13-4a7d-AF60-2684FF4D8FE9}"
 
 class ProtocolI;
 
@@ -52,39 +47,6 @@ public:
 	virtual void set_account_info(Account *acc) = 0;
 };
 
-class Contact {
-public:
-	Contact(Account *a, const QString &id): account(a), contact_id(id), status(ST_OFFLINE) {}
-
-	Account *account;
-	QString contact_id;
-
-	GlobalStatus status;
-	QMap<QString, QVariant> properties; // should be property cache?
-};
-
-class Message: public EventsI::Event {
-public:
-	class MessageData {
-	public:
-		MessageData(const QString msg, bool in): message(msg), incomming(in) {}
-		QString message;
-		bool incomming;
-	};
-
-	Message(const QString &msg, bool incomming, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG, source), data(msg, incomming), id(i), contact(c) {}
-	MessageData data;
-	Contact *contact;
-	int id;
-};
-
-class ContactChanged: public EventsI::Event {
-public:
-	ContactChanged(Contact *c, QObject *source = 0): EventsI::Event(UUID_CONTACT_CHANGED, source), contact(c), removed(false) {}
-	Contact *contact;
-	bool removed;
-};
-
 class AccountChanged: public EventsI::Event {
 public:
 	AccountChanged(Account *a, QObject *source = 0): EventsI::Event(UUID_ACCOUNT_CHANGED, source), account(a), removed(false) {}
@@ -97,25 +59,6 @@ public:
 	AccountStatusReq(Account *a, GlobalStatus gs, QObject *source = 0): EventsI::Event(UUID_ACCOUNT_STATUS_REQ, source), account(a), status(gs) {}
 	Account *account;
 	GlobalStatus status;
-};
-
-typedef enum {CS_ACTIVE, CS_COMPOSING, CS_PAUSED, CS_INACTIVE, CS_GONE}  ChatStateType;
-
-class UserChatState: public EventsI::Event {
-public:
-
-	UserChatState(Contact *c, ChatStateType t, QObject *source = 0): 
-		EventsI::Event(UUID_USER_CHAT_STATE, source), contact(c), type(t) {}
-	Contact *contact;
-	ChatStateType type;
-};
-
-class ContactChatState: public EventsI::Event {
-public:
-	ContactChatState(Contact *c, ChatStateType t, QObject *source = 0): 
-		EventsI::Event(UUID_CONTACT_CHAT_STATE, source), contact(c), type(t) {}
-	Contact *contact;
-	ChatStateType type;
 };
 
 class QDomElement;

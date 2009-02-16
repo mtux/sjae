@@ -64,6 +64,9 @@ JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
 	events_i->add_event_listener(this, UUID_SHOW_CONTACT_MENU);
 	events_i->add_event_listener(this, UUID_SHOW_GROUP_MENU);
+	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
+
+	contact_info_i = (ContactInfoI*)core_i->get_interface(INAME_CONTACTINFO);
 
 	keepAliveTimer.setInterval(30000);
 	connect(&keepAliveTimer, SIGNAL(timeout()), this, SLOT(sendKeepAlive()));
@@ -87,6 +90,7 @@ JabberCtx::~JabberCtx()
 
 	events_i->remove_event_listener(this, UUID_SHOW_CONTACT_MENU);
 	events_i->remove_event_listener(this, UUID_SHOW_GROUP_MENU);
+	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
 }
 
 Account *JabberCtx::get_account_info() {
@@ -128,6 +132,21 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 		grantAction->setVisible(false);
 		revokeAction->setVisible(false);
 		requestAction->setVisible(false);
+	} else if(e.uuid == UUID_CONTACT_CHANGED && e.source != this) {
+		ContactChanged &cc = static_cast<ContactChanged &>(e);
+		if(cc.contact->account == account) {
+			RosterItem *item = roster.get_item(cc.contact->contact_id);
+			if(!item) {
+				RosterGroup *gr = &roster;
+				if(cc.contact->has_property("group"))
+					gr = roster.get_group(cc.contact->get_property("group").toString());
+				QString name;
+				if(cc.contact->has_property("name"))
+					name = cc.contact->get_property("name").toString();
+				RosterItem *item = new RosterItem(cc.contact, name, ST_UNKNOWN, gr);
+				gr->addChild(item);
+			}
+		}
 	}
 	return true;
 }
@@ -261,7 +280,7 @@ void JabberCtx::sendWriteBuffer() {
 	sendBuffer.open(QIODevice::ReadOnly);
 	const QByteArray &b = sendBuffer.readAll();
 	if(b.size()) {
-		log(QString().append(b), LMT_SEND);
+		//log(QString().append(b), LMT_SEND);
 		sslSocket.write(b);
 	}
 	sendBuffer.close();
@@ -324,7 +343,7 @@ void JabberCtx::readSocket() {
 		return;
 
 	QByteArray data = sslSocket.read(sslSocket.bytesAvailable());
-	log(QString().append(data), LMT_RECV);
+	//log(QString().append(data), LMT_RECV);
 
 	reader.addData(data);
 	while(!reader.atEnd()) {
@@ -791,6 +810,7 @@ void JabberCtx::setDetails(RosterItem *item, const QString &group, const QString
 
 void JabberCtx::addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub) {
 	RosterGroup *gr = roster.get_group(group);
+	/*
 	if(!gr) {
 		QStringList subgroups = group.split(RosterGroup::getDelimiter());
 		if(subgroups.size()) {
@@ -814,7 +834,9 @@ void JabberCtx::addItem(const QString &jid, const QString &name, const QString &
 		} else 
 			gr = &roster;
 	}
-	RosterItem *item = new RosterItem(account, jid, name, sub, gr);
+	*/
+
+	RosterItem *item = new RosterItem(contact_info_i->get_contact(account, jid), name, sub, gr);
 	gr->addChild(item);
 
 	ContactChanged cc(item->getContact(), this);
@@ -838,20 +860,19 @@ void JabberCtx::parseRosterItem() {
 	if(name.isEmpty()) name = jid.split("@").at(0);
 
 	RosterItem *item = roster.get_item(jid);
-	if(subscription == "remove" && item) {
-		ContactChanged cc(item->getContact(), this);
-		cc.removed = true;
-		events_i->fire_event(cc);
-
-		item->getGroup()->removeChild(item);
-		delete item;
+	if(subscription == "remove") {
+		if(item) {
+			contact_info_i->delete_contact(item->getContact());
+			item->getGroup()->removeChild(item);
+			delete item;
+		}
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
 		}
 	} else {
-		log("Adding id to roster: " + jid + "(group: " + group + ")");
+		//log("Adding id to roster: " + jid + "(group: " + group + ")");
 		addItem(jid, name, group, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
@@ -902,9 +923,9 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 	r = item->get_active_resource();
 	item->getContact()->status = presenceToStatus(r->getPresence());
 	if(r->getPresenceMessage().isEmpty())
-		item->getContact()->properties.remove("status_msg");
+		item->getContact()->remove_property("status_msg");
 	else
-		item->getContact()->properties["status_msg"] = r->getPresenceMessage();
+		item->getContact()->set_property("status_msg", r->getPresenceMessage());
 
 	ContactChanged cc(item->getContact(), this);
 	events_i->fire_event(cc);

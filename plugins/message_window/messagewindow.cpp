@@ -22,6 +22,9 @@ MessageWindow::~MessageWindow() {
 
 bool MessageWindow::load(CoreI *core) {
 	core_i = core;
+
+	history_i = (HistoryI *)core_i->get_interface(INAME_HISTORY);
+
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
@@ -31,13 +34,6 @@ bool MessageWindow::load(CoreI *core) {
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHAT_STATE);
-
-	return true;
-}
-
-bool MessageWindow::modules_loaded() {
-	history_i = (HistoryI *)core_i->get_interface(INAME_HISTORY);
-	options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
 
 	QSettings settings;
 	MessageWindowOptions::Settings s;
@@ -49,8 +45,14 @@ bool MessageWindow::modules_loaded() {
 	
 	current_settings = s;
 
+	return true;
+}
+
+bool MessageWindow::modules_loaded() {
+	options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);
+
 	if(options_i) {
-		opt = new MessageWindowOptions(s, (history_i != 0));
+		opt = new MessageWindowOptions(current_settings, (history_i != 0));
 		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
 		options_i->add_page("Message Window", opt);
 	}
@@ -167,8 +169,10 @@ void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime
 	if(current_settings.show_style != MessageWindowOptions::Settings::SS_NONE && !window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
 		// if we're loading history, this event has been loaded already
-		if(current_settings.load_history == MessageWindowOptions::Settings::LH_NONE)
+		if(current_settings.load_history == MessageWindowOptions::Settings::LH_NONE) {
 			win->msgRecv(msg, time);
+			if(history_i) history_i->mark_as_read(contact, time);
+		}
 
 		if(current_settings.show_style == MessageWindowOptions::Settings::SS_POPUP) {
 			win->show();
@@ -181,6 +185,7 @@ void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime
 	} else if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
 		win->msgRecv(msg, time);
+		if(history_i) history_i->mark_as_read(contact, time);
 		win->activateWindow();
 	}
 }

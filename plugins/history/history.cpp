@@ -6,7 +6,7 @@
 #define DB_FILE_NAME		"message_history.db"
 
 PluginInfo info = {
-	0x200,
+	0x280,
 	"History",
 	"Scott Ellis",
 	"mail@scottellis.com.au",
@@ -28,10 +28,12 @@ History::~History()
 bool History::load(CoreI *core) {
 	core_i = core;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
+	if((contact_info_i = (ContactInfoI*)core_i->get_interface(INAME_CONTACTINFO)) == 0) return false;
+	if((accounts_i = (AccountsI*)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 
 	events_i->add_event_listener(this, UUID_MSG);
 
-	db = QSqlDatabase::addDatabase("QSQLITE");
+	db = QSqlDatabase::addDatabase("QSQLITE", "History");
 	db.setDatabaseName(core_i->get_config_dir() + "/" + DB_FILE_NAME);
     if(!db.open()) return false;
 
@@ -42,15 +44,30 @@ bool History::load(CoreI *core) {
 		"  contact_id varchar(256),"
 		"  timestamp number,"
 		"  incomming boolean,"
+		"  msg_read boolean,"
 		"  message text);"))
 	{
-		qWarning() << "db error." << q.lastError().text();
+		qWarning() << "History db error:" << q.lastError().text();
 	}
 	
 	return true;
 }
 
 bool History::modules_loaded() {
+
+	QSqlQuery unread(db);
+	if(!unread.exec("SELECT protocol, account, contact_id, message, incomming, timestamp FROM messages WHERE msg_read='false';"))
+		qWarning() << "History read unread failed:" << unread.lastError().text();
+
+	while(unread.next()) {
+		Account *account = accounts_i->account_info(unread.value(0).toString(), unread.value(1).toString());
+		if(account) {
+			Contact *contact = contact_info_i->get_contact(account, unread.value(2).toString());
+			Message m(unread.value(3).toString(), unread.value(4).toBool(), 0, contact, this);
+			m.timestamp = QDateTime::fromTime_t(unread.value(5).toUInt());
+			events_i->fire_event(m);
+		}
+	}
 	return true;
 }
 
@@ -71,16 +88,17 @@ const PluginInfo &History::get_plugin_info() {
 /////////////////////////////
 
 bool History::event_fired(EventsI::Event &e) {
-	if(e.uuid == UUID_MSG) {
+	if(e.uuid == UUID_MSG && e.source != this) {
 		Message &m = static_cast<Message &>(e);
 		writeQuery = new QSqlQuery(db);
-		writeQuery->prepare("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?);");
+		writeQuery->prepare("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?);");
 
 		writeQuery->addBindValue(m.contact->account->proto->name());
 		writeQuery->addBindValue(m.contact->account->account_id);
 		writeQuery->addBindValue(m.contact->contact_id);
 		writeQuery->addBindValue(m.timestamp.toTime_t());
 		writeQuery->addBindValue(m.data.incomming);
+		writeQuery->addBindValue(m.data.read);
 		writeQuery->addBindValue(m.data.message);
 
 		if(!writeQuery->exec()) {
@@ -92,7 +110,7 @@ bool History::event_fired(EventsI::Event &e) {
 	return true;
 }
 
-QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest) {
+QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest, bool mark_read) {
 	QList<Message> ret;
 
 	readQueryTime = new QSqlQuery(db);
@@ -111,6 +129,7 @@ QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest) 
 		Message m(readQueryTime->value(0).toString(), readQueryTime->value(1).toBool(), 0, contact, this);
 		m.timestamp = QDateTime::fromTime_t(readQueryTime->value(2).toUInt());
 		ret << m;
+		if(mark_read) mark_as_read(contact, m.timestamp);
 	}
 
 	delete readQueryTime;
@@ -118,7 +137,7 @@ QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest) 
 	return ret;
 }
 
-QList<Message> History::get_latest_events(Contact *contact, int count) {
+QList<Message> History::get_latest_events(Contact *contact, int count, bool mark_read) {
 	QList<Message> ret;
 
 	readQueryCount = new QSqlQuery(db);
@@ -137,11 +156,22 @@ QList<Message> History::get_latest_events(Contact *contact, int count) {
 		Message m(readQueryCount->value(0).toString(), readQueryCount->value(1).toBool(), 0, contact, this);
 		m.timestamp = QDateTime::fromTime_t(readQueryCount->value(2).toUInt());
 		ret.prepend(m);
+		if(mark_read) mark_as_read(contact, m.timestamp);
 	}
 
 	delete readQueryCount;
 
 	return ret;
+}
+	
+void History::mark_as_read(Contact *contact, QDateTime timestamp) {
+	QSqlQuery mrq(db);
+	QString query_text = "UPDATE messages SET msg_read='true' WHERE protocol='" + contact->account->proto->name() + "'"
+		+ " AND account='" + contact->account->account_id + "'"
+		+ " AND contact_id='" + contact->contact_id + "'" + 
+		+ " AND timestamp=" + QString("%1").arg(timestamp.toTime_t()) + ";";
+	if(!mrq.exec(query_text))
+		qWarning() << "History mark as read failed:" << mrq.lastError().text();
 }
 
 /////////////////////////////

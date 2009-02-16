@@ -2,6 +2,7 @@
 #define __HISTORY_H
 
 #include <history_i.h>
+#include <contact_info_i.h>
 #include <accounts_i.h>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -21,12 +22,16 @@ public:
 
 	bool event_fired(EventsI::Event &e);
 
-	QList<Message> get_latest_events(Contact *contact, QDateTime earliest);
-	QList<Message> get_latest_events(Contact *contact, int count);
+	QList<Message> get_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true);
+	QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true);
+
+	void mark_as_read(Contact *contact, QDateTime timestamp);
 
 protected:
 	CoreI *core_i;
 	QPointer<EventsI> events_i;
+	QPointer<ContactInfoI> contact_info_i;
+	QPointer<AccountsI> accounts_i;
 
 	QSqlDatabase db;
 	QSqlQuery *writeQuery, *readQueryTime, *readQueryCount;

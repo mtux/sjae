@@ -8,7 +8,7 @@
 #include <QDateTime>
 #include <QDebug>
 
-#include <accounts_i.h>
+#include <contact_info_i.h>
 
 typedef enum {ST_NONE, ST_TO, ST_FROM, ST_BOTH, ST_UNKNOWN} SubscriptionType;
 typedef enum {PT_UNAVAILABLE, PT_INVISIBLE, PT_ONLINE, PT_AWAY, PT_DND, PT_XA, PT_CHAT, PT_ERROR, PT_UNKNOWN} PresenceType;
@@ -145,7 +145,7 @@ class RosterGroup;
 
 class RosterItem: public RosterTreeNonLeafNode {
 public:
-	RosterItem(Account *acc, const QString &jid, const QString &n, SubscriptionType sub, RosterGroup *g);
+	RosterItem(Contact *contact, const QString &name, SubscriptionType sub, RosterGroup *g);
 
 	virtual ~RosterItem() {}
 	virtual NodeType type() const {return RTNT_ITEM;}
@@ -153,7 +153,7 @@ public:
 	virtual void setName(const QString &n);
 	virtual void setParent(RosterTreeNonLeafNode *p);
 
-	QString getJID() const {return contact.contact_id;}
+	QString getJID() const {return contact->contact_id;}
 
 	SubscriptionType getSubscription() const {return subscription;}
 	void setSubscription(SubscriptionType sub) {subscription = sub;}
@@ -184,13 +184,13 @@ public:
 	RosterGroup *getGroup() const;
 	Resource *get_active_resource() const;
 
-	Contact *getContact() {return &contact;}
+	Contact *getContact() {return contact;}
 
 	bool is_offline() const;
 protected:
 	SubscriptionType subscription;
 	ChatStateType userChatState, contactChatState;
-	Contact contact;
+	Contact *contact;
 };
 
 class RosterGroup: public RosterTreeNonLeafNode {

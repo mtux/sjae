@@ -147,9 +147,9 @@ void SplitterWin::update_log() {
 }
 
 QString SplitterWin::getNick() {
-	if(contact->properties.contains("handle")) return contact->properties["handle"].toString();
-	if(contact->properties.contains("nick")) return contact->properties["nick"].toString();
-	if(contact->properties.contains("name")) return contact->properties["name"].toString();
+	if(contact->has_property("handle")) return contact->get_property("handle").toString();
+	if(contact->has_property("nick")) return contact->get_property("nick").toString();
+	if(contact->has_property("name")) return contact->get_property("name").toString();
 	return contact->contact_id;
 }
 

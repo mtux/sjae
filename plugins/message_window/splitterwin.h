@@ -3,7 +3,7 @@
 
 #include <QSplitter>
 #include "ui_splitterwin.h"
-#include <accounts_i.h>
+#include <contact_info_i.h>
 #include <events_i.h>
 #include <QList>
 #include <QWebPage>

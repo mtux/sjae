@@ -141,6 +141,17 @@ QTreeWidgetItem *findGroup(QTreeWidgetItem *parent, const QString &name) {
 	return 0;
 }
 
+QString ContactList::getNick(Contact *contact) {
+	QString label = contact->contact_id;
+	if(contact->has_property("name"))
+		label = contact->get_property("name").toString();
+	if(contact->has_property("nick"))
+		label = contact->get_property("nick").toString();
+	if(contact->has_property("handle"))
+		label = contact->get_property("handle").toString();
+	return label;
+}
+
 QTreeWidgetItem *ContactList::add_contact(Contact *contact) {
 	SortedTreeWidgetItem *si = 0;
 
@@ -157,7 +168,7 @@ QTreeWidgetItem *ContactList::add_contact(Contact *contact) {
 		if(group_delim.contains(contact->account) == false)
 			group_delim[contact->account] = "\\";
 
-		QString group = (contact->properties.contains("group") ? contact->properties["group"].toString() : "");
+		QString group = (contact->has_property("group") ? contact->get_property("group").toString() : "");
 
 		QSettings settings;
 		QTreeWidgetItem *i, *parent = win->tree()->invisibleRootItem();
@@ -166,34 +177,32 @@ QTreeWidgetItem *ContactList::add_contact(Contact *contact) {
 			QStringList subgroups = group.split(group_delim[contact->account]);
 			while(subgroups.size() && (i = findGroup(parent, subgroups.at(0))) != 0) {
 				parent = i;
-				full_gn += group_delim[contact->account] + subgroups.at(0);
+				if(full_gn.size())
+					full_gn += group_delim[contact->account];
+				full_gn += subgroups.at(0);
 				subgroups.removeAt(0);
 			}
 			while(subgroups.size()) {
 				i = new SortedTreeWidgetItem(parent, QStringList() << subgroups.at(0) << proto_name << account_id, TWIT_GROUP);
 				//parent->sortChildren(0, Qt::AscendingOrder);
-				parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
+				parent->setExpanded(settings.value("CList/group_expand/" + full_gn, true).toBool());
 				//if(hide_offline) set_hide_offline(parent);
 				parent = i;
-				full_gn += group_delim[contact->account] + subgroups.at(0);
+				if(full_gn.size())
+					full_gn += group_delim[contact->account];
+				full_gn += subgroups.at(0);
 				subgroups.removeAt(0);
 			}
 		}
-		QString label = contact->contact_id;
-		if(contact->properties.contains("name"))
-			label = contact->properties["name"].toString();
-		if(contact->properties.contains("nick"))
-			label = contact->properties["nick"].toString();
-		if(contact->properties.contains("handle"))
-			label = contact->properties["handle"].toString();
-			
+		QString label = getNick(contact);
+
 		si = new SortedTreeWidgetItem(parent, QStringList() << label, TWIT_CONTACT);
 		ci.item = si;
 
 		QVariant var; var.setValue(ci);
 		si->setData(0, Qt::UserRole, var);
 		if(parent && !full_gn.isEmpty())
-			parent->setExpanded(settings.value("CList/group_expand" + full_gn, true).toBool());
+			parent->setExpanded(settings.value("CList/group_expand/" + full_gn, true).toBool());
 
 		si->setIcon(0, icons_i->get_account_status_icon(contact->account, contact->status));
 		id_item_map[contact] = si;
@@ -224,7 +233,9 @@ QString get_full_gn(QTreeWidgetItem *i, const QString &group_delim = "\\") {
 	}
 	while(stack.size()) {
 		i = stack.pop();
-		ret += group_delim + i->text(0);
+		if(ret.length())
+			ret += group_delim;
+		ret += i->text(0);
 	}
 	return ret;
 }
@@ -242,7 +253,7 @@ void ContactList::remove_contact(Contact *contact) {
 			while(i->parent() && i->parent()->childCount() == 1) {
 				i = i->parent();
 				full_gn = get_full_gn(i, group_delim[contact->account]);
-				settings.remove("CList/group_expand" + full_gn);
+				settings.remove("CList/group_expand/" + full_gn);
 			}
 
 			delete i;
@@ -274,13 +285,7 @@ void ContactList::remove_all_contacts(Account *account) {
 }
 
 void ContactList::update_label(Contact *contact) {
-	QString label = contact->contact_id;
-	if(contact->properties.contains("name"))
-		label = contact->properties["name"].toString();
-	if(contact->properties.contains("nick"))
-		label = contact->properties["nick"].toString();
-	if(contact->properties.contains("handle"))
-		label = contact->properties["handle"].toString();
+	QString label = getNick(contact);
 	{
 
 		QMutexLocker locker(&list_mutex);
@@ -298,7 +303,7 @@ void ContactList::update_group(Contact *contact) {
 	if(id_item_map.contains(contact)) {
 		QTreeWidgetItem *i = id_item_map[contact];
 		QString current_group = get_full_gn(i->parent()),
-			new_group = (contact->properties.contains("group") ? contact->properties["group"].toString() : "");
+			new_group = (contact->has_property("group") ? contact->get_property("group").toString() : "");
 		list_mutex.unlock();
 		if(current_group != new_group) {
 			remove_contact(contact);
@@ -388,14 +393,14 @@ void ContactList::treeItemExpanded(QTreeWidgetItem *i) {
 	QSettings settings;
 	Account *acc = accounts_i->account_info(i->text(1), i->text(2));
 	QString full_gn = get_full_gn(i, group_delim[acc]);
-	settings.setValue("CList/group_expand" + full_gn, true);
+	settings.setValue("CList/group_expand/" + full_gn, true);
 }
 
 void ContactList::treeItemCollapsed(QTreeWidgetItem *i) {
 	QSettings settings;
 	Account *acc = accounts_i->account_info(i->text(1), i->text(2));
 	QString full_gn = get_full_gn(i, group_delim[acc]);
-	settings.setValue("CList/group_expand" + full_gn, false);
+	settings.setValue("CList/group_expand/" + full_gn, false);
 }
 
 void ContactList::treeItemClicked(QTreeWidgetItem *i, int col) {

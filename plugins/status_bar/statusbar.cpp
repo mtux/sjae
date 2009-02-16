@@ -41,7 +41,7 @@ bool StatusBar::load(CoreI *core) {
 
 	toolbuttons = new QWidget(status_bar);
 	toolbuttons->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-	toolButtonLayout = new QHBoxLayout(status_bar);
+	toolButtonLayout = new QHBoxLayout(toolbuttons);
 	toolButtonLayout->setSpacing(6);
 	toolButtonLayout->setMargin(4);
 	toolbuttons->setLayout(toolButtonLayout);

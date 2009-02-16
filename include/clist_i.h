@@ -1,7 +1,7 @@
 #ifndef _I_CLIST_H
 #define _I_CLIST_H
 
-#include "accounts_i.h"
+#include "contact_info_i.h"
 #include "global_status.h"
 #include <QString>
 #include <QTreeWidgetItem>

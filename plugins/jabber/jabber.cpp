@@ -31,6 +31,11 @@ bool jabber::load(CoreI *core) {
 	registerDiscoMetaTypes();
 
 	core_i = core;
+	// interfaces required for contexts and protocol object
+	if(core_i->get_interface(INAME_EVENTS) == 0) return false;
+	if(core_i->get_interface(INAME_CONTACTINFO) == 0) return false;
+	if(core_i->get_interface(INAME_ACCOUNTS) == 0) return false;
+
 	IconsI *icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	if(icons_i) icons_i->add_icon("Proto/Jabber", QPixmap(":/icons/Resources/bulb.PNG"), "Protocols/Jabber");
 
@@ -205,6 +210,10 @@ bool JabberProto::event_fired(EventsI::Event &e) {
 		UserChatState &cs = static_cast<UserChatState &>(e);
 		if(ctx.contains(cs.contact->account))
 			ctx[cs.contact->account]->setUserChatState(cs.contact, cs.type);
+	} else if(e.uuid == UUID_CONTACT_CHANGED) {
+		//ContactChanged &cc = static_cast<ContactChanged &>(e);
+		//if(ctx.contains(cc.contact->account))
+		//	ctx[cc.contact->account]->
 	}
 	return true;
 }

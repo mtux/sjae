@@ -25,6 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "core\core.vcproj", 
 		{E26B3A99-54F0-49F6-BFF7-D3ECBB72E178} = {E26B3A99-54F0-49F6-BFF7-D3ECBB72E178}
 		{6C7F09B2-1F67-414A-B98C-F8AB15DE0B86} = {6C7F09B2-1F67-414A-B98C-F8AB15DE0B86}
 		{CDCD8DD5-B703-4F95-B60A-D3EC23C4AAC1} = {CDCD8DD5-B703-4F95-B60A-D3EC23C4AAC1}
+		{D81814EC-058C-4CD6-966D-8CF1C92E7D3B} = {D81814EC-058C-4CD6-966D-8CF1C92E7D3B}
 		{BBFF5BF5-5C61-44A6-99B1-0FC8CB7234CB} = {BBFF5BF5-5C61-44A6-99B1-0FC8CB7234CB}
 		{A230DAF7-2B46-40FE-B893-62DEF9392C45} = {A230DAF7-2B46-40FE-B893-62DEF9392C45}
 	EndProjectSection
@@ -104,6 +105,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "history", "plugins\history\
 		Integration = True
 	EndGlobalSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "contactinfo", "plugins\contactinfo\contactinfo.vcproj", "{D81814EC-058C-4CD6-966D-8CF1C92E7D3B}"
+	GlobalSection(Qt) = preSolution
+		Integration = True
+	EndGlobalSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -178,6 +184,10 @@ Global
 		{CDCD8DD5-B703-4F95-B60A-D3EC23C4AAC1}.Debug|Win32.Build.0 = Debug|Win32
 		{CDCD8DD5-B703-4F95-B60A-D3EC23C4AAC1}.Release|Win32.ActiveCfg = Release|Win32
 		{CDCD8DD5-B703-4F95-B60A-D3EC23C4AAC1}.Release|Win32.Build.0 = Release|Win32
+		{D81814EC-058C-4CD6-966D-8CF1C92E7D3B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D81814EC-058C-4CD6-966D-8CF1C92E7D3B}.Debug|Win32.Build.0 = Debug|Win32
+		{D81814EC-058C-4CD6-966D-8CF1C92E7D3B}.Release|Win32.ActiveCfg = Release|Win32
+		{D81814EC-058C-4CD6-966D-8CF1C92E7D3B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
