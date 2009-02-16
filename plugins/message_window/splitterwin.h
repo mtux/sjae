@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QHideEvent>
 #include <QShowEvent>
+#include <QCloseEvent>
 
 class SplitterWin : public QSplitter { 
 	Q_OBJECT
@@ -32,6 +33,9 @@ public slots:
 
 	void setSendChatState(bool f);
 
+signals:
+	void closed(Contact *contact);
+
 protected:
 	void update_log();
 	QString getNick();
@@ -40,6 +44,7 @@ protected:
 
 	void showEvent(QShowEvent *e);
 	void hideEvent(QHideEvent *e);
+	void closeEvent(QCloseEvent *e);
 
 	void setUserChatState(ChatStateType state);
 	void linkUrls(QString &s);

@@ -77,8 +77,6 @@ MainWin::~MainWin()
 }
 
 void MainWin::updateFlags() {
-	//Qt::WindowFlags flags = windowFlags();
-
 	bool hidden = isHidden();
 	setWindowFlags((toolWindow ? Qt::Tool : Qt::Window) 
 		| (hideFrame ? Qt::FramelessWindowHint : Qt::Widget)

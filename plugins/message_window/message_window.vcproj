@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\messagewindowoptions.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\splitterwin.cpp"
 				>
 			</File>
@@ -293,6 +297,58 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\messagewindowoptions.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing messagewindowoptions.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewindowoptions.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindowoptions.cpp&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewindowoptions.h"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindowoptions.cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing messagewindowoptions.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;.\messagewindowoptions.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindowoptions.cpp&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;.\messagewindowoptions.h"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_messagewindowoptions.cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\include\options_i.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing options_i.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;..\..\include\options_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_options_i.cpp&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;..\..\include\options_i.h"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_options_i.cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing options_i.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  -DUNICODE -DWIN32 -DQT_THREAD_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DMESSAGE_WINDOW_LIB -DQT_XML_LIB -D_WINDLL -I&quot;.\GeneratedFiles\.&quot; -I&quot;$(QTDIR)\include\.&quot; -I&quot;.\GeneratedFiles\$(ConfigurationName)\.&quot; -I&quot;.\.&quot; -I&quot;$(QTDIR)\include\QtCore\.&quot; -I&quot;$(QTDIR)\include\QtGui\.&quot; -I&quot;.\..\..\include\.&quot; -I&quot;$(QTDIR)\include\QtXml\.&quot; -I&quot;$(QTDIR)\include\QtWebKit\.&quot; &quot;..\..\include\options_i.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_options_i.cpp&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;..\..\include\options_i.h"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_options_i.cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\splitterwin.h"
 				>
 				<FileConfiguration
@@ -377,6 +433,32 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\messagewindowoptions.ui"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing $(InputPath)..."
+						CommandLine="&quot;$(QTDIR)\bin\uic.exe&quot; -o &quot;.\GeneratedFiles\ui_messagewindowoptions.h&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe"
+						Outputs="&quot;.\GeneratedFiles\ui_messagewindowoptions.h&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing $(InputPath)..."
+						CommandLine="&quot;$(QTDIR)\bin\uic.exe&quot; -o &quot;.\GeneratedFiles\ui_messagewindowoptions.h&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe"
+						Outputs="&quot;.\GeneratedFiles\ui_messagewindowoptions.h&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\splitterwin.ui"
 				>
 				<FileConfiguration
@@ -417,18 +499,6 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_chatinput.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_chatinput.cpp"
 				>
 				<FileConfiguration
@@ -441,7 +511,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_chatinput.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -476,7 +546,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_message_window_i.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -511,6 +581,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\GeneratedFiles\Release\moc_messagewin.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\GeneratedFiles\Debug\moc_messagewindow.cpp"
 				>
 				<FileConfiguration
@@ -525,6 +607,82 @@
 			<File
 				RelativePath=".\GeneratedFiles\Release\moc_messagewindow.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Debug\moc_messagewindowoptions.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Release\moc_messagewindowoptions.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Debug\moc_options_i.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\Release\moc_options_i.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -564,6 +722,10 @@
 			</File>
 			<File
 				RelativePath=".\GeneratedFiles\ui_messagewin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GeneratedFiles\ui_messagewindowoptions.h"
 				>
 			</File>
 			<File

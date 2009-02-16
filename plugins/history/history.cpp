@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QSqlError>
 
+#define DB_FILE_NAME		"message_history.db"
+
 PluginInfo info = {
 	0x200,
 	"History",
@@ -30,7 +32,7 @@ bool History::load(CoreI *core) {
 	events_i->add_event_listener(this, UUID_MSG);
 
 	db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName(core_i->get_config_dir() + "/history.db");
+	db.setDatabaseName(core_i->get_config_dir() + "/" + DB_FILE_NAME);
     if(!db.open()) return false;
 
 	QSqlQuery q(db);
@@ -102,7 +104,7 @@ QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest) 
 	readQueryTime->bindValue(":timestamp", earliest.toTime_t());
 
 	if(!readQueryTime->exec()) {
-		qWarning() << "History write failed:" << readQueryTime->lastError().text();
+		qWarning() << "History read failed:" << readQueryTime->lastError().text();
 	}
 
 	while(readQueryTime->next()) {
@@ -120,7 +122,7 @@ QList<Message> History::get_latest_events(Contact *contact, int count) {
 	QList<Message> ret;
 
 	readQueryCount = new QSqlQuery(db);
-	readQueryCount->prepare("SELECT message, incomming, timestamp FROM messages WHERE protocol=:proto AND account=:account AND contact_id=:contact_id LIMIT :count ORDER BY timestamp DESC;");
+	readQueryCount->prepare("SELECT message, incomming, timestamp FROM messages WHERE protocol=:proto AND account=:account AND contact_id=:contact_id ORDER BY timestamp DESC LIMIT :count;");
 
 	readQueryCount->bindValue(":proto", contact->account->proto->name());
 	readQueryCount->bindValue(":account", contact->account->account_id);
@@ -128,13 +130,13 @@ QList<Message> History::get_latest_events(Contact *contact, int count) {
 	readQueryCount->bindValue(":count", count);
 
 	if(!readQueryCount->exec()) {
-		qWarning() << "History write failed:" << readQueryCount->lastError().text();
+		qWarning() << "History read failed:" << readQueryCount->lastError().text();
 	}
 
 	while(readQueryCount->next()) {
 		Message m(readQueryCount->value(0).toString(), readQueryCount->value(1).toBool(), 0, contact, this);
 		m.timestamp = QDateTime::fromTime_t(readQueryCount->value(2).toUInt());
-		ret << m;
+		ret.prepend(m);
 	}
 
 	delete readQueryCount;

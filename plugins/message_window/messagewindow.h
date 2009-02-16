@@ -7,6 +7,7 @@
 #include <events_i.h>
 #include <history_i.h>
 #include "splitterwin.h"
+#include "messagewindowoptions.h"
 
 #include <QPointer>
 #include <QMap>
@@ -32,7 +33,11 @@ protected:
 	QPointer<IconsI> icons_i;
 	QPointer<EventsI> events_i;
 	QPointer<HistoryI> history_i;
+	QPointer<OptionsI> options_i;
 	
+	MessageWindowOptions *opt;
+	MessageWindowOptions::Settings current_settings;
+
 	QMap<Contact *, SplitterWin *> windows;
 	bool window_exists(Contact *contact);
 
@@ -45,6 +50,9 @@ protected slots:
 	void account_removed(Account *account);
 	void message_recv(Contact *contact, const QString &msg, QDateTime &time);
 	void contact_change(Contact *contact);
+	void destroy_window(Contact *contact);
+
+	void options_applied();
 
 public slots:
 	void open_window(Contact *contact);

@@ -1,0 +1,202 @@
+<ui version="4.0" >
+ <class>MessageWindowOptionsClass</class>
+ <widget class="OptionsPageI" name="MessageWindowOptionsClass" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>381</width>
+    <height>309</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>MessageWindowOptions</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2" >
+   <item>
+    <spacer name="verticalSpacer" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox" >
+     <property name="title" >
+      <string>When a message is received</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout" >
+      <item>
+       <widget class="QRadioButton" name="radShowPopup" >
+        <property name="text" >
+         <string>Pop up the message window</string>
+        </property>
+        <property name="checked" >
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radShowMin" >
+        <property name="text" >
+         <string>Show the window minimized</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radShowNone" >
+        <property name="text" >
+         <string>Do nothing</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2" >
+     <property name="title" >
+      <string>History</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout" >
+      <item row="0" column="0" >
+       <widget class="QCheckBox" name="chkHistory" >
+        <property name="text" >
+         <string>Load message history</string>
+        </property>
+        <property name="checked" >
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QRadioButton" name="radHistoryDays" >
+        <property name="text" >
+         <string>Show this many days:</string>
+        </property>
+        <property name="checked" >
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QSpinBox" name="spnHistoryDays" >
+        <property name="minimumSize" >
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="minimum" >
+         <number>1</number>
+        </property>
+        <property name="maximum" >
+         <number>365</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QRadioButton" name="radHistoryCount" >
+        <property name="text" >
+         <string>Show this many messages:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QSpinBox" name="spnHistoryCount" >
+        <property name="enabled" >
+         <bool>false</bool>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="minimum" >
+         <number>1</number>
+        </property>
+        <property name="maximum" >
+         <number>500</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkSendChatState" >
+     <property name="text" >
+      <string>Send chat state</string>
+     </property>
+     <property name="checked" >
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_2" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11" />
+ <customwidgets>
+  <customwidget>
+   <class>OptionsPageI</class>
+   <extends>QWidget</extends>
+   <header>options_i.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>radHistoryDays</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>spnHistoryDays</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>119</x>
+     <y>200</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>226</x>
+     <y>200</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radHistoryCount</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>spnHistoryCount</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>165</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>207</x>
+     <y>227</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

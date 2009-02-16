@@ -66,6 +66,11 @@ void SplitterWin::showEvent(QShowEvent *e) {
 	QSplitter::showEvent(e);
 }
 
+void SplitterWin::closeEvent(QCloseEvent *e) {
+	QSplitter::closeEvent(e);
+	emit closed(contact);
+}
+
 void SplitterWin::setSendChatState(bool f) {
 	sendChatState = f;
 }
@@ -229,10 +234,6 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 	else
 		update_log();
 	
-	show();
-	activateWindow();
-	raise();
-
 	active();
 }
 
