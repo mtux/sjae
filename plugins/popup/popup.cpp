@@ -1,0 +1,164 @@
+#include "popup.h"
+#include <QtPlugin>
+#include <QRect>
+#include <QDesktopWidget>
+#include <QSettings>
+
+PluginInfo info = {
+	0x600,
+	"Popup",
+	"Scott Ellis",
+	"mail@scottellis.com.au",
+	"http://www.scottellis.com.au",
+	"PopupNotify",
+	0x00000001
+};
+
+Popup::Popup(): opt(0), nextWinId(1)
+{
+
+}
+
+Popup::~Popup()
+{
+
+}
+
+bool Popup::load(CoreI *core) {
+	core_i = core;
+
+	QSettings settings;
+	current_settings.enabled = settings.value("Popup/Enabled", true).toBool();
+	current_settings.round_corners = settings.value("Popup/RoundCorners", true).toBool();
+
+	OptionsI *options_i = (OptionsI*)core_i->get_interface(INAME_OPTIONS);
+	if(options_i) {
+		opt = new PopupOptions(this);
+		options_i->add_page("Appearance/Popups", opt);
+		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
+	}
+
+	PopupI::PopupClass p;
+	p.name = "Default";
+	p.icon = QIcon(":/Resources/Notepad.png");
+	p.title = Qt::black;
+	p.text = Qt::black;
+	p.background = Qt::gray;
+	p.listener = this;
+	p.timeout = 10;
+	register_class(p);
+
+	p.name = "Warning";
+	p.icon = QIcon(":/Resources/Alert.png");
+	p.title = Qt::black;
+	p.text = Qt::black;
+	p.background = Qt::red;
+	p.listener = this;
+	p.timeout = 0;
+	register_class(p);
+
+	return true;
+}
+
+bool Popup::modules_loaded() {
+	return true;
+}
+
+bool Popup::pre_shutdown() {
+	foreach(PopupWin *win, windows)
+		delete win;
+	return true;
+}
+
+bool Popup::unload() {
+	return true;
+}
+
+const PluginInfo &Popup::get_plugin_info() {
+	return info;
+}
+
+/////////////////////////////
+
+bool Popup::register_class(const PopupClass &c)  {
+	if(current_settings.classes.contains(c.name)) return false;
+	current_settings.classes[c.name] = c;
+
+	QSettings settings;
+	current_settings.classes[c.name].icon = QIcon(settings.value("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(64, 64)).value<QPixmap>());
+	current_settings.classes[c.name].title = settings.value("Popup/Class/" + c.name + "/TitleCol", c.title).value<QColor>();
+	current_settings.classes[c.name].text = settings.value("Popup/Class/" + c.name + "/TextCol", c.text).value<QColor>();
+	current_settings.classes[c.name].background = settings.value("Popup/Class/" + c.name + "/BackgroundCol", c.background).value<QColor>();
+	current_settings.classes[c.name].timeout = settings.value("Popup/Class/" + c.name + "/Timeout", c.timeout).toInt();
+
+	if(opt) opt->set_settings(current_settings);
+	return true;
+}
+
+int Popup::show_popup(const QString &className, const QString &title, const QString &text) {
+	if(current_settings.classes.contains(className)) {
+		PopupWin *win = new PopupWin(current_settings.classes[className], nextWinId++);
+		connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
+		win->setContent(title, text);
+		windows.append(win);
+		layoutPopups();
+		win->show();
+	}
+	return -1;
+}
+
+void Popup::show_preview(const PopupI::PopupClass &c, const QString &title, const QString &text) {
+	PopupWin *win = new PopupWin(c, nextWinId++);
+	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
+	win->setContent(title, text);
+	windows.append(win);
+	layoutPopups();
+	win->show();
+}
+
+void Popup::layoutPopups() {
+	QRect r, screen = desktop.availableGeometry();
+	int y = screen.height();
+	for(int i = windows.size() - 1; i >= 0; --i) {
+		r.setWidth(windows.at(i)->size().width());
+		r.setHeight(windows.at(i)->size().height());
+		y -= r.height() + 6;
+		
+		r.moveTo(screen.width() - r.width() - 6, y);
+		windows.at(i)->setGeometry(r);
+	}
+}
+
+void Popup::win_closed(int id) {
+	for(int i = 0; i < windows.size(); i++) {
+		if(windows.at(i)->getId() == id) {
+			windows.removeAt(i);
+			break;
+		}
+	}
+	layoutPopups();
+}
+
+void Popup::popup_closed(int id, PopupI::PopupDoneType done) {
+}
+
+void Popup::options_applied() {
+	QSettings settings;
+	current_settings = opt->get_settings();
+
+	settings.setValue("Popup/Enabled", current_settings.enabled);
+	settings.setValue("Popup/RoundCorners", current_settings.round_corners);
+
+	foreach(PopupI::PopupClass c, current_settings.classes) {
+		settings.setValue("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(64, 64));
+		settings.setValue("Popup/Class/" + c.name + "/TitleCol", c.title);
+		settings.setValue("Popup/Class/" + c.name + "/TextCol", c.text);
+		settings.setValue("Popup/Class/" + c.name + "/BackgroundCol", c.background);
+		settings.setValue("Popup/Class/" + c.name + "/Timeout", c.timeout);
+	}
+}
+
+/////////////////////////////
+
+Q_EXPORT_PLUGIN2(popup, Popup)
+

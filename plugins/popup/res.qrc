@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>Resources/Alert.png</file>
+        <file>Resources/Notepad.png</file>
+    </qresource>
+</RCC>
