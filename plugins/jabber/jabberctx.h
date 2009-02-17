@@ -101,6 +101,7 @@ protected slots:
 	void requestSubscription();
 
 	void sendRequestSubscription(const QString &to);
+	void sendStopSubscription(const QString &to);
 
 	//void setAllOffline();
 

@@ -125,11 +125,6 @@ bool ContactInfo::delete_contact(Contact *contact) {
 			events_i->fire_event(cc);
 		}
 
-		delete contacts[acc][contact_id];
-		contacts[acc].remove(contact_id);
-		if(contacts[acc].size() == 0)
-			contacts.remove(acc);
-
 		delete_props->bindValue(":proto", contact->account->proto->name());
 		delete_props->bindValue(":account_id", contact->account->account_id);
 		delete_props->bindValue(":contact_id", contact->contact_id);
@@ -138,6 +133,11 @@ bool ContactInfo::delete_contact(Contact *contact) {
 			qWarning() << "ContactInfo delete query error:" << delete_props->lastError().text();
 
 		delete_props->finish();
+
+		delete contacts[acc][contact_id];
+		contacts[acc].remove(contact_id);
+		if(contacts[acc].size() == 0)
+			contacts.remove(acc);
 
 		return true;
 	}

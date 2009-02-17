@@ -60,12 +60,14 @@ const PluginInfo &MessageNotify::get_plugin_info() {
 /////////////////////////////
 
 void MessageNotify::popup_closed(int id, PopupI::PopupDoneType done) {
-	if(done == PopupI::PDT_LEFT_CLICK) {
-		message_win_i->open_window(winMap[id].contact);
-	} else if(history_i && done == PopupI::PDT_LEFT_CLICK) {
-		history_i->mark_as_read(winMap[id].contact, winMap[id].timestamp);
+	if(winMap.contains(id)) {
+		if(done == PopupI::PDT_LEFT_CLICK) {
+			message_win_i->open_window(winMap[id].contact);
+		} else if(history_i && done == PopupI::PDT_LEFT_CLICK) {
+			history_i->mark_as_read(winMap[id].contact, winMap[id].timestamp);
+		}
+		winMap.remove(id);
 	}
-	winMap.remove(id);
 }
 
 QString MessageNotify::getNick(Contact *contact) {

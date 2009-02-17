@@ -31,7 +31,10 @@ void SearchWindow::add_account(const QString &proto_name, const QString &id) {
 	if(ui.protoCmb->findText(proto_name) == -1) {
 		ui.protoCmb->addItem(proto_name);
 		ui.protoCmb->setEnabled(true);
+		if(ui.protoCmb->currentIndex() == -1)
+			ui.protoCmb->setCurrentIndex(0);
 	}
+	select_protocol(ui.protoCmb->currentText());
 }
 
 void SearchWindow::remove_account(const QString &proto_name, const QString &id) {

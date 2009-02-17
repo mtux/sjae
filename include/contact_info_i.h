@@ -31,11 +31,8 @@ public:
 		if(properties.contains(key)) {
 			properties.remove(key);
 			int i = transient_properties.indexOf(key);
-			if(i != -1) transient_properties.removeAt(i);
-			else {
-				if(changed_properties.indexOf(key) == -1)
-					changed_properties.append(key);
-			}
+			if(changed_properties.indexOf(key) == -1)
+				changed_properties.append(key);
 		}
 	}
 	bool has_property(const QString &key) {

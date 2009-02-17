@@ -71,6 +71,15 @@ Resource *RosterItem::get_active_resource() const {
 	}
 }
 
+void RosterItem::setAllResourcePresence(PresenceType pres, const QString &msg) {
+	QVectorIterator<RosterTreeNode *> i(children);
+	Resource *r = 0;
+	while(i.hasNext()) {
+		r = static_cast<Resource *>(i.next());
+		r->setPresence(pres, msg);
+	}
+}
+
 bool RosterItem::is_offline() const {
 	QVectorIterator<RosterTreeNode *> i(children);
 	Resource *r;

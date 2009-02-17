@@ -63,6 +63,8 @@ bool History::modules_loaded() {
 		Account *account = accounts_i->account_info(unread.value(0).toString(), unread.value(1).toString());
 		if(account) {
 			Contact *contact = contact_info_i->get_contact(account, unread.value(2).toString());
+			ContactChanged cc(contact, this);
+			events_i->fire_event(cc);
 			Message m(unread.value(3).toString(), unread.value(4).toBool(), 0, contact, this);
 			m.timestamp = QDateTime::fromTime_t(unread.value(5).toUInt());
 			events_i->fire_event(m);

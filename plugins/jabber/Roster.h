@@ -183,8 +183,10 @@ public:
 
 	RosterGroup *getGroup() const;
 	Resource *get_active_resource() const;
+	void setAllResourcePresence(PresenceType pres, const QString &msg);
 
 	Contact *getContact() {return contact;}
+	void setAllUnavailable();
 
 	bool is_offline() const;
 protected:

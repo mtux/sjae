@@ -136,15 +136,13 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
 		if(cc.contact->account == account) {
 			RosterItem *item = roster.get_item(cc.contact->contact_id);
-			if(!item) {
-				RosterGroup *gr = &roster;
-				if(cc.contact->has_property("group"))
-					gr = roster.get_group(cc.contact->get_property("group").toString());
-				QString name;
-				if(cc.contact->has_property("name"))
-					name = cc.contact->get_property("name").toString();
-				RosterItem *item = new RosterItem(cc.contact, name, ST_UNKNOWN, gr);
-				gr->addChild(item);
+			if(!item && !cc.removed) {
+				cc.contact->mark_transient("name");
+				cc.contact->mark_transient("group");
+				cc.contact->mark_transient("status_msg");
+
+				RosterItem *item = new RosterItem(cc.contact, "", ST_UNKNOWN, &roster);
+				roster.addChild(item);
 			}
 		}
 	}
@@ -280,7 +278,7 @@ void JabberCtx::sendWriteBuffer() {
 	sendBuffer.open(QIODevice::ReadOnly);
 	const QByteArray &b = sendBuffer.readAll();
 	if(b.size()) {
-		//log(QString().append(b), LMT_SEND);
+		log(QString().append(b), LMT_SEND);
 		sslSocket.write(b);
 	}
 	sendBuffer.close();
@@ -343,7 +341,7 @@ void JabberCtx::readSocket() {
 		return;
 
 	QByteArray data = sslSocket.read(sslSocket.bytesAvailable());
-	//log(QString().append(data), LMT_RECV);
+	log(QString().append(data), LMT_RECV);
 
 	reader.addData(data);
 	while(!reader.atEnd()) {
@@ -602,6 +600,7 @@ void JabberCtx::parseIq() {
 			//sendPresence(from);
 			//sendGrant(from);
 		} else if(reader.attributes().value("id") == "gateway_unregister") {
+		} else if(reader.attributes().value("id") == "push") {
 		} else {
 			readMoreIfNecessary();
 			if(reader.isStartElement() && reader.name() == "query") {
@@ -866,21 +865,23 @@ void JabberCtx::parseRosterItem() {
 	RosterItem *item = roster.get_item(jid);
 	if(subscription == "remove") {
 		if(item) {
-			contact_info_i->delete_contact(item->getContact());
 			item->getGroup()->removeChild(item);
+			contact_info_i->delete_contact(item->getContact());
 			delete item;
 		}
 	} else if(item) {
 		setDetails(item, group, name, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
-		}
+		} //if(subscription == "to")
+			//sendRequestSubscription(jid);
 	} else {
 		//log("Adding id to roster: " + jid + "(group: " + group + ")");
 		addItem(jid, name, group, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
-		}
+		} //else if(subscription == "to")
+			//sendRequestSubscription(jid);
 	}
 }
 
@@ -915,21 +916,25 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 	RosterItem *item = roster.get_item(Roster::full_jid2jid(full_jid));
 	if(!item) return false;
 
-	Resource *r = roster.get_resource(full_jid, false);
-	if(!r) r = roster.get_resource(full_jid, true);
-
-	r->setPresence(presence);
-	r->setPresenceMessage(msg);
-	r->updateLastActivity();
-	r->setPriority(prio);
-
+	Resource *r = 0;
+	if(Roster::full_jid2jid(full_jid) == full_jid) {
+		item->setAllResourcePresence(presence, msg);
+	} else {
+		r = roster.get_resource(full_jid, true);
+		r->setPresence(presence);
+		r->setPresenceMessage(msg);
+		r->updateLastActivity();
+		r->setPriority(prio);
+	}
 	// application contact status is based on 'active' resource
 	r = item->get_active_resource();
-	item->getContact()->status = presenceToStatus(r->getPresence());
-	if(r->getPresenceMessage().isEmpty())
-		item->getContact()->remove_property("status_msg");
-	else
-		item->getContact()->set_property("status_msg", r->getPresenceMessage());
+	if(r) {
+		item->getContact()->status = presenceToStatus(r->getPresence());
+		if(r->getPresenceMessage().isEmpty())
+			item->getContact()->remove_property("status_msg");
+		else
+			item->getContact()->set_property("status_msg", r->getPresenceMessage());
+	}
 
 	ContactChanged cc(item->getContact(), this);
 	events_i->fire_event(cc);
@@ -949,11 +954,15 @@ void JabberCtx::parsePresence() {
 	presenceType = reader.attributes().value("type").toString();
 
 	if(presenceType == "subscribe") {
-		emit grantRequested(jid, account->account_id);
+		emit grantRequested(Roster::full_jid2jid(jid), account->account_id);
 	} else if(presenceType == "subscribed") {
 		//sendPresence(jid);
+		//sendRequestSubscription(Roster::full_jid2jid(jid));
 	} else if(presenceType == "unsubscribe") {
+		//sendRevoke(Roster::full_jid2jid(jid));
 	} else if(presenceType == "unsubscribed") {
+		//sendRevoke(Roster::full_jid2jid(jid));
+		//sendStopSubscription(Roster::full_jid2jid(jid));
 	} else if(presenceType == "unavailable") {
 		presence = "unavailable";
 	}
@@ -1226,7 +1235,7 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 }
 
 void JabberCtx::addContact(const QString &jid) {
-	RosterItem *item = roster.get_item(mid);
+	RosterItem *item = roster.get_item(jid);
 	if(!item) {
 
 		//<iq from='juliet@example.com/balcony' type='set' id='roster_2'>
@@ -1360,12 +1369,14 @@ void JabberCtx::removeContact(const QString &jid) {
 			writer.writeEndElement();
 		writer.writeEndElement();
 		sendWriteBuffer();
-
-		sendRevoke(jid);
 	}
 }
 
 void JabberCtx::sendGrant(const QString &to) {
+	RosterItem *item = roster.get_item(to);
+	if(!item)
+		addContact(to);
+
 	log("Granting subscription to " + to);
 	writer.writeEmptyElement("presence");
 	writer.writeAttribute("to", to);
@@ -1377,6 +1388,9 @@ void JabberCtx::sendGrant(const QString &to) {
 
 void JabberCtx::grantSubscription() {
 	sendGrant(mid);
+	RosterItem *item = roster.get_item(mid);
+	if(!item)
+		addContact(mid);
 }
 
 void JabberCtx::sendRevoke(const QString &to) {
@@ -1395,11 +1409,21 @@ void JabberCtx::revokeSubscription() {
 }
 
 void JabberCtx::sendRequestSubscription(const QString &to) {
-	log("Requesting subscription from " + to);
+	log("Requesting subscription to " + to);
 	writer.writeEmptyElement("presence");
 	//writer.writeAttribute("from", Roster::full_jid2jid(jid));
 	writer.writeAttribute("to", to);
 	writer.writeAttribute("type", "subscribe");
+	writer.writeCharacters("");
+	sendWriteBuffer();
+}
+
+void JabberCtx::sendStopSubscription(const QString &to) {
+	log("Stopping subscription from " + to);
+	writer.writeEmptyElement("presence");
+	//writer.writeAttribute("from", Roster::full_jid2jid(jid));
+	writer.writeAttribute("to", to);
+	writer.writeAttribute("type", "unsubscribe");
 	writer.writeCharacters("");
 	sendWriteBuffer();
 }
