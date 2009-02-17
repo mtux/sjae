@@ -29,6 +29,7 @@ bool MessageNotify::load(CoreI *core) {
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
 	events_i->add_event_listener(this, UUID_MSG);
+	events_i->add_event_listener(this, UUID_MSG_WIN);
 
 	PopupI::PopupClass c= popup_i->get_class("Default");
 	c.name = "Message Notify";
@@ -44,6 +45,7 @@ bool MessageNotify::modules_loaded() {
 
 bool MessageNotify::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_MSG);
+	events_i->remove_event_listener(this, UUID_MSG_WIN);
 	return true;
 }
 
@@ -60,10 +62,6 @@ const PluginInfo &MessageNotify::get_plugin_info() {
 void MessageNotify::popup_closed(int id, PopupI::PopupDoneType done) {
 	if(done == PopupI::PDT_LEFT_CLICK) {
 		message_win_i->open_window(winMap[id].contact);
-		foreach(int oid, winMap.keys()) {
-			if(oid != id && winMap[oid].contact == winMap[id].contact)
-				popup_i->close_popup(oid);
-		}
 	} else if(history_i && done == PopupI::PDT_LEFT_CLICK) {
 		history_i->mark_as_read(winMap[id].contact, winMap[id].timestamp);
 	}
@@ -75,6 +73,14 @@ bool MessageNotify::event_fired(EventsI::Event &e) {
 		Message &m = static_cast<Message &>(e);
 		if(m.data.incomming && !m.data.read) {
 			winMap[popup_i->show_popup("Message Notify", m.contact->get_property("name").toString() + " said:", m.data.message)] = m;
+		}
+	} else if(e.uuid == UUID_MSG_WIN) {
+		MessageWinEvent &mwe = static_cast<MessageWinEvent &>(e);
+		if(!mwe.removed) {
+			foreach(int id, winMap.keys()) {
+				if(winMap[id].contact == mwe.contact)
+					popup_i->close_popup(id);
+			}
 		}
 	}
 	return true;

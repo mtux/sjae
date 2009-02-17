@@ -6,6 +6,16 @@
 
 #define INAME_MESSAGE_WINDOW	"MessageWindowInterface"
 
+#define UUID_MSG_WIN		"{0CA32300-AAAA-4ed9-9867-42320DAC7BD7}"
+
+class MessageWinEvent: public EventsI::Event {
+public:
+	MessageWinEvent(Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG_WIN, source), contact(c), removed(false) {}
+	Contact *contact;
+	bool removed;
+};
+
+
 class MessageWindowI: public PluginI {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)

@@ -175,12 +175,11 @@ void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime
 		}
 
 		if(current_settings.show_style == MessageWindowOptions::Settings::SS_POPUP) {
-			win->show();
-			win->activateWindow();
-			win->raise();
+			open_window(contact);
 		} else if(current_settings.show_style == MessageWindowOptions::Settings::SS_MINIMIZED) {
 			win->showMinimized();
 			win->activateWindow();
+			events_i->fire_event(MessageWinEvent(contact, this));
 		}
 	} else if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
@@ -203,11 +202,17 @@ void MessageWindow::open_window(Contact *contact) {
 	win->show();
 	win->activateWindow();
 	win->raise();
+
+	events_i->fire_event(MessageWinEvent(contact, this));
 }
 
 void MessageWindow::destroy_window(Contact *contact) {
 	delete windows[contact];
 	windows.remove(contact);
+
+	MessageWinEvent e(contact, this);
+	e.removed = true;
+	events_i->fire_event(e);
 }
 
 /////////////////////////////
