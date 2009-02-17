@@ -34,6 +34,7 @@ private:
 	Settings current_settings;
 	PopupI *popup_i;
 private slots:
+	void on_spnTimeout_valueChanged(int);
 	void on_btnIcon_clicked();
 	void on_btnPreview_clicked();
 	void on_btnTextCol_clicked();

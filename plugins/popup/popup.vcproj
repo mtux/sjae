@@ -449,7 +449,7 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing res.qrc..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;res&quot; -no-compress &quot;.\res.qrc&quot; -o .\GeneratedFiles\qrc_res.cpp&#x0D;&#x0A;"
-						AdditionalDependencies=".\res.qrc;.\Resources\Alert.png;.\Resources\Document.png;.\Resources\Notepad.png;.\Resources\System.png"
+						AdditionalDependencies=".\res.qrc;.\Resources\Alert.png;.\Resources\Notepad.png"
 						Outputs=".\GeneratedFiles\qrc_res.cpp"
 					/>
 				</FileConfiguration>
@@ -460,7 +460,7 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing res.qrc..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;res&quot; -no-compress &quot;.\res.qrc&quot; -o .\GeneratedFiles\qrc_res.cpp&#x0D;&#x0A;"
-						AdditionalDependencies=".\res.qrc;.\Resources\Alert.png;.\Resources\Document.png;.\Resources\Notepad.png;.\Resources\System.png"
+						AdditionalDependencies=".\res.qrc;.\Resources\Alert.png;.\Resources\Notepad.png"
 						Outputs=".\GeneratedFiles\qrc_res.cpp"
 					/>
 				</FileConfiguration>

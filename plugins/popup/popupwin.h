@@ -20,6 +20,7 @@ public:
 	void setContent(const QString &title, const QString &text);
 
 	int getId() {return id;}
+	void closeManual();
 signals:
 	void closed(int i);
 

@@ -53,12 +53,15 @@ class Message: public EventsI::Event {
 public:
 	class MessageData {
 	public:
+		MessageData(): incomming(false), read(false) {}
 		MessageData(const QString msg, bool in): message(msg), incomming(in), read(!in) {}
 		QString message;
 		bool incomming, read;
 	};
 
+	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source) {};
 	Message(const QString &msg, bool incomming, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG, source), data(msg, incomming), id(i), contact(c) {}
+	Message(const Message &m): EventsI::Event(UUID_MSG, m.source), data(m.data), contact(m.contact), id(m.id) {}
 	MessageData data;
 	Contact *contact;
 	int id;

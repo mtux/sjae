@@ -3,6 +3,7 @@
 #include <QRect>
 #include <QDesktopWidget>
 #include <QSettings>
+#include <QDebug>
 
 PluginInfo info = {
 	0x600,
@@ -95,20 +96,37 @@ bool Popup::register_class(const PopupClass &c)  {
 	return true;
 }
 
+PopupI::PopupClass Popup::get_class(const QString &name) {
+	if(current_settings.classes.contains(name))
+		return current_settings.classes[name];
+	return PopupClass();
+}
+
 int Popup::show_popup(const QString &className, const QString &title, const QString &text) {
-	if(current_settings.classes.contains(className)) {
-		PopupWin *win = new PopupWin(current_settings.classes[className], nextWinId++);
+	if(current_settings.enabled && current_settings.classes.contains(className)) {
+		int id = nextWinId++;
+		PopupWin *win = new PopupWin(current_settings.classes[className], id, current_settings.round_corners);
 		connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
 		win->setContent(title, text);
 		windows.append(win);
 		layoutPopups();
 		win->show();
+		return id;
 	}
 	return -1;
 }
 
+void Popup::close_popup(int id) {
+	foreach(PopupWin *win, windows) {
+		if(win->getId() == id) {
+			win->closeManual();
+			break;
+		}
+	}
+}
+
 void Popup::show_preview(const PopupI::PopupClass &c, const QString &title, const QString &text) {
-	PopupWin *win = new PopupWin(c, nextWinId++);
+	PopupWin *win = new PopupWin(c, nextWinId++, current_settings.round_corners);
 	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
 	win->setContent(title, text);
 	windows.append(win);

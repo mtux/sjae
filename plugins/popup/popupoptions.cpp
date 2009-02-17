@@ -101,3 +101,8 @@ void PopupOptions::on_btnIcon_clicked()
 		ui.btnIcon->setIcon(current_settings.classes[ui.lstClasses->currentItem()->text()].icon);
 	}
 }
+
+void PopupOptions::on_spnTimeout_valueChanged(int val)
+{
+	current_settings.classes[ui.lstClasses->currentItem()->text()].timeout = val;
+}

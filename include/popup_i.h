@@ -12,7 +12,7 @@ class PopupI: public PluginI {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
 public:
-	typedef enum {PDT_RIGHT_CLICK, PDT_LEFT_CLICK, PDT_TIMEOUT} PopupDoneType;
+	typedef enum {PDT_RIGHT_CLICK, PDT_LEFT_CLICK, PDT_TIMEOUT, PDT_MANUAL} PopupDoneType;
 
 	const QString get_interface_name() const {return INAME_POPUP;}
 
@@ -31,9 +31,11 @@ public:
 	};
 
 	virtual bool register_class(const PopupClass &c) = 0;
+	virtual PopupClass get_class(const QString &name) = 0;
 
 	/// returns an int identifying the new popup, which will be passed to the class' PopupListener on close
 	virtual int show_popup(const QString &className, const QString &title, const QString &text) = 0;
+	virtual void close_popup(int id) = 0;
 
 	virtual void show_preview(const PopupI::PopupClass &c, const QString &title, const QString &text) = 0;
 };

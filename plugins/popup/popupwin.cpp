@@ -58,6 +58,11 @@ PopupWin::~PopupWin()
 
 }
 
+void PopupWin::closeManual() {
+	listener->popup_closed(id, PopupI::PDT_MANUAL);
+	close();
+}
+
 void PopupWin::timeout() {
 	listener->popup_closed(id, PopupI::PDT_TIMEOUT);
 	close();
