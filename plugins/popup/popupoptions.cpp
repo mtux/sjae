@@ -7,6 +7,9 @@ PopupOptions::PopupOptions(PopupI *i, QWidget *parent)
 	: OptionsPageI(parent), popup_i(i)
 {
 	ui.setupUi(this);
+
+	connect(ui.chkEnable, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.chkRoundCorners, SIGNAL(clicked()), this, SIGNAL(changed()));
 }
 
 PopupOptions::~PopupOptions()
@@ -15,7 +18,10 @@ PopupOptions::~PopupOptions()
 }
 
 bool PopupOptions::apply() {
+	current_settings.enabled = ui.chkEnable->isChecked();
+	current_settings.round_corners = ui.chkRoundCorners->isChecked();
 	emit applied();
+	on_lstClasses_currentRowChanged(ui.lstClasses->currentRow());
 	return true;
 }
 
@@ -63,6 +69,8 @@ void PopupOptions::on_btnBgCol_clicked()
 	QPalette p = ui.widBgCol->palette();
 	p.setColor(QPalette::Background, col);
 	ui.widBgCol->setPalette(p);
+
+	emit changed();
 }
 
 void PopupOptions::on_btnTitleCol_clicked()
@@ -74,6 +82,8 @@ void PopupOptions::on_btnTitleCol_clicked()
 	QPalette p = ui.widTitleCol->palette();
 	p.setColor(QPalette::Background, col);
 	ui.widTitleCol->setPalette(p);
+
+	emit changed();
 }
 
 void PopupOptions::on_btnTextCol_clicked()
@@ -85,12 +95,14 @@ void PopupOptions::on_btnTextCol_clicked()
 	QPalette p = ui.widTextCol->palette();
 	p.setColor(QPalette::Background, col);
 	ui.widTextCol->setPalette(p);
+
+	emit changed();
 }
 
 void PopupOptions::on_btnPreview_clicked()
 {
 	PopupI::PopupClass c = current_settings.classes[ui.lstClasses->currentItem()->text()];
-	popup_i->show_preview(c, "Preview", "How do I look?");
+	popup_i->show_preview(c, ui.chkRoundCorners->isChecked(), "Preview", "How do I look?");
 }
 
 void PopupOptions::on_btnIcon_clicked()
@@ -99,10 +111,15 @@ void PopupOptions::on_btnIcon_clicked()
 	if(!fn.isEmpty()) {
 		current_settings.classes[ui.lstClasses->currentItem()->text()].icon = QIcon(fn);
 		ui.btnIcon->setIcon(current_settings.classes[ui.lstClasses->currentItem()->text()].icon);
+	
+		emit changed();
 	}
 }
 
 void PopupOptions::on_spnTimeout_valueChanged(int val)
 {
-	current_settings.classes[ui.lstClasses->currentItem()->text()].timeout = val;
+	if(current_settings.classes[ui.lstClasses->currentItem()->text()].timeout != val) {
+		current_settings.classes[ui.lstClasses->currentItem()->text()].timeout = val;
+		emit changed();
+	}
 }

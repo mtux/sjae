@@ -125,8 +125,8 @@ void Popup::close_popup(int id) {
 	}
 }
 
-void Popup::show_preview(const PopupI::PopupClass &c, const QString &title, const QString &text) {
-	PopupWin *win = new PopupWin(c, nextWinId++, current_settings.round_corners);
+void Popup::show_preview(const PopupI::PopupClass &c, bool round_corners, const QString &title, const QString &text) {
+	PopupWin *win = new PopupWin(c, nextWinId++, round_corners);
 	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
 	win->setContent(title, text);
 	windows.append(win);

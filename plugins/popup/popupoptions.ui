@@ -122,9 +122,6 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="text" >
-             <string>Icon</string>
-            </property>
             <property name="iconSize" >
              <size>
               <width>64</width>
