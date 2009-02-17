@@ -32,6 +32,7 @@ protected:
 	QPointer<EventsI> events_i;
 
 	QMap<int, Message> winMap;
+	QList<Contact *> open_message_windows;
 };
 
 #endif // MESSAGENOTIFY
