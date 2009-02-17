@@ -21,7 +21,7 @@ public:
 	GlobalStatus status;
 	QVariant get_property(const QString &key) {if(properties.contains(key)) return properties[key]; return QVariant();}
 	void set_property(const QString &key, const QVariant &v) {
-		if((!properties.contains(key) || properties[key] != v) && changed_properties.indexOf(key) == -1)
+		if((!properties.contains(key) || properties[key] != v) && changed_properties.indexOf(key) == -1 && transient_properties.indexOf(key) == -1)
 			changed_properties.append(key);
 		properties[key] = v;
 	}
@@ -30,16 +30,27 @@ public:
 	void remove_property(const QString &key) {
 		if(properties.contains(key)) {
 			properties.remove(key);
-			if(changed_properties.indexOf(key) == -1)
-				changed_properties.append(key);
+			int i = transient_properties.indexOf(key);
+			if(i != -1) transient_properties.removeAt(i);
+			else {
+				if(changed_properties.indexOf(key) == -1)
+					changed_properties.append(key);
+			}
 		}
 	}
 	bool has_property(const QString &key) {
 		return properties.contains(key);
 	}
+
+	void mark_transient(const QString &key) {
+		if(!transient_properties.contains(key)) {
+			transient_properties.append(key);
+		}
+	}
 private:
 	QMap<QString, QVariant> properties; // should be property cache?
 	QStringList changed_properties;
+	QStringList transient_properties;
 };
 
 class ContactChanged: public EventsI::Event {

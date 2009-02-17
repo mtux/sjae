@@ -33,6 +33,8 @@ protected:
 
 	QMap<int, Message> winMap;
 	QList<Contact *> open_message_windows;
+
+	QString getNick(Contact *contact);
 };
 
 #endif // MESSAGENOTIFY

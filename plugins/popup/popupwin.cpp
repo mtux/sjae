@@ -1,5 +1,6 @@
 #include "popupwin.h"
 #include <QPalette>
+#include <QDebug>
 
 QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	QRegion r(x, y, w, h);
@@ -18,8 +19,8 @@ QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	return r;
 }
 
-PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round_corners, QWidget *parent)
-	: QWidget(parent), listener(c.listener), id(i)
+PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *parent)
+	: QWidget(parent), listener(c.listener), id(i), round_corners(round)
 {
 	ui.setupUi(this);
 
@@ -47,15 +48,18 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round_corners, QWidg
 		closeTimer.start();
 	}
 
-	if(round_corners) {
-		QRegion r = roundRectRegion(0, 0, width(), height(), 6);
-		setMask(r);
-	}
+	ui.lblText->installEventFilter(this);
 }
 
 PopupWin::~PopupWin()
 {
 
+}
+
+bool PopupWin::eventFilter(QObject *obj, QEvent *e) {
+	if(e->type() == QEvent::MouseButtonPress)
+		mousePressEvent(static_cast<QMouseEvent *>(e));
+	return QObject::eventFilter(obj, e);
 }
 
 void PopupWin::closeManual() {
@@ -69,17 +73,23 @@ void PopupWin::timeout() {
 }
 
 void PopupWin::closeEvent(QCloseEvent *e) {
-	QWidget::closeEvent(e);
 	emit closed(id);
+	QWidget::closeEvent(e);
+}
+
+// work around QLabel swallowing mouse press events when it contains rich text (e.g. links)
+void PopupWin::mouseClose() {
+	listener->popup_closed(id, mouseCloseReason);
+	close();
 }
 
 void PopupWin::mousePressEvent(QMouseEvent *e) {
-	QWidget::mousePressEvent(e);
 	if(e->button() == Qt::LeftButton)
-		listener->popup_closed(id, PopupI::PDT_LEFT_CLICK);
+		mouseCloseReason = PopupI::PDT_LEFT_CLICK;
 	else if(e->button() == Qt::RightButton)
-		listener->popup_closed(id, PopupI::PDT_RIGHT_CLICK);
-	close();
+		mouseCloseReason = PopupI::PDT_RIGHT_CLICK;
+	//e->accept();
+	QTimer::singleShot(100, this, SLOT(mouseClose()));
 }
 
 void PopupWin::setIcon(const QIcon &icon) {
@@ -89,4 +99,10 @@ void PopupWin::setIcon(const QIcon &icon) {
 void PopupWin::setContent(const QString &title, const QString &text) {
 	ui.lblTitle->setText(QString("<b><big>%1</big></b>").arg(title));
 	ui.lblText->setText(text);
+
+	adjustSize();
+	if(round_corners) {
+		QRegion r = roundRectRegion(0, 0, width(), height(), 6);
+		setMask(r);
+	}
 }

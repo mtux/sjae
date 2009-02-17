@@ -44,6 +44,8 @@ protected:
 
 	void layoutPopups();
 	QDesktopWidget desktop;
+
+	void linkUrls(QString &str);
 };
 
 #endif // POPUPNOTIFY

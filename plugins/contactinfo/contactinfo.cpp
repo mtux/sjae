@@ -112,11 +112,6 @@ Contact *ContactInfo::get_contact(Account *acc, const QString &contact_id) {
 
 	contact->clear_changed_properties();
 
-	if(events_i) {
-		ContactChanged cc(contact, this);
-		events_i->fire_event(cc);
-	}
-
 	return contact;
 }
 
@@ -158,7 +153,7 @@ bool ContactInfo::event_fired(EventsI::Event &e) {
 
 		foreach(QString prop, changed_props) {
 			if(cc.contact->has_property(prop)) {
-				qDebug() << "replacing prop" << prop;
+				//qDebug() << "replacing prop" << prop;
 				replace_prop->bindValue(":v", cc.contact->get_property(prop));
 				replace_prop->bindValue(":proto", cc.contact->account->proto->name());
 				replace_prop->bindValue(":a", cc.contact->account->account_id);

@@ -68,11 +68,19 @@ void MessageNotify::popup_closed(int id, PopupI::PopupDoneType done) {
 	winMap.remove(id);
 }
 
+QString MessageNotify::getNick(Contact *contact) {
+	if(contact->has_property("handle")) return contact->get_property("handle").toString();
+	if(contact->has_property("nick")) return contact->get_property("nick").toString();
+	if(contact->has_property("name")) return contact->get_property("name").toString();
+	return contact->contact_id;
+}
+
+
 bool MessageNotify::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
 		if(m.data.incomming && !m.data.read && open_message_windows.indexOf(m.contact) == -1) {
-			winMap[popup_i->show_popup("Message Notify", m.contact->get_property("name").toString() + " said:", m.data.message)] = m;
+			winMap[popup_i->show_popup("Message Notify", getNick(m.contact) + " said:", m.data.message)] = m;
 		}
 	} else if(e.uuid == UUID_MSG_WIN) {
 		MessageWinEvent &mwe = static_cast<MessageWinEvent &>(e);

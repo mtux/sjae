@@ -836,7 +836,11 @@ void JabberCtx::addItem(const QString &jid, const QString &name, const QString &
 	}
 	*/
 
-	RosterItem *item = new RosterItem(contact_info_i->get_contact(account, jid), name, sub, gr);
+	Contact *c = contact_info_i->get_contact(account, jid);
+	c->mark_transient("name");
+	c->mark_transient("group");
+	c->mark_transient("status_msg");
+	RosterItem *item = new RosterItem(c, name, sub, gr);
 	gr->addChild(item);
 
 	ContactChanged cc(item->getContact(), this);

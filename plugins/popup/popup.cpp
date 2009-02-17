@@ -4,6 +4,14 @@
 #include <QDesktopWidget>
 #include <QSettings>
 #include <QDebug>
+#include <QTextDocument>	// for Qt::escape function
+
+#define RX_DOMAIN		"(?:\\.co(?:m)?|\\.org|\\.net|\\.gov|\\.biz|\\.info|\\.travel)(?:\\.[a-z]{2})?"
+#define RX_PROTOS		"(?:http(?:s)?://|ftp://|mailto:|file://)?"
+#define RX_PORT			"(?:\\:\\d{0,5})?"
+#define RX_EMAIL		"\\w+@\\w+(?:\\.\\w+)*" RX_DOMAIN
+#define RX_OTHER		"\\w+(?:\\.\\w+)*" RX_DOMAIN RX_PORT "(?:[/\\?]\\S*)?"
+#define LP				"\\b(" RX_PROTOS ")(" RX_EMAIL "|" RX_OTHER ")\\b"
 
 PluginInfo info = {
 	0x600,
@@ -107,7 +115,12 @@ int Popup::show_popup(const QString &className, const QString &title, const QStr
 		int id = nextWinId++;
 		PopupWin *win = new PopupWin(current_settings.classes[className], id, current_settings.round_corners);
 		connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
-		win->setContent(title, text);
+
+		QString t = Qt::escape(text);
+		t.replace("\n", "<br />\n");
+		linkUrls(t);
+		win->setContent(title, t);
+
 		windows.append(win);
 		layoutPopups();
 		win->show();
@@ -128,7 +141,12 @@ void Popup::close_popup(int id) {
 void Popup::show_preview(const PopupI::PopupClass &c, bool round_corners, const QString &title, const QString &text) {
 	PopupWin *win = new PopupWin(c, nextWinId++, round_corners);
 	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
-	win->setContent(title, text);
+
+	QString t = Qt::escape(text);
+	t.replace("\n", "<br />\n");
+	linkUrls(t);
+	win->setContent(title, t);
+
 	windows.append(win);
 	layoutPopups();
 	win->show();
@@ -177,6 +195,41 @@ void Popup::options_applied() {
 }
 
 /////////////////////////////
+
+void Popup::linkUrls(QString &str) {
+	//dispMsg.replace(QRegExp(LP), "<a href='http://\\2'>\\1</a>");
+
+	QRegExp rx(LP), rx_email("^" RX_EMAIL);
+	int pos = 0, len;
+	QString scheme, after;
+	bool valid;
+	while ((pos = rx.indexIn(str, pos)) != -1) {
+		len = rx.matchedLength();
+
+		//rx.cap(0) is whole match, rx.cap(1) is url scheme, rx.cap(2) is the rest
+		
+		scheme = rx.cap(1);
+		valid = true;
+		if(scheme.isEmpty()) {
+			if(rx_email.indexIn(rx.cap(2)) != -1)
+				scheme = "mailto:";
+			else
+				scheme = "http://";
+		} else 
+		if((scheme == "mailto:" && rx_email.indexIn(rx.cap(2)) == -1)
+			|| (scheme != "mailto:" && rx_email.indexIn(rx.cap(2)) != -1)) 
+		{
+			valid = false;
+		}
+		if(valid) {
+			after = "<a href='" + scheme + rx.cap(2) + "'>" + rx.cap(0) + "</a>";
+			str.replace(pos, len, after);
+			len = after.length();
+		}
+
+		pos += len;
+	}
+}
 
 Q_EXPORT_PLUGIN2(popup, Popup)
 
