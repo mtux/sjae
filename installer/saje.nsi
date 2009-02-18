@@ -61,6 +61,15 @@ Section "Qt Runtime Libraries"
  
 SectionEnd
 
+Section "Qt Plugins"
+  SetOutPath $INSTDIR  
+
+  File "${QTDIR}\plugins\accessible\qtaccessiblewidgets4.dll"
+  File "${QTDIR}\plugins\imageformats\qjpeg4.dll"
+  File "${QTDIR}\plugins\sqldrivers\qsqlite4.dll"
+ 
+SectionEnd
+
 Section "Saje (required)"
   SectionIn RO
   
