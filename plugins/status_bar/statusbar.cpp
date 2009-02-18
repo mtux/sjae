@@ -81,7 +81,8 @@ bool StatusBar::modules_loaded() {
 bool StatusBar::event_fired(EventsI::Event &e) {
 	AccountChanged &ac = static_cast<AccountChanged &>(e);
 	QString proto_name = ac.account->proto->name(),
-		account_id = ac.account->account_id;
+		account_id = ac.account->account_id,
+		account_name = ac.account->account_name;
 	if(ac.removed) {
 		if(account_buttons.contains(proto_name) && account_buttons[proto_name].contains(account_id)) {
 			QToolButton *tb = account_buttons[proto_name][account_id];
@@ -100,10 +101,10 @@ bool StatusBar::event_fired(EventsI::Event &e) {
 		if(new_account) {
 			QToolButton *tb = new QToolButton();
 			tb->setIcon(icons_i->get_account_status_icon(ac.account, ac.account->status));
-			tb->setToolTip(proto_name + ": " + account_id);
+			tb->setToolTip(proto_name + ": " + account_name);
 			QMenu *menu = new QMenu();
 			//connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-			menu->addAction(icons_i->get_icon("Proto/" + proto_name), proto_name + ": " + account_id);
+			menu->addAction(icons_i->get_icon("Proto/" + proto_name), proto_name + ": " + account_name);
 			menu->addSeparator();
 			QList<GlobalStatus> statuses = ac.account->proto->statuses();
 			foreach(GlobalStatus gs, statuses) {

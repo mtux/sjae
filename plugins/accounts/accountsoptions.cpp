@@ -37,8 +37,8 @@ bool AccountsOptions::apply() {
 	QList<Account *> deleted_accounts;
 	QStringList proto_names = accounts_i->protocol_names();
 	foreach(QString proto_name, proto_names) {
-		QStringList account_names = accounts_i->account_ids(proto_name);
-		foreach(QString account_id, account_names) {
+		QStringList account_ids = accounts_i->account_ids(proto_name);
+		foreach(QString account_id, account_ids) {
 			if(acc_info.contains(proto_name) == false || acc_info[proto_name].contains(account_id) == false)
 				deleted_accounts.append(accounts_i->account_info(proto_name, account_id));
 		}
@@ -90,6 +90,11 @@ void AccountsOptions::enableAccountInfo(bool enable) {
 		ui.edHost->setEnabled(false);
 		ui.edPort->setEnabled(false);
 	}
+
+	foreach(QString proto_name, account_extra_map.keys()) {
+		foreach(AccountExtra *w, account_extra_map[proto_name].values())
+			w->setEnabled(enable);
+	}
 }
 
 void AccountsOptions::reset() {
@@ -138,33 +143,30 @@ void AccountsOptions::reset() {
 	}
 
 	if(enableWindow) {
-		QStringList acc_ids = acc_info[ui.cmbProto->currentText()].keys();
-		if(acc_ids.size()) {
-			QString sel = ui.cmbAccount->currentText();
-			ui.cmbAccount->clear();
-			ui.cmbAccount->addItems(acc_ids);
-			if(acc_ids.contains(sel))
-				ui.cmbAccount->setCurrentIndex(acc_ids.indexOf(sel));
-			else
-				ui.cmbAccount->setCurrentIndex(0);
-		} else {
-			ui.cmbAccount->clear();
-			enableInfo = false;
+		enableInfo = false;
+		QString sel = ui.cmbAccount->currentText();
+		ui.cmbAccount->clear();
+		foreach(QString acc_id, acc_info[ui.cmbProto->currentText()].keys()) {
+			enableInfo = true;
+			ui.cmbAccount->addItem(acc_info[ui.cmbProto->currentText()][acc_id].account_name);
 		}
+		int index = 0;
+		if((index = ui.cmbAccount->findText(sel)) == -1) index = 0;
+		ui.cmbAccount->setCurrentIndex(index);
 	} else
 		ui.cmbAccount->clear();
 
 	if(enableWindow && enableInfo) {
-		setAccInfo(ui.cmbProto->currentText(), ui.cmbAccount->currentText());
+		setAccInfo(ui.cmbProto->currentText(), ui.cmbAccount->currentIndex());
 	}
 
 	enableAccountInfo(enableInfo);
 	setEnabled(enableWindow);
 }
 
-void AccountsOptions::setAccInfo(const QString &proto, const QString &account_id) {
-	
-	if(acc_info.contains(proto) && acc_info[proto].contains(account_id)) {
+void AccountsOptions::setAccInfo(const QString &proto, int acc_index) {
+	if(acc_info.contains(proto) && acc_info[proto].size() > acc_index) {
+		QString account_id = acc_info[proto].keys().at(acc_index);
 		if(account_extra_map.contains(proto) && account_extra_map[proto].contains(account_id) && account_extra_map[proto][account_id] != 0)
 			ui.stackedWidget->setCurrentWidget(account_extra_map[proto][account_id]);
 		else
@@ -187,40 +189,41 @@ void AccountsOptions::on_btnCreate_clicked() {
 	bool ok;
 
 	ProtocolI *proto = accounts_i->get_proto_interface(ui.cmbProto->currentText());
-	QString text = QInputDialog::getText(this, tr("New Account: ") + proto->name(), tr("Account name:"), QLineEdit::Normal, QDir::home().dirName(), &ok);
-	if (ok && !text.isEmpty()) {
-		QStringList account_names = acc_info[proto->name()].keys();
-		if(account_names.contains(text)) {
-			QMessageBox::information(this, tr("New Account"), tr("That account name is already in use"));
-		} else {
-			// make new account
-			Account &info = acc_info[proto->name()][text];
-			info.account_id = text;
-			info.proto = proto;
-			info.host = proto->defaultHost();
-			info.nick = text;
-			info.port = proto->defaultPort();
-			info.enabled = true;
+	// make new account
+	QString account_id = QUuid::createUuid().toString();
+	Account &info = acc_info[proto->name()][account_id];
+	info.account_name = (proto->name() + " %1").arg(acc_info[proto->name()].size());
+	info.account_id = account_id;
+	info.proto = proto;
+	info.host = proto->defaultHost();
+	info.nick = QDir::home().dirName();
+	info.port = proto->defaultPort();
+	info.enabled = true;
 
-			AccountExtra *w = proto->create_account_extra(0);
-			if(w) {
-				connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
-				account_extra_map[proto->name()][text] = w;
-				ui.stackedWidget->addWidget(w);
-			} else 
-				account_extra_map[proto->name()][text] = 0;
+	AccountExtra *w = proto->create_account_extra(0);
+	if(w) {
+		connect(w, SIGNAL(changed(bool)), this, SIGNAL(changed(bool)));
+		account_extra_map[proto->name()][info.account_id] = w;
+		ui.stackedWidget->addWidget(w);
+	} else 
+		account_extra_map[proto->name()][info.account_id] = 0;
 
-			QStringList acc_ids = acc_info[proto->name()].keys();
-			ui.cmbAccount->clear();
-			ui.cmbAccount->addItems(acc_ids);
-			ui.cmbAccount->setCurrentIndex(acc_ids.indexOf(text));
-
-			setAccInfo(proto->name(), text);
-			enableAccountInfo(true);
-
-			emit changed(false);
+	QStringList acc_ids = acc_info[proto->name()].keys();
+	ui.cmbAccount->clear();
+	int i = 0, index = 0;
+	foreach(QString acc_id, acc_info[ui.cmbProto->currentText()].keys()) {
+		ui.cmbAccount->addItem(acc_info[ui.cmbProto->currentText()][acc_id].account_name);
+		if(acc_id == info.account_id) {
+			index = i;
+			ui.cmbAccount->setCurrentIndex(i);
 		}
+		i++;
 	}
+	
+	setAccInfo(proto->name(), index);
+	enableAccountInfo(true);
+
+	emit changed(false);
 }
 
 void AccountsOptions::checkValid() {
@@ -239,67 +242,94 @@ void AccountsOptions::checkValid() {
 }
 
 void AccountsOptions::on_btnDel_clicked() {
-	acc_info[ui.cmbProto->currentText()].remove(ui.cmbAccount->currentText());
+	acc_info[ui.cmbProto->currentText()].remove(acc_info[ui.cmbProto->currentText()].keys().at(ui.cmbAccount->currentIndex()));
 
-	QStringList acc_ids = acc_info[ui.cmbProto->currentText()].keys();
-	if(acc_ids.size()) {
-		ui.cmbAccount->clear();
-		ui.cmbAccount->addItems(acc_ids);
+	bool enableInfo = false;
+	ui.cmbAccount->clear();
+	foreach(QString acc_id, acc_info[ui.cmbProto->currentText()].keys()) {
+		enableInfo = true;
+		ui.cmbAccount->addItem(acc_info[ui.cmbProto->currentText()][acc_id].account_name);
+	}
+	if(enableInfo) {
 		ui.cmbAccount->setCurrentIndex(0);
-		enableAccountInfo(true);
-
-		setAccInfo(ui.cmbProto->currentText(), ui.cmbAccount->currentText());
-	} else {
-		ui.cmbAccount->clear();
-		enableAccountInfo(false);
+		setAccInfo(ui.cmbProto->currentText(), ui.cmbAccount->currentIndex());
 	}
 
+	enableAccountInfo(enableInfo);
 	checkValid();
 }
 
 void AccountsOptions::on_edNick_textChanged(const QString &nick) { 
-	if(acc_info.contains(ui.cmbProto->currentText()) && acc_info[ui.cmbProto->currentText()].contains(ui.cmbAccount->currentText())) {
-		if(acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].nick != nick) {
-			acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].nick = nick;
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].nick != nick) {
+			acc_info[proto_name][acc_id].nick = nick;
 			checkValid();
 		}
 	}
 }
 
 void AccountsOptions::on_edUname_textChanged(const QString &username) { 
-	if(acc_info.contains(ui.cmbProto->currentText()) && acc_info[ui.cmbProto->currentText()].contains(ui.cmbAccount->currentText())) {
-		if(acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].username != username) {
-			acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].username = username;
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].username != username) {
+			acc_info[proto_name][acc_id].username = username;
 			checkValid();
 		}
 	}
 }
 void AccountsOptions::on_edPass_textChanged(const QString &pass) { 
-	if(acc_info.contains(ui.cmbProto->currentText()) && acc_info[ui.cmbProto->currentText()].contains(ui.cmbAccount->currentText())) {
-		if(acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].password != pass) {
-			acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].password = pass;
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].password != pass) {
+			acc_info[proto_name][acc_id].password = pass;
 			checkValid();
 		}
 	}
 }
 void AccountsOptions::on_edHost_textChanged(const QString &host) { 
-	if(acc_info.contains(ui.cmbProto->currentText()) && acc_info[ui.cmbProto->currentText()].contains(ui.cmbAccount->currentText())) {
-		if(acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].host != host) {
-			acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].host = host;
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].host != host) {
+			acc_info[proto_name][acc_id].host = host;
 			checkValid();
 		}
 	}
 }
 void AccountsOptions::on_edPort_textChanged(const QString &port) { 
-	if(acc_info.contains(ui.cmbProto->currentText()) && acc_info[ui.cmbProto->currentText()].contains(ui.cmbAccount->currentText())) {
-		if(acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].port != port.toInt()) {
-			acc_info[ui.cmbProto->currentText()][ui.cmbAccount->currentText()].port = port.toInt();
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].port != port.toInt()) {
+			acc_info[proto_name][acc_id].port = port.toInt();
 			checkValid();
 		}
 	}
 }
 
-void AccountsOptions::on_cmbAccount_currentIndexChanged(QString id) {
-	if(!id.isEmpty())
-		setAccInfo(ui.cmbProto->currentText(), id);
+void AccountsOptions::on_cmbAccount_currentIndexChanged(int index) {
+	if(index >= 0)
+		setAccInfo(ui.cmbProto->currentText(), index);
+}
+
+void AccountsOptions::on_cmbAccount_editTextChanged(QString t)
+{
+	QString proto_name = ui.cmbProto->currentText();
+	int acc_index = ui.cmbAccount->currentIndex();
+	if(acc_index >= 0 && acc_info.contains(proto_name)) {
+		QString acc_id = acc_info[proto_name].keys().at(acc_index);
+		if(acc_info[proto_name][acc_id].account_name != t) {
+			acc_info[proto_name][acc_id].account_name = t;
+			checkValid();
+		}
+	}
 }

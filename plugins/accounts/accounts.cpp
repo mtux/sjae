@@ -87,6 +87,7 @@ bool accounts::parse_account_node(QDomElement node) {
 	acc->password = core_i->decrypt(node.attribute("password"), acc->username + acc->host);
 	acc->port = node.attribute("port").toInt();
 	acc->account_id = account_id;
+	acc->account_name = node.attribute("account-name", account_id);
 	acc->status = acc->desiredStatus = ST_OFFLINE;
 
 	account_list[acc->proto][acc->account_id] = acc;
@@ -139,6 +140,7 @@ QDomElement accounts::toDOM(QDomDocument &doc, Account *acc) {
 
 	ret.setAttribute("protocol-name", acc->proto->name());
 	ret.setAttribute("id", acc->account_id);
+	ret.setAttribute("account-name", acc->account_name);
 	ret.setAttribute("enabled", acc->enabled ? "true" : "false");
 	ret.setAttribute("host", acc->host);
 	ret.setAttribute("nickname", acc->nick);

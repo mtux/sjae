@@ -23,7 +23,7 @@ class Account {
 public:
 	Account(): proto(0), status(ST_OFFLINE), desiredStatus(ST_OFFLINE) {}
 
-	QString account_id;
+	QString account_id, account_name;
 
 	QString username, password, host;
 	quint16 port;

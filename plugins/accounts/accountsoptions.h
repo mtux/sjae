@@ -28,14 +28,15 @@ protected:
 	QMap<QString, QMap<QString, Account> > acc_info;
 
 	void enableAccountInfo(bool enable);
-	void setAccInfo(const QString &proto, const QString &account_id);
+	void setAccInfo(const QString &proto, int index);
 	bool isValid(const Account &account);
 	void checkValid();
 private:
 	Ui::AccountsOptionsClass ui;
 	QIntValidator *portValidator;
 private slots:
-	void on_cmbAccount_currentIndexChanged(QString);
+	void on_cmbAccount_editTextChanged(QString);
+	void on_cmbAccount_currentIndexChanged(int);
 	void on_edPort_textChanged(const QString &);
 	void on_edHost_textChanged(const QString &);
 	void on_edPass_textChanged(const QString &);
