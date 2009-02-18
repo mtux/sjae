@@ -429,12 +429,14 @@ void ContactList::treeShowTip(QTreeWidgetItem *i, const QPoint &pos) {
 		ContactInfo ci = i->data(0, Qt::UserRole).value<ContactInfo>();
 		list_mutex.unlock();
 		events_i->fire_event(ShowTip(ci.contact, this));
+		qDebug() << "Show tip for" << ci.contact->contact_id;
 	} else
 		list_mutex.unlock();
 }
 
 void ContactList::treeHideTip() {
 	events_i->fire_event(HideTip(this));
+	qDebug() << "Hide tip";
 }
 
 /////////////////////////////

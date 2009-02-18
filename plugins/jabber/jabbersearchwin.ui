@@ -47,5 +47,22 @@
  </widget>
  <layoutdefault spacing="6" margin="11" />
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>jidEd</sender>
+   <signal>returnPressed()</signal>
+   <receiver>addBtn</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>263</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>284</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

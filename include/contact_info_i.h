@@ -30,8 +30,7 @@ public:
 	void remove_property(const QString &key) {
 		if(properties.contains(key)) {
 			properties.remove(key);
-			int i = transient_properties.indexOf(key);
-			if(changed_properties.indexOf(key) == -1)
+			if(changed_properties.indexOf(key) == -1 && transient_properties.indexOf(key) == -1)
 				changed_properties.append(key);
 		}
 	}

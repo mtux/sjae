@@ -16,6 +16,8 @@ ContactTree::ContactTree(QWidget *parent)
 	*/
 
 	setMouseTracking(true);
+	setAttribute(Qt::WA_AlwaysShowToolTips, true);
+	setAttribute(Qt::WA_Hover, true);
 }
 
 ContactTree::~ContactTree()

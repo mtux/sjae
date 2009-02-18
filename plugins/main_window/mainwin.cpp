@@ -117,7 +117,7 @@ void MainWin::set_options(MainWinOptions::Settings settings) {
 	hideFrame = settings.hide_frame;
 	toolWindow = settings.tool_window;
 	setWindowOpacity(1 - (settings.trans_percent / 100.0));
-	roundCorners = settings.round_corners;
+	roundCorners = (settings.round_corners && hideFrame);
 	if(roundCorners && hideFrame) {
 		QRegion r = roundRectRegion(0, 0, width(), height(), 6);
 		setMask(r);
