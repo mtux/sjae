@@ -54,7 +54,6 @@ bool History::load(CoreI *core) {
 }
 
 bool History::modules_loaded() {
-
 	QSqlQuery unread(db);
 	if(!unread.exec("SELECT protocol, account, contact_id, message, incomming, timestamp FROM messages WHERE msg_read='false';"))
 		qWarning() << "History read unread failed:" << unread.lastError().text();
@@ -65,7 +64,7 @@ bool History::modules_loaded() {
 			Contact *contact = contact_info_i->get_contact(account, unread.value(2).toString());
 			ContactChanged cc(contact, this);
 			events_i->fire_event(cc);
-			Message m(unread.value(3).toString(), unread.value(4).toBool(), 0, contact, this);
+			Message m(contact, unread.value(3).toString(), unread.value(4).toBool(), 0, this);
 			m.timestamp = QDateTime::fromTime_t(unread.value(5).toUInt());
 			events_i->fire_event(m);
 		}
@@ -92,6 +91,9 @@ const PluginInfo &History::get_plugin_info() {
 bool History::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG && e.source != this) {
 		Message &m = static_cast<Message &>(e);
+		if(m.contact->has_property("DisableHistory"))
+			return true;
+
 		writeQuery = new QSqlQuery(db);
 		writeQuery->prepare("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?);");
 
@@ -99,9 +101,9 @@ bool History::event_fired(EventsI::Event &e) {
 		writeQuery->addBindValue(m.contact->account->account_id);
 		writeQuery->addBindValue(m.contact->contact_id);
 		writeQuery->addBindValue(m.timestamp.toTime_t());
-		writeQuery->addBindValue(m.data.incomming);
-		writeQuery->addBindValue(m.data.read);
-		writeQuery->addBindValue(m.data.message);
+		writeQuery->addBindValue(m.type == EventsI::ET_INCOMMING);
+		writeQuery->addBindValue(m.read);
+		writeQuery->addBindValue(m.text);
 
 		if(!writeQuery->exec()) {
 			qWarning() << "History write failed:" << writeQuery->lastError().text();
@@ -128,7 +130,7 @@ QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest, 
 	}
 
 	while(readQueryTime->next()) {
-		Message m(readQueryTime->value(0).toString(), readQueryTime->value(1).toBool(), 0, contact, this);
+		Message m(contact, readQueryTime->value(0).toString(), readQueryTime->value(1).toBool(), 0, this);
 		m.timestamp = QDateTime::fromTime_t(readQueryTime->value(2).toUInt());
 		ret << m;
 		if(mark_read) mark_as_read(contact, m.timestamp);
@@ -155,7 +157,7 @@ QList<Message> History::get_latest_events(Contact *contact, int count, bool mark
 	}
 
 	while(readQueryCount->next()) {
-		Message m(readQueryCount->value(0).toString(), readQueryCount->value(1).toBool(), 0, contact, this);
+		Message m(contact, readQueryCount->value(0).toString(), readQueryCount->value(1).toBool(), 0, this);
 		m.timestamp = QDateTime::fromTime_t(readQueryCount->value(2).toUInt());
 		ret.prepend(m);
 		if(mark_read) mark_as_read(contact, m.timestamp);
@@ -174,6 +176,13 @@ void History::mark_as_read(Contact *contact, QDateTime timestamp) {
 		+ " AND timestamp=" + QString("%1").arg(timestamp.toTime_t()) + ";";
 	if(!mrq.exec(query_text))
 		qWarning() << "History mark as read failed:" << mrq.lastError().text();
+}
+
+void History::enable_history(Contact *contact, bool enable) {
+	if(enable) contact->remove_property("DisableHistory");
+	else contact->set_property("DisableHistory", true);
+
+	events_i->fire_event(ContactChanged(contact, this));
 }
 
 /////////////////////////////

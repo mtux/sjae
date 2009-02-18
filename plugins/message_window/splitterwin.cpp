@@ -52,7 +52,7 @@ SplitterWin::~SplitterWin() {
 
 void SplitterWin::addEvents(QList<Message> &events) {
 	foreach(Message m, events) {
-		addToLog(m.data.message, m.data.incomming, m.timestamp);
+		addToLog(m);
 	}
 	update_log();
 }
@@ -86,7 +86,7 @@ void SplitterWin::setUserChatState(ChatStateType state) {
 	if(state != chatState) {
 		chatState = state;
 		if(sendChatState)
-			events_i->fire_event(UserChatState(contact, chatState, this));
+			events_i->fire_event(ChatState(contact, chatState, false, this));
 	}
 }
 
@@ -101,19 +101,40 @@ void SplitterWin::openLink(const QUrl &url) {
 	QDesktopServices::openUrl(url);
 }
 
+QString SplitterWin::format_text(Message &m) {
+	QString nick = (m.type == EventsI::ET_INCOMMING ? Qt::escape(getNick()) : Qt::escape(m.contact->account->nick));
+	QString msg = m.text;
+	if(msg.startsWith("/me "))
+		msg.replace(0, 4, "* " + nick);
+	QString dispMsg = Qt::escape(msg);
+	dispMsg.replace("\n", "<br />\n");
+	linkUrls(dispMsg);
+	
+	QString text = "<div class='message'>";
+	text += "<span class='info'>";
+	text += timestamp(m.timestamp);
+	text += "<span class='nick'>" + nick + " </span>";
+	text += "<span class='separator'>: </span></span>";
+	text += "<span class='text'>" + dispMsg + "</span>";
+	text += "</div>";
+
+	return text;
+}
+
 QString SplitterWin::getContent() {
 	QString ret;
-	bool first = true, last_incomming;
-	foreach(Message::MessageData item, content) {
-		if(first || item.incomming != last_incomming) {
+	bool first = true, incomming, last_incomming;
+	foreach(Message item, content) {
+		incomming = (item.type == EventsI::ET_INCOMMING);
+		if(first || incomming != last_incomming) {
 			if(first)
-				ret += QString("<div class='") + (item.incomming ? "incomming" : "outgoing") + "'>";
+				ret += QString("<div class='") + (incomming ? "incomming" : "outgoing") + "'>";
 			else
-				ret += QString("</div>\n<div class='") + (item.incomming ? "incomming" : "outgoing") + "'>";
+				ret += QString("</div>\n<div class='") + (incomming ? "incomming" : "outgoing") + "'>";
 		}
-		ret += item.message;
+		ret += format_text(item);
 		first = false;
-		last_incomming = item.incomming;
+		last_incomming = incomming;
 	}
 
 	if(!first) ret += "</div>\n";
@@ -208,29 +229,14 @@ void SplitterWin::linkUrls(QString &str) {
 	}
 }
 
-void SplitterWin::addToLog(QString msg, bool incomming, QDateTime time) {
-	QString nick = (incomming ? Qt::escape(getNick()) : Qt::escape(contact->account->nick));
-	if(msg.startsWith("/me "))
-		msg.replace(0, 4, "* " + nick);
-	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br />\n");
-	linkUrls(dispMsg);
-	
-	QString text = "<div class='message'>";
-	text += "<span class='info'>";
-	text += timestamp(time);
-	text += "<span class='nick'>" + nick + " </span>";
-	text += "<span class='separator'>: </span></span>";
-	text += "<span class='text'>" + dispMsg + "</span>";
-	text += "</div>";
-
-	content << Message::MessageData(text, incomming);
+void SplitterWin::addToLog(Message &m) {
+	content << m;
 	while(content.size() > MAX_MESSAGES)
 		content.removeFirst();
 }
 
-void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
-	addToLog(msg, true, time);
+void SplitterWin::msgRecv(Message &m) {
+	addToLog(m);
 
 	if(contactChatState != CS_ACTIVE)
 		setContactChatState(CS_ACTIVE);
@@ -241,11 +247,11 @@ void SplitterWin::msgRecv(const QString &msg, QDateTime &time) {
 }
 
 void SplitterWin::msgSend(const QString &msg) {
-	addToLog(msg, false, QDateTime::currentDateTime());
+	Message m(contact, msg, false, 0, this);
+	addToLog(m);
 
 	update_log();
 	
-	Message m(msg, false, 0, contact, this);
 	events_i->fire_event(m);
 
 	active();

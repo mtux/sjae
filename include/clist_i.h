@@ -64,7 +64,7 @@ public:
 	const QString get_interface_name() const {return INAME_CLIST;}
 
 	virtual QTreeWidgetItem *add_contact(Contact *contact) = 0;
-	virtual QAction *add_contact_action(Account *account, const QString &label, const QString &icon = "") = 0;
+	virtual QAction *add_contact_action(const QString &label, const QString &icon = "") = 0;
 
 	virtual bool get_hide_offline() {return hide_offline;}
 

@@ -22,16 +22,34 @@ public:
 
 	void fire_event(Event &e);
 
-	void add_event_listener(EventListener *l, const QUuid &id = QUuid());
-	void add_event_filter(EventFilter *l, const QUuid &id = QUuid());
+	void add_event_listener(EventListener *l, const QUuid &id = QUuid(), int mask = EVENT_TYPE_MASK_ALL);
+	void add_event_filter(EventListener *l, int order = 0, const QUuid &id = QUuid(), int mask = EVENT_TYPE_MASK_ALL);
 
 	void remove_event_listener(EventListener *l, const QUuid &id = QUuid());
-	void remove_event_filter(EventFilter *l, const QUuid &id = QUuid());
+	void remove_event_filter(EventListener *l, const QUuid &id = QUuid());
 
 protected:
+	class ListenerInfo {
+	public:
+		EventListener *listener;
+		int mask;
+		ListenerInfo(EventListener *l, int m): listener(l), mask(m) {}
+
+		bool operator==(const EventListener *l) const {return listener == l;}
+	};
+
+	class FilterInfo {
+	public:
+		EventListener *filter;
+		int mask, order;
+		FilterInfo(EventListener *f, int o, int m): filter(f), order(o), mask(m) {}
+
+		bool operator<(const FilterInfo &other) const {return order < other.order;}
+	};
+
 	CoreI *core_i;
-	typedef QList<EventListener *> EventListenerList;
-	typedef QList<EventFilter *> EventFilterList;
+	typedef QList<ListenerInfo> EventListenerList;
+	typedef QList<FilterInfo> EventFilterList;
 
 	QMap<QUuid, EventListenerList> listeners;
 	QMap<QUuid, EventFilterList> filters;

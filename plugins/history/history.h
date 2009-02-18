@@ -26,6 +26,8 @@ public:
 	QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true);
 
 	void mark_as_read(Contact *contact, QDateTime timestamp);
+	
+	void enable_history(Contact *contact, bool enable);
 
 protected:
 	CoreI *core_i;

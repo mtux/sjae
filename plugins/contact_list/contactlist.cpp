@@ -213,11 +213,10 @@ QTreeWidgetItem *ContactList::add_contact(Contact *contact) {
 	return si;
 }
 
-QAction *ContactList::add_contact_action(Account *account, const QString &label, const QString &icon) {
+QAction *ContactList::add_contact_action(const QString &label, const QString &icon) {
 	QMutexLocker locker(&list_mutex);
 
 	QAction *action = new QAction(QIcon(icons_i->get_icon(icon)), label, 0);
-	action->setData(QVariantList() << account->proto->name() << account->account_id);
 	win->contact_menu()->addAction(action);
 	connect(win, SIGNAL(aboutToShowMenu(QTreeWidgetItem *)), this, SLOT(aboutToShowMenuSlot(QTreeWidgetItem *)));
 

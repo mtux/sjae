@@ -8,8 +8,7 @@
 
 #define UUID_CONTACT_CHANGED		"{3602C4D5-2589-4be5-AC4D-A2DCA5A4F8F0}"
 #define UUID_MSG					"{99D59C72-F5C6-4a20-84CF-1BAA6612E945}"
-#define UUID_USER_CHAT_STATE		"{AC8F9710-54B5-40af-9CA1-779AB4ED59DB}"
-#define UUID_CONTACT_CHAT_STATE		"{C00E8853-CF13-4a7d-AF60-2684FF4D8FE9}"
+#define UUID_CHAT_STATE				"{AC8F9710-54B5-40af-9CA1-779AB4ED59DB}"
 
 class Contact {
 public:
@@ -58,39 +57,25 @@ public:
 
 class Message: public EventsI::Event {
 public:
-	class MessageData {
-	public:
-		MessageData(): incomming(false), read(false) {}
-		MessageData(const QString msg, bool in): message(msg), incomming(in), read(!in) {}
-		QString message;
-		bool incomming, read;
-	};
-
-	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source) {};
-	Message(const QString &msg, bool incomming, int i, Contact *c, QObject *source = 0): EventsI::Event(UUID_MSG, source), data(msg, incomming), id(i), contact(c) {}
-	Message(const Message &m): EventsI::Event(UUID_MSG, m.source), data(m.data), contact(m.contact), id(m.id) {}
-	MessageData data;
+	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {};
+	Message(Contact *c, const QString &msg, bool incomming, int i, QObject *source = 0): 
+		EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), text(msg), read(!incomming), id(i), contact(c) {}
+	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), text(m.text), read(m.read), contact(m.contact), id(m.id) {}
 	Contact *contact;
 	int id;
+	QString text;
+	bool read;
 };
 
 typedef enum {CS_ACTIVE, CS_COMPOSING, CS_PAUSED, CS_INACTIVE, CS_GONE}  ChatStateType;
 
-class UserChatState: public EventsI::Event {
+class ChatState: public EventsI::Event {
 public:
 
-	UserChatState(Contact *c, ChatStateType t, QObject *source = 0): 
-		EventsI::Event(UUID_USER_CHAT_STATE, source), contact(c), type(t) {}
+	ChatState(Contact *c, ChatStateType type, bool incomming, QObject *source = 0): 
+		EventsI::Event(UUID_CHAT_STATE, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), state_type(type) {}
 	Contact *contact;
-	ChatStateType type;
-};
-
-class ContactChatState: public EventsI::Event {
-public:
-	ContactChatState(Contact *c, ChatStateType t, QObject *source = 0): 
-		EventsI::Event(UUID_CONTACT_CHAT_STATE, source), contact(c), type(t) {}
-	Contact *contact;
-	ChatStateType type;
+	ChatStateType state_type;
 };
 
 class ContactInfoI: public PluginI, public EventsI::EventListener {

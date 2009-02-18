@@ -29,11 +29,11 @@ bool MessageWindow::load(CoreI *core) {
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_listener(this, UUID_MSG);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
-	events_i->add_event_listener(this, UUID_CONTACT_CHAT_STATE);
+	events_i->add_event_listener(this, UUID_CHAT_STATE, EVENT_TYPE_MASK_INCOMMING);
 
 	QSettings settings;
 	MessageWindowOptions::Settings s;
@@ -64,7 +64,7 @@ bool MessageWindow::pre_shutdown() {
 	events_i->remove_event_listener(this, UUID_MSG);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->remove_event_listener(this, UUID_CONTACT_DBL_CLICKED);
-	events_i->remove_event_listener(this, UUID_CONTACT_CHAT_STATE);
+	events_i->remove_event_listener(this, UUID_CHAT_STATE);
 
 	return true;
 }
@@ -98,8 +98,7 @@ void MessageWindow::options_applied() {
 bool MessageWindow::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
-		if(m.data.incomming)
-			message_recv(m.contact, m.data.message, m.timestamp);
+		message_recv(m);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
 		if(window_exists(cc.contact)) {
@@ -116,10 +115,10 @@ bool MessageWindow::event_fired(EventsI::Event &e) {
 	} else if(e.uuid == UUID_CONTACT_DBL_CLICKED) {
 		ContactDblClicked &cd = static_cast<ContactDblClicked &>(e);
 		open_window(cd.contact);
-	} else if(e.uuid == UUID_CONTACT_CHAT_STATE) {
-		ContactChatState &cs = static_cast<ContactChatState&>(e);
+	} else if(e.uuid == UUID_CHAT_STATE) {
+		ChatState &cs = static_cast<ChatState&>(e);
 		if(window_exists(cs.contact)) {
-			windows[cs.contact]->setContactChatState(cs.type);
+			windows[cs.contact]->setContactChatState(cs.state_type);
 		}
 	}
 	return true;
@@ -165,13 +164,14 @@ void MessageWindow::account_removed(Account *account) {
 	}
 }
 
-void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime &time) {
-	if(current_settings.show_style != MessageWindowOptions::Settings::SS_NONE && !window_exists(contact)) {
+void MessageWindow::message_recv(Message &m) {
+	Contact *contact = m.contact;
+	if(current_settings.show_style != MessageWindowOptions::Settings::SS_NONE && !window_exists(contact) && !m.read) {
 		SplitterWin *win = get_window(contact);
 		// if we're loading history, this event has been loaded already
 		if(current_settings.load_history == MessageWindowOptions::Settings::LH_NONE) {
-			win->msgRecv(msg, time);
-			if(history_i) history_i->mark_as_read(contact, time);
+			win->msgRecv(m);
+			if(history_i) history_i->mark_as_read(contact, m.timestamp);
 		}
 
 		if(current_settings.show_style == MessageWindowOptions::Settings::SS_POPUP) {
@@ -183,8 +183,8 @@ void MessageWindow::message_recv(Contact *contact, const QString &msg, QDateTime
 		}
 	} else if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
-		win->msgRecv(msg, time);
-		if(history_i) history_i->mark_as_read(contact, time);
+		win->msgRecv(m);
+		if(history_i && !m.read) history_i->mark_as_read(contact, m.timestamp);
 		win->activateWindow();
 	}
 }

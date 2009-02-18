@@ -48,7 +48,7 @@ protected:
 protected slots:
 	void account_added(Account *account);
 	void account_removed(Account *account);
-	void message_recv(Contact *contact, const QString &msg, QDateTime &time);
+	void message_recv(Message &m);
 	void contact_change(Contact *contact);
 	void destroy_window(Contact *contact);
 

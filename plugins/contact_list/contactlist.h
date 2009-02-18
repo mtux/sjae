@@ -41,7 +41,7 @@ public:
 	const PluginInfo &get_plugin_info();
 
 	QTreeWidgetItem *add_contact(Contact *contact);
-	QAction *add_contact_action(Account *account, const QString &label, const QString &icon = "");
+	QAction *add_contact_action(const QString &label, const QString &icon = "");
 
 public slots:
 	void set_group_delimiter(Account *account, const QString &delim) {

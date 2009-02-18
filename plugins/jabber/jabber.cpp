@@ -73,11 +73,11 @@ JabberProto::JabberProto(CoreI *core) {
 
 	accounts_i->register_protocol(this);
 
-	events_i->add_event_listener(this, UUID_MSG);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_OUTGOING);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
-	events_i->add_event_listener(this, UUID_USER_CHAT_STATE);
+	events_i->add_event_listener(this, UUID_CHAT_STATE, EVENT_TYPE_MASK_OUTGOING);
 
 	service_discovery = new ServiceDiscovery();
 	connect(this, SIGNAL(destroyed()), service_discovery, SLOT(deleteLater()));
@@ -125,7 +125,7 @@ JabberProto::~JabberProto() {
 	events_i->remove_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->remove_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
-	events_i->remove_event_listener(this, UUID_USER_CHAT_STATE);
+	events_i->remove_event_listener(this, UUID_CHAT_STATE);
 
 	accounts_i->deregister_protocol(this);
 
@@ -196,8 +196,8 @@ const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 bool JabberProto::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
-		if(m.data.incomming == false && ctx.contains(m.contact->account))
-			ctx[m.contact->account]->msgSend(m.contact->contact_id, m.data.message, m.id);
+		if(ctx.contains(m.contact->account))
+			ctx[m.contact->account]->msgSend(m.contact->contact_id, m.text, m.id);
 	} else if(e.uuid == UUID_ACCOUNT_STATUS_REQ) {
 		AccountStatusReq &as = static_cast<AccountStatusReq &>(e);
 		if(ctx.contains(as.account))
@@ -206,10 +206,10 @@ bool JabberProto::event_fired(EventsI::Event &e) {
 		AccountChanged &ac = static_cast<AccountChanged &>(e);
 		if(ac.removed) remove_account_data(ac.account);
 		else update_account_data(ac.account);
-	} else if(e.uuid == UUID_USER_CHAT_STATE) {
-		UserChatState &cs = static_cast<UserChatState &>(e);
+	} else if(e.uuid == UUID_CHAT_STATE) {
+		ChatState &cs = static_cast<ChatState &>(e);
 		if(ctx.contains(cs.contact->account))
-			ctx[cs.contact->account]->setUserChatState(cs.contact, cs.type);
+			ctx[cs.contact->account]->setUserChatState(cs.contact, cs.state_type);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		//ContactChanged &cc = static_cast<ContactChanged &>(e);
 		//if(ctx.contains(cc.contact->account))

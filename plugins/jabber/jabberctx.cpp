@@ -39,20 +39,20 @@ JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 	clist_i = (CListI *)core_i->get_interface(INAME_CLIST);
 	if(clist_i) {
 
-		editRosterItemAction = clist_i->add_contact_action(account, "Edit...");
+		editRosterItemAction = clist_i->add_contact_action("Edit...");
 		connect(editRosterItemAction, SIGNAL(triggered()), this, SLOT(editRosterItem()));
 
-		removeRosterItemAction = clist_i->add_contact_action(account, "Remove");
+		removeRosterItemAction = clist_i->add_contact_action("Remove");
 		connect(removeRosterItemAction, SIGNAL(triggered()), this, SLOT(removeRosterItem()));
 
 
-		grantAction = clist_i->add_contact_action(account, "Grant");
+		grantAction = clist_i->add_contact_action("Grant");
 		connect(grantAction, SIGNAL(triggered()), this, SLOT(grantSubscription()));
 
-		revokeAction = clist_i->add_contact_action(account, "Revoke");
+		revokeAction = clist_i->add_contact_action("Revoke");
 		connect(revokeAction, SIGNAL(triggered()), this, SLOT(revokeSubscription()));
 
-		requestAction = clist_i->add_contact_action(account, "Request");
+		requestAction = clist_i->add_contact_action("Request");
 		connect(requestAction, SIGNAL(triggered()), this, SLOT(requestSubscription()));
 
 		//	void aboutToShowMenu(const QString &proto_name, const QString &account_id, const QString &id);
@@ -1030,7 +1030,7 @@ void JabberCtx::parseMessageBody(const QString &source) {
 		RosterItem *i = r->getItem();
 		QString id = i->getJID();
 
-		Message m(body, true, 0, i->getContact(), this);
+		Message m(i->getContact(), body, true, 0, this);
 		events_i->fire_event(m);
 	} else {
 		log("message from unknown resource ignored: " + source);
@@ -1064,7 +1064,7 @@ void JabberCtx::parseMessage() {
 						state = CS_GONE;
 					}
 				}
-				events_i->fire_event(ContactChatState(i->getContact(), state, this));
+				events_i->fire_event(ChatState(i->getContact(), state, true, this));
 			}
 		}
 	} else {

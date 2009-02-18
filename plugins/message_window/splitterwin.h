@@ -22,7 +22,7 @@ public:
 
 	void addEvents(QList<Message> &events);
 public slots:
-	void msgRecv(const QString &msg, QDateTime &time);
+	void msgRecv(Message &m);
 	void msgSend(const QString &msg);
 
 	void setLogStyleSheet(const QString &styleSheet);
@@ -37,10 +37,11 @@ signals:
 	void closed(Contact *contact);
 
 protected:
+	QString format_text(Message &m);
 	void update_log();
 	QString getNick();
 	QString getContent();
-	void addToLog(QString msg, bool incomming, QDateTime time);
+	void addToLog(Message &m);
 
 	void showEvent(QShowEvent *e);
 	void hideEvent(QHideEvent *e);
@@ -66,7 +67,7 @@ private:
 	QPointer<EventsI> events_i;
 	bool showDate, showTime, showNick;
 
-	QList<Message::MessageData> content;
+	QList<Message> content;
 	QString style;
 
 	ChatStateType chatState, contactChatState;

@@ -28,7 +28,7 @@ bool MessageNotify::load(CoreI *core) {
 	if((history_i = (HistoryI *)core_i->get_interface(INAME_HISTORY)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
-	events_i->add_event_listener(this, UUID_MSG);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
 	events_i->add_event_listener(this, UUID_MSG_WIN);
 
 	PopupI::PopupClass c= popup_i->get_class("Default");
@@ -81,8 +81,8 @@ QString MessageNotify::getNick(Contact *contact) {
 bool MessageNotify::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
-		if(m.data.incomming && !m.data.read && open_message_windows.indexOf(m.contact) == -1) {
-			QString msg = m.data.message;
+		if(!m.read && open_message_windows.indexOf(m.contact) == -1) {
+			QString msg = m.text;
 			if(msg.startsWith("/me "))
 				msg.replace(0, 4, "* " + getNick(m.contact));
 			winMap[popup_i->show_popup("Message Notify", "Message from " + getNick(m.contact) + ":", msg)] = m;

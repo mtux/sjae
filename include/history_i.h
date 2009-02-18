@@ -20,6 +20,8 @@ public:
 	virtual QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true) = 0;
 
 	virtual void mark_as_read(Contact *contact, QDateTime timestamp) = 0;
+
+	virtual void enable_history(Contact *contact, bool enable) = 0;
 };
 
 #endif

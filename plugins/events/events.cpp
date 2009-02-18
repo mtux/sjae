@@ -23,40 +23,61 @@ void Events::fire_event(Event &e) {
 	l += listeners[QUuid()]; 
 	lmutex.unlock();
 
-	foreach(EventFilter *filter, f) {
-		if(!filter->event_fired(e)) return;
+	int m;
+	switch(e.type) {
+		case ET_INTERNAL: m = EVENT_TYPE_MASK_INTERNAL; break;
+		case ET_INCOMMING: m = EVENT_TYPE_MASK_INCOMMING; break;
+		case ET_OUTGOING: m = EVENT_TYPE_MASK_OUTGOING; break;
+		default:
+			m = EVENT_TYPE_MASK_ALL;
+	};
+
+	foreach(FilterInfo fi, f) {
+		if(fi.mask & m)
+			if(!fi.filter->event_fired(e)) return;
 	}
 
-	foreach(EventListener *listener, l) {
-		listener->event_fired(e);
+	foreach(ListenerInfo li, l) {
+		if(li.mask & m)
+			li.listener->event_fired(e);
 	}
 }
 
-void Events::add_event_listener(EventListener *l, const QUuid &id) {
+void Events::add_event_listener(EventListener *l, const QUuid &id, int mask) {
 	QMutexLocker locker(&lmutex);
-	listeners[id].append(l);
+	listeners[id].append(ListenerInfo(l, mask));
 }
 
-void Events::add_event_filter(EventFilter *l, const QUuid &id) {
+void Events::add_event_filter(EventListener *l, int order, const QUuid &id, int mask) {
 	QMutexLocker locker(&lmutex);
-	filters[id].append(l);
+	filters[id].append(FilterInfo(l, order, mask));
 	qSort(filters[id]);
 }
 
 void Events::remove_event_listener(EventListener *l, const QUuid &id) {
 	QMutexLocker locker(&lmutex);
 	int i;
-	if(listeners.contains(id) && (i = listeners[id].indexOf(l)) != -1) {
-		listeners[id].removeAt(i);
+	if(listeners.contains(id)) {
+		for(int i = 0; i < listeners[id].size();) {
+			if(listeners[id].at(i).listener == l)
+				listeners[id].removeAt(i);
+			else
+				i++;
+		}
 		if(listeners[id].size() == 0) listeners.remove(id);
 	}
 }
 
-void Events::remove_event_filter(EventFilter *l, const QUuid &id) {
+void Events::remove_event_filter(EventListener *l, const QUuid &id) {
 	QMutexLocker locker(&lmutex);
 	int i;
-	if(filters.contains(id) && (i = filters[id].indexOf(l)) != -1) {
-		filters[id].removeAt(i);
+	if(filters.contains(id)) {
+		for(int i = 0; i < filters[id].size();) {
+			if(filters[id].at(i).filter == l)
+				filters[id].removeAt(i);
+			else
+				i++;
+		}
 		if(filters[id].size() == 0) filters.remove(id);
 	}
 }
