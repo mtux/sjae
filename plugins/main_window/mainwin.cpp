@@ -10,6 +10,7 @@
 #include <QRegion>
 #include <QPaintEvent>
 #include <QTimer>
+#include <QDesktopWidget>
 
 QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	QRegion r(x, y, w, h);
@@ -67,6 +68,8 @@ MainWin::MainWin(CoreI *core, QWidget *parent)
 	connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(systrayActivated(QSystemTrayIcon::ActivationReason)));
 	systray->setContextMenu(winMenu);
 	systray->show();
+
+	connect(QApplication::desktop(), SIGNAL(workAreaResized(int)), this, SLOT(ensureOnScreen(int)));
 }
 
 MainWin::~MainWin()
@@ -74,6 +77,30 @@ MainWin::~MainWin()
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
 	settings.setValue("MainWin/hiddenState", isHidden());
+}
+
+void MainWin::ensureOnScreen(int screenChanged) {
+
+	int myscreen = QApplication::desktop()->screenNumber(this);
+	if(myscreen == -1) myscreen = QApplication::desktop()->primaryScreen();
+	QRect screenGeom = QApplication::desktop()->availableGeometry(myscreen),
+		myGeom = geometry();
+
+	if(screenChanged == myscreen) {
+		if(!screenGeom.contains(myGeom, true)) {
+			if(myGeom.left() < screenGeom.left())
+				myGeom.moveLeft(0);
+			if(myGeom.right() > screenGeom.right())
+				myGeom.moveRight(screenGeom.right());
+
+			if(myGeom.top() < screenGeom.top())
+				myGeom.moveTop(0);
+			if(myGeom.bottom() > screenGeom.bottom())
+				myGeom.moveBottom(screenGeom.bottom());
+
+			setGeometry(myGeom);
+		}
+	}
 }
 
 void MainWin::updateFlags() {

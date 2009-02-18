@@ -25,6 +25,7 @@ public:
 	void set_options(MainWinOptions::Settings settings);
 
 public slots:
+	void ensureOnScreen(int);
 	void toggleHidden();
 	void quit();
 
