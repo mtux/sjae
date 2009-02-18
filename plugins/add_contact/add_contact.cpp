@@ -62,13 +62,13 @@ bool AddContact::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_ACCOUNT_CHANGED) {
 		AccountChanged &ac = static_cast<AccountChanged &>(e);
 		if(ac.removed)
-			win->remove_account(ac.account->proto->name(), ac.account->account_id);
+			win->remove_account(ac.account);
 		else {
-			if(!win->has_account(ac.account->proto->name(), ac.account->account_id)) {
+			if(!win->has_account(ac.account)) {
 				ProtoSearchWindowI *w = ac.account->proto->create_search_window();
 				if(w) {
 					win->add_search_window(ac.account->proto->name(), w);
-					win->add_account(ac.account->proto->name(), ac.account->account_id);
+					win->add_account(ac.account);
 				}
 			}
 		}

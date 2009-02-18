@@ -7,14 +7,14 @@ SearchWindow::SearchWindow(QWidget *parent)
 	ui.setupUi(this);
 
 	connect(ui.protoCmb, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(select_protocol(const QString &)));
-	connect(ui.accountCmb, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(select_account(const QString &)));
+	connect(ui.accountCmb, SIGNAL(currentIndexChanged(int)), this, SLOT(select_account(int)));
 }
 
 SearchWindow::~SearchWindow() {
 }
 
-bool SearchWindow::has_account(const QString &proto_name, const QString &id) {
-	return (accounts.contains(proto_name) && accounts[proto_name].accounts.contains(id));
+bool SearchWindow::has_account(Account *acc) {
+	return (accounts.contains(acc->proto->name()) && accounts[acc->proto->name()].accounts.contains(acc));
 }
 
 void SearchWindow::add_search_window(const QString &proto_name, ProtoSearchWindowI *search_window) {
@@ -23,10 +23,11 @@ void SearchWindow::add_search_window(const QString &proto_name, ProtoSearchWindo
 	ui.stackedWidget->addWidget(search_window);
 }
 
-void SearchWindow::add_account(const QString &proto_name, const QString &id) {
+void SearchWindow::add_account(Account *acc) {
 	//qDebug() << "adding account" << proto_name << id;
-	if(!accounts.contains(proto_name) || !accounts[proto_name].accounts.contains(id)) {
-		accounts[proto_name].accounts.append(id);
+	QString proto_name = acc->proto->name();
+	if(!accounts.contains(proto_name) || !accounts[proto_name].accounts.contains(acc)) {
+		accounts[proto_name].accounts.append(acc);
 	}
 	if(ui.protoCmb->findText(proto_name) == -1) {
 		ui.protoCmb->addItem(proto_name);
@@ -37,12 +38,14 @@ void SearchWindow::add_account(const QString &proto_name, const QString &id) {
 	select_protocol(ui.protoCmb->currentText());
 }
 
-void SearchWindow::remove_account(const QString &proto_name, const QString &id) {
+void SearchWindow::remove_account(Account *acc) {
+	QString proto_name = acc->proto->name();
 	if(accounts.contains(proto_name)) {
-		if(accounts[proto_name].accounts.contains(id)) {
-			accounts[proto_name].accounts.removeAt(accounts[proto_name].accounts.indexOf(id));
+		if(accounts[proto_name].accounts.contains(acc)) {
+			accounts[proto_name].accounts.removeAt(accounts[proto_name].accounts.indexOf(acc));
 			if(accounts[proto_name].accounts.size() == 0) {
 				ui.protoCmb->removeItem(ui.protoCmb->findText(proto_name));
+				ui.stackedWidget->removeWidget(accounts[proto_name].search_win);
 				if(ui.protoCmb->count() == 0) {
 					ui.protoCmb->setEnabled(false);
 					ui.accountCmb->setEnabled(false);
@@ -60,7 +63,8 @@ void SearchWindow::select_protocol(const QString &proto) {
 		ui.stackedWidget->setCurrentWidget(accounts[proto].search_win);
 
 		ui.accountCmb->clear();
-		ui.accountCmb->addItems(accounts[proto].accounts);
+		foreach(Account *acc, accounts[proto].accounts)
+			ui.accountCmb->addItem(acc->account_name);
 		ui.accountCmb->setCurrentIndex(0);
 		ui.accountCmb->setEnabled(true);
 	} else {
@@ -68,12 +72,12 @@ void SearchWindow::select_protocol(const QString &proto) {
 	}
 }
 
-void SearchWindow::select_account(const QString &account) {
-	if(!account.isEmpty()) {
+void SearchWindow::select_account(int index) {
+	if(index >= 0) {
 		//qDebug() << "account selected:" << account;
 		QWidget *w = ui.stackedWidget->currentWidget();
 		ProtoSearchWindowI *psw = (ProtoSearchWindowI *)w;
 		if(psw)
-			psw->set_account(account);
+			psw->set_account(accounts[ui.protoCmb->currentText()].accounts.at(index)->account_id);
 	}
 }
