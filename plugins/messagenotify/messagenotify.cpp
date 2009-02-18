@@ -63,7 +63,7 @@ void MessageNotify::popup_closed(int id, PopupI::PopupDoneType done) {
 	if(winMap.contains(id)) {
 		if(done == PopupI::PDT_LEFT_CLICK) {
 			message_win_i->open_window(winMap[id].contact);
-		} else if(history_i && done == PopupI::PDT_LEFT_CLICK) {
+		} else if(history_i && done == PopupI::PDT_RIGHT_CLICK) {
 			history_i->mark_as_read(winMap[id].contact, winMap[id].timestamp);
 		}
 		winMap.remove(id);
@@ -84,7 +84,7 @@ bool MessageNotify::event_fired(EventsI::Event &e) {
 		if(!m.read && open_message_windows.indexOf(m.contact) == -1) {
 			QString msg = m.text;
 			if(msg.startsWith("/me "))
-				msg.replace(0, 4, "* " + getNick(m.contact));
+				msg.replace(0, 4, "* " + getNick(m.contact) + " ");
 			winMap[popup_i->show_popup("Message Notify", "Message from " + getNick(m.contact) + ":", msg)] = m;
 		}
 	} else if(e.uuid == UUID_MSG_WIN) {

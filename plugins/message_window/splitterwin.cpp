@@ -105,7 +105,7 @@ QString SplitterWin::format_text(Message &m) {
 	QString nick = (m.type == EventsI::ET_INCOMMING ? Qt::escape(getNick()) : Qt::escape(m.contact->account->nick));
 	QString msg = m.text;
 	if(msg.startsWith("/me "))
-		msg.replace(0, 4, "* " + nick);
+		msg.replace(0, 4, "* " + nick + " ");
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />\n");
 	linkUrls(dispMsg);
