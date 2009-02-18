@@ -629,6 +629,10 @@ void JabberCtx::parseIq() {
 			sendVersionInfoResult(id, from);
 		} else if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "http://jabber.org/protocol/disco#info") {
 			sendDiscoInfoResult(id, from);
+		} else if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:time") {
+			sendIqTimeResult(id, from);
+		} else if(reader.isStartElement() && reader.name() == "time" && reader.namespaceUri() == "urn:xmpp:time") {
+			sendXMPPTimeResult(id, from);
 		} else {
 			sendIqError(id, from);
 		}
@@ -1227,6 +1231,10 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 			writer.writeAttribute("var", "jabber:iq:version");
 			writer.writeEmptyElement("feature");
 			writer.writeAttribute("var", "http://jabber.org/protocol/chatstates");
+			writer.writeEmptyElement("feature");
+			writer.writeAttribute("var", "jabber:iq:time");
+			writer.writeEmptyElement("feature");
+			writer.writeAttribute("var", "urn:xmpp:time");
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq
 	sendWriteBuffer();
@@ -1527,4 +1535,59 @@ void JabberCtx::sendChatState(const QString &id, ChatStateType type) {
 	writer.writeEndElement();
 	sendWriteBuffer();
 	log("Sent chat state " + state + " to " + id);
+}
+
+void JabberCtx::sendIqTimeResult(const QString &id, const QString &sender) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("id", id);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("type", "result");
+		writer.writeStartElement("query");
+		writer.writeDefaultNamespace("jabber:iq:time");
+
+		QDateTime currentTime = QDateTime::currentDateTime();
+		writer.writeTextElement("utc", currentTime.toUTC().toString("yyyyMMddTHH:mm:ss"));
+		writer.writeTextElement("display", currentTime.toString());
+
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+	log("Sent time (iq) to " + id);
+}
+
+QString utcOffset() {
+	QDateTime local = QDateTime::currentDateTime(),
+		utc = local.toUTC();
+	double off = 0;
+	if(local.toString("d") != utc.toString("d")) off -= 24.0;
+	double local_hours = local.toString("H").toInt() + local.toString("m").toInt() / 60.0,
+		utc_hours = utc.toString("H").toInt() + utc.toString("m").toInt() / 60.0;
+
+	off += local_hours - utc_hours;
+	bool neg = (off < 0);
+	if(neg) off *= -1;
+
+	return QString().sprintf("%s%02d:%02d", (neg ? "-" : ""), (int)(off + 0.5), (int)((off - (int)(off + 0.5)) * 60 + 0.5));
+}
+
+void JabberCtx::sendXMPPTimeResult(const QString &id, const QString &sender) {
+	writer.writeStartElement("iq");
+	writer.writeAttribute("id", id);
+	if(!sender.isEmpty())
+		writer.writeAttribute("to", sender);
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("type", "result");
+		writer.writeStartElement("time");
+		writer.writeDefaultNamespace("urn:xmpp:time");
+
+		QDateTime currentTime = QDateTime::currentDateTime();
+		writer.writeTextElement("utc", currentTime.toUTC().toString("yyyy-MM-ddThh:HH:ss'Z'"));
+		writer.writeTextElement("tzo", utcOffset());
+
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+	log("Sent time (iq) to " + id);
 }

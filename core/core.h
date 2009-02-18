@@ -1,6 +1,8 @@
 #include <plugin_i.h>
 #include <QMap>
 
+#define VERSION			"Alpha 10"
+
 class PluginInfoEx: public PluginInfo{
 public:
 	PluginI *iface;
@@ -45,7 +47,7 @@ public:
 	Q_INVOKABLE QString decrypt(const QString &source, const QString &key = "");
 
 	Q_INVOKABLE QString platform() {return "Saje";}
-	Q_INVOKABLE QString version() {return "Alpha 9";}
+	Q_INVOKABLE QString version() {return VERSION;}
 };
 
 

@@ -198,6 +198,9 @@ protected:
 	void sendDiscoInfoResult(const QString &id, const QString &sender);
 
 	void sendChatState(const QString &id, ChatStateType type);
+
+	void sendIqTimeResult(const QString &id, const QString &sender);
+	void sendXMPPTimeResult(const QString &id, const QString &sender);
 };
 
 #endif // JABBERCTX_H
