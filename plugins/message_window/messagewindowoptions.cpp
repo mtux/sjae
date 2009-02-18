@@ -6,6 +6,16 @@ MessageWindowOptions::MessageWindowOptions(const Settings &s, bool enable_hist, 
 	ui.setupUi(this);
 
 	ui.chkHistory->setEnabled(enable_history);
+
+	connect(ui.radShowPopup, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.radShowMin, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.radShowNone, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.chkHistory, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.radHistoryDays, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.radHistoryCount, SIGNAL(clicked()), this, SIGNAL(changed()));
+	connect(ui.spnHistoryDays, SIGNAL(valueChanged(int)), this, SIGNAL(changed()));
+	connect(ui.spnHistoryCount, SIGNAL(valueChanged(int)), this, SIGNAL(changed()));
+	connect(ui.chkSendChatState, SIGNAL(clicked()), this, SIGNAL(changed()));
 }
 
 MessageWindowOptions::~MessageWindowOptions()
