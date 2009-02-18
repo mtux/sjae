@@ -916,11 +916,10 @@ bool JabberCtx::setPresence(const QString &full_jid, PresenceType presence, cons
 	RosterItem *item = roster.get_item(Roster::full_jid2jid(full_jid));
 	if(!item) return false;
 
-	Resource *r = 0;
+	Resource *r = roster.get_resource(full_jid, true);
 	if(Roster::full_jid2jid(full_jid) == full_jid) {
 		item->setAllResourcePresence(presence, msg);
 	} else {
-		r = roster.get_resource(full_jid, true);
 		r->setPresence(presence);
 		r->setPresenceMessage(msg);
 		r->updateLastActivity();
