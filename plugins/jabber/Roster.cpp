@@ -15,8 +15,9 @@ RosterItem::RosterItem(Contact *contact, const QString &n, SubscriptionType sub,
 	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(contact),
 	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE)
 {
-	contact->set_property("name", n);
-	contact->set_property("group", g->getFullName());
+	if(!n.isEmpty()) contact->set_property("name", n);
+	QString gn = g->getFullName();
+	if(!gn.isEmpty()) contact->set_property("group", g->getFullName());
 }
 
 void RosterItem::setName(const QString &n) {

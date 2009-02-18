@@ -209,6 +209,9 @@ void SplitterWin::linkUrls(QString &str) {
 }
 
 void SplitterWin::addToLog(QString msg, bool incomming, QDateTime time) {
+	QString nick = (incomming ? Qt::escape(getNick()) : Qt::escape(contact->account->nick));
+	if(msg.startsWith("/me "))
+		msg.replace(0, 4, "* " + nick);
 	QString dispMsg = Qt::escape(msg);
 	dispMsg.replace("\n", "<br />\n");
 	linkUrls(dispMsg);
@@ -216,7 +219,7 @@ void SplitterWin::addToLog(QString msg, bool incomming, QDateTime time) {
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
 	text += timestamp(time);
-	text += "<span class='nick'>" + (incomming ? Qt::escape(getNick()) : Qt::escape(contact->account->nick)) + " </span>";
+	text += "<span class='nick'>" + nick + " </span>";
 	text += "<span class='separator'>: </span></span>";
 	text += "<span class='text'>" + dispMsg + "</span>";
 	text += "</div>";

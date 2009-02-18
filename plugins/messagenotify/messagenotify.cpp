@@ -82,7 +82,10 @@ bool MessageNotify::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
 		if(m.data.incomming && !m.data.read && open_message_windows.indexOf(m.contact) == -1) {
-			winMap[popup_i->show_popup("Message Notify", getNick(m.contact) + " said:", m.data.message)] = m;
+			QString msg = m.data.message;
+			if(msg.startsWith("/me "))
+				msg.replace(0, 4, "* " + getNick(m.contact));
+			winMap[popup_i->show_popup("Message Notify", "Message from " + getNick(m.contact) + ":", msg)] = m;
 		}
 	} else if(e.uuid == UUID_MSG_WIN) {
 		MessageWinEvent &mwe = static_cast<MessageWinEvent &>(e);
