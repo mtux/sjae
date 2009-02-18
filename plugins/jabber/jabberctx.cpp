@@ -1589,5 +1589,5 @@ void JabberCtx::sendXMPPTimeResult(const QString &id, const QString &sender) {
 		writer.writeEndElement();
 	writer.writeEndElement();
 	sendWriteBuffer();
-	log("Sent time (iq) to " + id);
+	log("Sent time (xmpp) to " + id);
 }
