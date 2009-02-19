@@ -28,12 +28,11 @@ bool MessageWin::okToSend() {
 void MessageWin::on_btnSend_clicked() {
 	if(okToSend()) {
 
-		emit msgSend(ui.edMsg->document()->toPlainText());
-		
-		disconnect(ui.edMsg, SIGNAL(textChanged()), this, SIGNAL(textChanged()));
+		QString msg = ui.edMsg->document()->toPlainText(); 
 		ui.edMsg->clear();
-		connect(ui.edMsg, SIGNAL(textChanged()), this, SIGNAL(textChanged()));
-
+		ui.edMsg->document()->clear();
+		emit msgSend(msg);
+		
 		ui.edMsg->setFocus();
 	}
 }

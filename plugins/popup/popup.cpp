@@ -6,11 +6,11 @@
 #include <QDebug>
 #include <QTextDocument>	// for Qt::escape function
 
-#define RX_DOMAIN		"(?:\\.co(?:m)?|\\.org|\\.net|\\.gov|\\.biz|\\.info|\\.travel)(?:\\.[a-z]{2})?"
-#define RX_PROTOS		"(?:http(?:s)?://|ftp://|mailto:|file://)?"
-#define RX_PORT			"(?:\\:\\d{0,5})?"
-#define RX_EMAIL		"\\w+@\\w+(?:\\.\\w+)*" RX_DOMAIN
-#define RX_OTHER		"\\w+(?:\\.\\w+)*" RX_DOMAIN RX_PORT "(?:[/\\?]\\S*)?"
+#define RX_DOMAIN		"(?:\\w+\\.)+(?:co(?:m)?|org|net|gov|biz|info|travel|ous|[a-z]{2})"
+#define RX_PROTOS		"(?:http(?:s)?://|ftp://|mailto:)?"
+#define RX_PORT			"(?:\\:\\d{1,5})?"
+#define RX_EMAIL		"\\w+@" RX_DOMAIN
+#define RX_OTHER		RX_DOMAIN RX_PORT "(?:[/\\?]\\S+)?"
 #define LP				"\\b(" RX_PROTOS ")(" RX_EMAIL "|" RX_OTHER ")\\b"
 
 PluginInfo info = {
