@@ -23,6 +23,7 @@ private:
 	Account *account;
 	
 private slots:
+	void on_chkIgnoreSSLErrors_stateChanged(int);
 	void on_edConHost_textChanged(const QString &);
 	void on_chkSSL_stateChanged(int);
 };

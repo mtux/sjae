@@ -20,7 +20,7 @@
 #include <clist_i.h>
 
 JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
-	: QObject(parent), account(acc), useSSL(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
+	: QObject(parent), account(acc), useSSL(false), ignoreSSLErrors(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
 		sessionRequired(false), tlsAvailable(false), tlsRequired(false),
 		priority(DEFAULT_PRIORITY)
 {
@@ -157,16 +157,13 @@ void JabberCtx::setUserChatState(Contact *contact, ChatStateType type) {
 	}
 }
 
-void JabberCtx::showMessage(const QString &message) {
-	qDebug() << ("Jabber message (" + account->account_id + "):") << message;
-	//QMessageBox::information(0, tr("Jabber Message"), message);
-}
-
 void JabberCtx::log(const QString &message, LogMessageType type) {
+	QString msg = QString("Jabber (%1) - %2").arg(account->account_name).arg(message);
 	switch(type) {
 		case LMT_NORMAL:
-			qDebug() << "Jabber:" << message;
+			qDebug() << msg.toAscii().data();
 			break;
+		
 		case LMT_SEND:
 				if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"))
 					qDebug() << "Jabber (send): Challenge response: CENSORED FOR SECURITY REASONS";
@@ -176,11 +173,14 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 		case LMT_RECV:
 			qDebug() << "Jabber (recv):" << message;
 			break;
+		
 		case LMT_WARNING:
-			qWarning() << "Jabber:" << message;
+			qWarning() << msg.toAscii().data();
 			break;
 		case LMT_ERROR:
-			qCritical() << "Jabber:" << message;
+			qCritical() << msg.toAscii().data();
+			break;
+		default:
 			break;
 	}
 }
@@ -218,7 +218,7 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 		case SSNONE:
 			keepAliveTimer.stop();
 			setStatus(ST_OFFLINE);
-			showMessage("Disconnected");
+			log("Disconnected");
 			sslSocket.close();
 			//newRosterItemAction->setEnabled(false);
 			//setAllOffline();
@@ -227,39 +227,39 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			break;
 		case SSSTARTSSL:
 			setStatus(ST_CONNECTING);
-			showMessage("Connecting (encrypted)...");
+			log("Connecting (encrypted)...");
 			sslSocket.connectToHostEncrypted(connectionHost.isEmpty() ? account->host : connectionHost, account->port);
 			break;
 		case SSSTARTTLS:
 			setStatus(ST_CONNECTING);
-			showMessage("Connecting...");
+			log("Connecting...");
 			sslSocket.connectToHost(connectionHost.isEmpty() ? account->host : connectionHost, account->port);
 			break;
 		case SSINITIALIZING:
 			setStatus(ST_CONNECTING);
-			showMessage("Initializing...");
+			log("Initializing...");
 			startStream();
 			break;
 		case SSAUTHORIZING:
 			setStatus(ST_CONNECTING);
-			showMessage("Authorizing...");
+			log("Authorizing...");
 			authenticate();
 			break;
 		case SSLOGIN:
 			setStatus(ST_CONNECTING);
-			showMessage("Getting roster...");
+			log("Getting roster...");
 			startStream();
 			break;
 		case SSOK:
 			setStatus(account->desiredStatus);
-			showMessage("Ok");
+			log("Ok");
 			//newRosterItemAction->setEnabled(true);
 			keepAliveTimer.start();
 			break;
 		case SSTERMINATING:
 			keepAliveTimer.stop();
 			setStatus(ST_OFFLINE);
-			showMessage("Disconnecting...");
+			log("Disconnecting...");
 			endStream();
 			break;
 	}
@@ -294,9 +294,10 @@ void JabberCtx::socketError(QAbstractSocket::SocketError socketError) {
 
 void JabberCtx::sslErrors(const QList<QSslError> &errors) {
 	for(int i = 0; i < errors.size(); i++) {
-		log("SSL error: " + errors.at(i).errorString(), LMT_WARNING);
+		log("SSL error: " + errors.at(i).errorString(), (ignoreSSLErrors ? LMT_NORMAL : LMT_ERROR));
 	}
-	sslSocket.ignoreSslErrors();
+	if(ignoreSSLErrors)
+		sslSocket.ignoreSslErrors();
 }
 
 void JabberCtx::socketStateChanged(QAbstractSocket::SocketState socketState) {
@@ -639,6 +640,13 @@ void JabberCtx::parseIq() {
 	} else if(reader.attributes().value("type") == "error") {
 		if(reader.attributes().value("id") == "group_delimiter_get") {
 			getRoster();
+		} else{
+			QString msg = QString("Error (code %1): %2").arg(reader.attributes().value("code").toString());
+			readMoreIfNecessary();
+			if(reader.isStartElement() && reader.namespaceUri() == "urn:ietf:params:xml:ns:xmpp-stanzas") {
+				log(msg.arg(reader.name().toString()), LMT_ERROR);
+			} else
+				log(msg.arg("unknown"), LMT_ERROR);
 		}
 	} else
 		sendIqError(id, from);
@@ -1269,7 +1277,7 @@ void JabberCtx::addContact(const QString &jid) {
 		sendWriteBuffer();
 
 	} else
-		qWarning() << "JID" << jid << "already exists for account" << account->account_id;
+		qWarning() << "JID" << jid << "already exists for account" << account->account_name;
 
 	sendRequestSubscription(jid);
 }
@@ -1461,24 +1469,27 @@ bool JabberCtx::gatewayRegister(const QString &gateway) {
 
 void JabberCtx::parseRegisterResult(const QString &gateway) {
 	QString instructions;
-	QStringList fields;
+	QStringList fields, values;
+	bool already_registered = false;
 	while(!reader.atEnd() && !(reader.isEndElement() && reader.name() == "query")) {
 		readMoreIfNecessary();
 		if(reader.isStartElement()) {
 			if(reader.name() == "instructions")
 				instructions = reader.readElementText();
 			else if(reader.name() == "registered") {
-				log("Already registered with gateway " + gateway, LMT_WARNING);
+				already_registered = true;
+				log("Already registered with gateway " + gateway);
 			} else if(reader.name() == "x") {
 				while(reader.name() != "x" || !reader.isEndElement())
 					readMoreIfNecessary();
 			} else {
 				fields << reader.name().toString();
+				values << reader.readElementText();
 			}
 		}
 	}
 
-	GatewayRegister *r = new GatewayRegister(gateway, instructions, fields);
+	GatewayRegister *r = new GatewayRegister(gateway, instructions, fields, values);
 	connect(r, SIGNAL(gatewayRegistration(const QString &, const QMap<QString, QString> &)), this, SLOT(gatewayRegistration(const QString &, const QMap<QString, QString> &)));
 	r->show();
 }
@@ -1554,7 +1565,7 @@ void JabberCtx::sendIqTimeResult(const QString &id, const QString &sender) {
 		writer.writeEndElement();
 	writer.writeEndElement();
 	sendWriteBuffer();
-	log("Sent time (iq) to " + id);
+	log("Sent time (iq) to " + sender);
 }
 
 QString utcOffset() {
@@ -1589,5 +1600,5 @@ void JabberCtx::sendXMPPTimeResult(const QString &id, const QString &sender) {
 		writer.writeEndElement();
 	writer.writeEndElement();
 	sendWriteBuffer();
-	log("Sent time (xmpp) to " + id);
+	log("Sent time (xmpp) to " + sender);
 }

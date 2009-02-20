@@ -30,14 +30,14 @@ public:
 	~JabberCtx();
 	
 	void setAccountInfo(Account *acc);
-	void showMessage(const QString &message);
 	void log(const QString &message, LogMessageType type = LMT_NORMAL);
 
 	GlobalStatus getCurrentStatus() {return account->status;}
 	GlobalStatus getContactStatus(const QString &contact_id);
 
-	void setUseSSL(bool f) {useSSL = f;}
+	void setUseSSL(bool f, bool ignore) {useSSL = f; ignoreSSLErrors = ignore;}
 	bool getUseSSL() {return useSSL;}
+	bool getIgnoreSSLErrors() {return ignoreSSLErrors;}
 
 	QString getConnectionHost() {return connectionHost;}
 	void setConnectionHost(const QString &host);
@@ -113,7 +113,7 @@ protected slots:
 	void sendKeepAlive();
 protected:
 	Account *account;
-	bool useSSL;
+	bool useSSL, ignoreSSLErrors;
 	QString connectionHost;
 
 	QString to_clist_id(const QString &jid);

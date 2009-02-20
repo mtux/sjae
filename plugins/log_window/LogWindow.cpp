@@ -2,12 +2,30 @@
 #include <QtPlugin>
 #include <QTime>
 #include <QTextStream>
+#include <popup_i.h>
+
+#include <iostream>
 
 LogFrame *g_log_frame = 0;
 QtMsgHandler oldHandler = 0;
+QPointer<PopupI> popup_i;
 
 void myMessageOutput(QtMsgType type, const char *msg) {
 	QString timestr = QTime::currentTime().toString("HH:mm:ss.zzz");
+	switch(type) {
+		case QtDebugMsg:
+			std::cerr << timestr.toUtf8().data() << " Debug: " << msg << std::endl;
+			break;
+		case QtWarningMsg:
+			std::cerr << timestr.toUtf8().data() << " Warning: " << msg << std::endl;
+			break;
+		case QtCriticalMsg:
+			std::cerr << timestr.toUtf8().data() << " Critical: " << msg << std::endl;
+			break;
+		case QtFatalMsg:
+			std::cerr << timestr.toUtf8().data() << " Critical: " << msg << std::endl;
+			abort();
+	}
 	if(g_log_frame) {
 		QString str;
 		QTextStream st_out(&str);
@@ -17,9 +35,11 @@ void myMessageOutput(QtMsgType type, const char *msg) {
 				break;
 			case QtWarningMsg:
 				st_out << "<font color=#ff00ff>" << timestr << " <b>Warning</b>:" << Qt::escape(msg) << "</font>";
+				if(popup_i) popup_i->show_popup("Warning", "Warning", msg);
 				break;
 			case QtCriticalMsg:
 				st_out << "<font color=#ff0000>" << timestr << " <b>Critical</b>: " << Qt::escape(msg) << "</font>";
+				if(popup_i) popup_i->show_popup("Warning", "Error", msg);
 				break;
 			// Handled above ...
 			// case QtFatalMsg:
@@ -94,10 +114,13 @@ bool LogWindow::modules_loaded() {
 	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
 	if(main_win_i) main_win_i->add_window(log_frame);
 	else log_frame->show();
+	popup_i = (PopupI *)core_i->get_interface(INAME_POPUP);
+
 	return true;
 }
 
 bool LogWindow::pre_shutdown() {
+	qInstallMsgHandler(oldHandler);
 	return true;
 }
 

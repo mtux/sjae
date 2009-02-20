@@ -299,7 +299,7 @@ bool JabberProto::update_account_data(Account *acc) {
 
 void JabberProto::parse_extra_data(QDomElement &node, Account *acc) {
 	if(ctx.contains(acc)) {
-		ctx[acc]->setUseSSL(node.attribute("useSSL", "false") == "true");
+		ctx[acc]->setUseSSL(node.attribute("useSSL", "false") == "true", node.attribute("ignoreSSLErrors", "false") == "true");
 		ctx[acc]->setConnectionHost(node.attribute("connectionHost", ""));
 	}
 }
@@ -307,6 +307,7 @@ void JabberProto::parse_extra_data(QDomElement &node, Account *acc) {
 void JabberProto::set_extra_data(QDomElement &node, Account *acc) {
 	if(ctx.contains(acc)) {
 		node.setAttribute("useSSL", ctx[acc]->getUseSSL() ? "true" : "false");
+		node.setAttribute("ignoreSSLErrors", ctx[acc]->getIgnoreSSLErrors() ? "true" : "false");
 		if(!ctx[acc]->getConnectionHost().isEmpty())
 			node.setAttribute("connectionHost", ctx[acc]->getConnectionHost());
 	}
@@ -318,9 +319,9 @@ AccountExtra *JabberProto::create_account_extra(Account *acc) {
 	return po;
 }
 
-void JabberProto::setUseSSL(Account *account, bool on) {
+void JabberProto::setUseSSL(Account *account, bool on, bool ignoreErrors) {
 	if(ctx.contains(account))
-		ctx[account]->setUseSSL(on);
+		ctx[account]->setUseSSL(on, ignoreErrors);
 }
 
 void JabberProto::setConnectionHost(Account *account, const QString &host) {
@@ -331,6 +332,12 @@ void JabberProto::setConnectionHost(Account *account, const QString &host) {
 bool JabberProto::getUseSSL(Account *account) {
 	if(ctx.contains(account))
 		return ctx[account]->getUseSSL();
+	return false;
+}
+
+bool JabberProto::getIgnoreSSLErrors(Account *account) {
+	if(ctx.contains(account))
+		return ctx[account]->getIgnoreSSLErrors();
 	return false;
 }
 

@@ -1,7 +1,7 @@
 #include "gatewayregister.h"
 
-GatewayRegister::GatewayRegister(const QString &gw, const QString &instructions, const QStringList &fieldList, QWidget *parent)
-	: QDialog(parent), fieldNames(fieldList), gateway(gw)
+GatewayRegister::GatewayRegister(const QString &gw, const QString &instructions, const QStringList &fieldList, const QStringList &valueList, QWidget *parent)
+	: QDialog(parent), fieldNames(fieldList), values(valueList), gateway(gw)
 {
 	ui.setupUi(this);
 	setAttribute(Qt::WA_DeleteOnClose);
@@ -10,11 +10,14 @@ GatewayRegister::GatewayRegister(const QString &gw, const QString &instructions,
 	ui.lblInstructions->setText(instructions);
 
 	QLineEdit *le;
+	int index = 0;
 	foreach(QString fname, fieldNames) {
 		ui.formLayout->addRow(new QLabel(fname, this), le = new QLineEdit(this));
 		field_map[fname] = le;
+		le->setText(values.at(index));
 		if(fname.compare("password", Qt::CaseInsensitive) == 0)
 			le->setEchoMode(QLineEdit::Password);
+		index++;
 	}
 
 	connect(this, SIGNAL(accepted()), this, SLOT(reg()));

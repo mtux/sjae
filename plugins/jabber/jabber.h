@@ -53,10 +53,11 @@ public:
 
 	bool event_fired(EventsI::Event &e);
 
-	void setUseSSL(Account *account, bool on);
+	void setUseSSL(Account *account, bool on, bool ignoreSSLErrors = false);
 	void setConnectionHost(Account *account, const QString &host);
 
 	bool getUseSSL(Account *account);
+	bool getIgnoreSSLErrors(Account *account);
 	QString getConnectionHost(Account *account);
 public slots:
 	void add_contact(const QString &account_id, const QString &contact_id);

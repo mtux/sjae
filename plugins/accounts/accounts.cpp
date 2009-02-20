@@ -100,7 +100,6 @@ bool accounts::parse_account_node(QDomElement node) {
 }
 
 bool accounts::read_data() {
-	qDebug() << "reading accound data";
 
 	QFile file(core_i->get_config_dir() + "/" + ACCOUNTS_DATA_FILENAME);
 	QFileInfo info(file);
@@ -113,13 +112,13 @@ bool accounts::read_data() {
 	int error_line, error_col;
 	QDomDocument doc;
 	if(!doc.setContent(&file, false, &error_str, &error_line, &error_col)) {
-		qDebug() << "Accounts: failed to load XML file ("<< info.absoluteFilePath() << ") - error on line" << error_line << ":" << error_str;
+		qWarning() << "Accounts: failed to load XML file ("<< info.absoluteFilePath() << ") - error on line" << error_line << ":" << error_str;
 		return false;
 	}
 	
 	QDomElement root = doc.documentElement();
 	if(root.tagName() != "accounts") {
-		qDebug() << "Accounts: XML contains no 'accounts' element";
+		qWarning() << "Accounts: XML contains no 'accounts' element";
 		return false;
 	}
 	
@@ -173,7 +172,7 @@ bool accounts::save_data() {
 	QFile file(core_i->get_config_dir() + "/" + ACCOUNTS_DATA_FILENAME);
 	QFileInfo info(file);
 	if(!file.open(QIODevice::WriteOnly)) {
-		qDebug() << "Accounts: could not write XML to" << info.absoluteFilePath();
+		qWarning() << "Accounts: could not write XML to" << info.absoluteFilePath();
 		return false;
 	}
 	QTextStream st(&file);

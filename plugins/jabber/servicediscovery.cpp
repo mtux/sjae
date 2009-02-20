@@ -33,12 +33,11 @@ void ServiceDiscovery::reset() {
 }
 
 void ServiceDiscovery::gotDiscoInfo(const DiscoInfo &info) {
-	qDebug() << "ServiceDiscovery window got info:" << info.entity;
+	//qDebug() << "ServiceDiscovery window got info:" << info.entity;
 	QList<QTreeWidgetItem *> items = ui.itemTree->findItems(info.entity, Qt::MatchFixedString | Qt::MatchCaseSensitive | Qt::MatchRecursive, 1);
 	QTreeWidgetItem *parent = 0;
 	if(items.size()) parent = items.at(0);
 	else {
-		qDebug() << "found no parent with text=" + info.entity;
 		parent = new QTreeWidgetItem(ui.itemTree->invisibleRootItem());
 		parent->setText(0, info.entity);
 		parent->setText(1, info.entity);
@@ -75,7 +74,7 @@ void ServiceDiscovery::gotDiscoItems(const DiscoItems &items) {
 	//qDebug() << "ServiceDiscovery window got items:" << items.entity;
 	QList<QTreeWidgetItem *> parents = ui.itemTree->findItems(items.entity, Qt::MatchFixedString | Qt::MatchCaseSensitive | Qt::MatchRecursive, 1);
 	if(!parents.size()) {
-		qDebug() << "Disco items: no such entity (" + items.entity + ")";
+		//qDebug() << "Disco items: no such entity (" + items.entity + ")";
 		return;
 	}
 
@@ -102,6 +101,6 @@ void ServiceDiscovery::itemExpanded(QTreeWidgetItem *item) {
 void ServiceDiscovery::itemActivated(QTreeWidgetItem *titem, int col) {
 	if(titem->text(0) == "jabber:iq:register" || titem->text(0).startsWith("gateway/")) {
 		QString itemJid = titem->parent()->parent()->text(1);
-		qDebug() << "activated registration for entity: " + itemJid;
+		//qDebug() << "activated registration for entity: " + itemJid;
 	}
 }
