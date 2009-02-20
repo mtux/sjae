@@ -182,7 +182,10 @@ bool Core::parse_command_line() {
 			qDebug() << "no config directory specified";
 		}
 		
-		if(ok) config_dir = dir.absolutePath();
+		if(ok) {
+			config_dir = dir.absolutePath();
+			QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config_dir);
+		}
 	} else {
 		//dir.cd(QCoreApplication::applicationDirPath());
 		QSettings s;
