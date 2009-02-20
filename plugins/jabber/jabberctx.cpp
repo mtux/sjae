@@ -433,7 +433,7 @@ void JabberCtx::parseError() {
 		readMoreIfNecessary();
 		if(reader.isStartElement()) {
 			if(reader.name() == "text")
-				log("Error: " + reader.readElementText());
+				log("Error: " + reader.readElementText(), LMT_ERROR);
 			//else
 				//log("skipping error element: " + reader.name().toString());
 		}
@@ -641,12 +641,18 @@ void JabberCtx::parseIq() {
 		if(reader.attributes().value("id") == "group_delimiter_get") {
 			getRoster();
 		} else{
-			QString msg = QString("Error (code %1): %2").arg(reader.attributes().value("code").toString());
 			readMoreIfNecessary();
-			if(reader.isStartElement() && reader.namespaceUri() == "urn:ietf:params:xml:ns:xmpp-stanzas") {
-				log(msg.arg(reader.name().toString()), LMT_ERROR);
-			} else
-				log(msg.arg("unknown"), LMT_ERROR);
+			if(reader.isStartElement() && reader.name() == "error") {
+				if(reader.attributes().value("type") != "wait") {// error 'wait' code
+					int code = reader.attributes().value("code").toString().toInt();
+					QString msg = QString("Error (code %1): %2").arg(code);
+					readMoreIfNecessary();
+					if(reader.isStartElement() && reader.namespaceUri() == "urn:ietf:params:xml:ns:xmpp-stanzas") {
+						log(msg.arg(reader.name().toString()), LMT_ERROR);
+					} else
+						log(msg.arg("unknown"), LMT_ERROR);
+				}
+			}
 		}
 	} else
 		sendIqError(id, from);
