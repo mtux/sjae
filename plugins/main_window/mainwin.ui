@@ -13,7 +13,7 @@
    <enum>Qt::ActionsContextMenu</enum>
   </property>
   <property name="windowTitle" >
-   <string>SJC</string>
+   <string>Saje</string>
   </property>
   <widget class="QWidget" name="centralWidget" />
   <widget class="QToolBar" name="toolBar" >

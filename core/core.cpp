@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileInfo>
 #include <QPluginLoader>
 #include <QDebug>
 #include <QMultiMap>
@@ -10,6 +11,7 @@
 #include <QTextStream>
 #include <QDateTime>
 #include <QApplication>
+#include <QSettings>
 
 #ifdef _WIN32  // for high performance timer
 #include <windows.h>
@@ -182,8 +184,11 @@ bool Core::parse_command_line() {
 		
 		if(ok) config_dir = dir.absolutePath();
 	} else {
-		dir.cd(QCoreApplication::applicationDirPath());
-		if(!dir.cd("config")) {
+		//dir.cd(QCoreApplication::applicationDirPath());
+		QSettings s;
+		dir = QFileInfo(s.fileName()).dir();
+		if(!dir.exists()) {
+		//if(!dir.cd("config")) {
 			qDebug() << "no config directory found";
 		}
 		config_dir = dir.absolutePath();
