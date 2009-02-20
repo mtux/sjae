@@ -143,6 +143,23 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 
 				RosterItem *item = new RosterItem(cc.contact, "", ST_UNKNOWN, &roster);
 				roster.addChild(item);
+			} else if(item) {
+				RosterGroup *g = item->getGroup();
+				if(sstate == SSOK && g->getFullName() != cc.contact->get_property("group").toString()) {
+					writer.writeStartElement("iq");
+					writer.writeAttribute("type", "set");
+					writer.writeAttribute("id", "roster_update");
+						writer.writeStartElement("query");
+						writer.writeDefaultNamespace("jabber:iq:roster");
+							writer.writeStartElement("item");
+							writer.writeAttribute("jid", cc.contact->contact_id);
+							writer.writeAttribute("name", cc.contact->get_property("name").toString());
+							writer.writeTextElement("group", cc.contact->get_property("group").toString());
+							writer.writeEndElement();
+						writer.writeEndElement();
+					writer.writeEndElement();
+					sendWriteBuffer();
+				}
 			}
 		}
 	}
