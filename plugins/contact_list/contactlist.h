@@ -20,9 +20,7 @@ public:
 	SortedTreeModel(QObject *parent = 0);
 	void setModel(ContactTreeModel *model);
 	void setHideOffline(bool f);
-	void setHideEmptyGroups(bool f);
 
-	void resort();
 protected:
 	bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
 	bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
@@ -90,6 +88,9 @@ protected slots:
 
 	void newGroup();
 	void deleteGroup();
+
+	void update_group_hide(QModelIndex index, bool hide);
+	void update_hide_empty_groups();
 };
 
 #endif // CONTACTLIST_H

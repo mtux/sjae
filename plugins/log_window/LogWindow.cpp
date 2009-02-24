@@ -35,7 +35,7 @@ void myMessageOutput(QtMsgType type, const char *msg) {
 				break;
 			case QtWarningMsg:
 				st_out << "<font color=#ff00ff>" << timestr << " <b>Warning</b>:" << Qt::escape(msg) << "</font>";
-				if(popup_i) popup_i->show_popup("Warning", "Warning", msg);
+				//if(popup_i) popup_i->show_popup("Warning", "Warning", msg);
 				break;
 			case QtCriticalMsg:
 				st_out << "<font color=#ff0000>" << timestr << " <b>Critical</b>: " << Qt::escape(msg) << "</font>";

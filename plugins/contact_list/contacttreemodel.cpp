@@ -217,7 +217,7 @@ TreeItemGroup *ContactTreeModel::find_group(QStringList &names, bool create) {
 				g = new TreeItemGroup(name, parent);
 				parent->appendChild(g);
 				endInsertRows();
-				recursive_data_change(parent);
+				//recursive_data_change(parent);
 			} else
 				return 0;
 		}
@@ -284,7 +284,7 @@ void ContactTreeModel::addContact(Contact *contact) {
 	group_item->appendChild(item);
 	contact_item_map[contact] = item;
 	endInsertRows();
-	recursive_data_change(group_item);
+	//recursive_data_change(group_item);
 }
 
 void ContactTreeModel::removeContact(Contact *contact) {
@@ -299,7 +299,7 @@ void ContactTreeModel::removeContact(Contact *contact) {
 		contact_item_map.remove(contact);
 		delete item;
 		endRemoveRows();
-		recursive_data_change(group_item);
+		//recursive_data_change(group_item);
 	}
 }
 
@@ -314,7 +314,7 @@ void ContactTreeModel::removeGroup(QStringList &full_name) {
 		group_item->removeChild(g);
 		delete g;
 		endRemoveRows();
-		recursive_data_change(group_item);
+		//recursive_data_change(group_item);
 	}
 }
 
@@ -346,7 +346,9 @@ void ContactTreeModel::update_contact(Contact *contact) {
 			removeContact(contact);
 			addContact(contact);
 		} else {
-			recursive_data_change(item);
+			//recursive_data_change(item);
+			QModelIndex index = createIndex(item->row(), 0, item);
+			emit dataChanged(index, index);
 		}
 	}
 }

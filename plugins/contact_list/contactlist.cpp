@@ -61,7 +61,6 @@ bool ContactList::load(CoreI *core) {
 	current_settings.hide_offline = s.value("CList/hide_offline", false).toBool();
 	current_settings.hide_empty_groups = s.value("CList/hide_empty_groups", false).toBool();
 	sortedModel->setHideOffline(current_settings.hide_offline);
-	sortedModel->setHideEmptyGroups(current_settings.hide_empty_groups);
 
 	if(main_win_i) main_win_i->set_central_widget(win);
 	else win->show();
@@ -113,7 +112,7 @@ void ContactList::options_applied() {
 	settings.setValue("CList/hide_empty_groups", current_settings.hide_empty_groups);
 
 	sortedModel->setHideOffline(current_settings.hide_offline);
-	sortedModel->setHideEmptyGroups(current_settings.hide_empty_groups);
+	update_hide_empty_groups();
 }
 
 void ContactList::newGroup() {
@@ -199,15 +198,47 @@ void ContactList::aboutToShowMenuSlot(const QPoint &pos, const QModelIndex &i) {
 	}
 }
 
+void ContactList::update_group_hide(QModelIndex index, bool hide) {
+	QModelIndex sourceIndex = sortedModel->mapToSource(index);
+	QStringList gn;
+	if(model->getType(sourceIndex) == TIT_GROUP) {
+		gn = model->getGroup(sourceIndex);
+		win->tree()->setRowHidden(index.row(), sortedModel->parent(index), hide && model->onlineCount(gn) == 0);
+
+		for(int i = 0; i < sortedModel->rowCount(index); i++) {
+			update_group_hide(sortedModel->index(i, 0, index), hide);
+		}
+	}
+}
+
+
+void ContactList::update_hide_empty_groups() {
+	bool hide = current_settings.hide_empty_groups;
+	for(int i = 0; i < sortedModel->rowCount(); i++) {
+		update_group_hide(sortedModel->index(i, 0), hide);
+	}
+}
+
 void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
 	for(int i = start; i <= end; i++) {
-		QModelIndex index = model->index(i, 0, sortedModel->mapToSource(parent));
+		QModelIndex index = sortedModel->index(i, 0, parent), sourceIndex = sortedModel->mapToSource(index);
 		QStringList gn;
-		if(model->getType(index) == TIT_GROUP) {
-			gn = model->getGroup(index);
+		if(model->getType(sourceIndex) == TIT_GROUP) {
+			gn = model->getGroup(sourceIndex);
+
 			QSettings settings;
 			bool expand = settings.value("CList/group_expand/" + gn.join(">"), true).toBool();
-			win->tree()->setExpanded(sortedModel->mapFromSource(index), expand);
+			win->tree()->setExpanded(index, expand);
+			
+			win->tree()->setRowHidden(i, parent, current_settings.hide_empty_groups);
+		} else if(model->getType(sourceIndex) == TIT_CONTACT) {
+			QStringList gn;
+			QModelIndex current = parent;
+			while(current.isValid()) {
+				gn = model->getGroup(sortedModel->mapToSource(current));
+				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups && model->onlineCount(gn) == 0);
+				current = sortedModel->parent(current);
+			}
 		}
 	}
 }
@@ -251,10 +282,6 @@ void ContactList::treeHideTip() {
 SortedTreeModel::SortedTreeModel(QObject *parent): QSortFilterProxyModel(parent) {
 }
 
-void SortedTreeModel::resort() {
-	invalidateFilter();
-}
-
 void SortedTreeModel::setModel(ContactTreeModel *model) {
 	QSortFilterProxyModel::setSourceModel(model);
 }
@@ -264,23 +291,12 @@ void SortedTreeModel::setHideOffline(bool f) {
 	invalidateFilter();
 }
 
-void SortedTreeModel::setHideEmptyGroups(bool f) {
-	hideEmptyGroups = f;
-	invalidateFilter();
-}
-
 bool SortedTreeModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
 	ContactTreeModel *model = static_cast<ContactTreeModel *>(sourceModel());
 	TreeItemType type = model->getType(model->index(source_row, 0, source_parent));
 	if(type == TIT_CONTACT && hideOffline) {
 		Contact *c = model->getContact(model->index(source_row, 0, source_parent));
 		if(c->status == ST_OFFLINE) return false;
-	}
-	if(type == TIT_GROUP && hideEmptyGroups) {
-		//return hasChildren(mapFromSource(model->index(source_row, 0, source_parent)));
-		QStringList group = model->getGroup(model->index(source_row, 0, source_parent));
-		int count = model->onlineCount(group);
-		return count > 0;
 	}
 	return true;
 }
