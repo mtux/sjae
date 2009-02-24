@@ -15,7 +15,6 @@ public:
 signals:
 	void show_tip(const QModelIndex &index, const QPoint &p);
 	void hide_tip();
-
 protected:
 	bool viewportEvent(QEvent *e);
 
@@ -24,6 +23,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent *e);
 
 	bool tip_shown;
+
 private:
 	Ui::ContactTreeClass ui;
 };

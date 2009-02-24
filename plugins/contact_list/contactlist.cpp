@@ -39,10 +39,12 @@ bool ContactList::load(CoreI *core) {
 	sortedModel = new SortedTreeModel(this);
 	sortedModel->setDynamicSortFilter(true);
 	sortedModel->setModel(model);
-
+	
 	win = new CListWin();
 	win->tree()->setModel(sortedModel);
 	win->tree()->sortByColumn(0, Qt::AscendingOrder);
+
+	connect(sortedModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SLOT(rowsInserted(const QModelIndex &, int, int)));
 
 	connect(win, SIGNAL(showMenu(const QPoint &, const QModelIndex &)), this, SLOT(aboutToShowMenuSlot(const QPoint &, const QModelIndex &)));
 
@@ -194,6 +196,19 @@ void ContactList::aboutToShowMenuSlot(const QPoint &pos, const QModelIndex &i) {
 
 		events_i->fire_event(ShowGroupMenu(menuGroup, contactCount, this));
 		win->group_menu()->exec(pos);
+	}
+}
+
+void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
+	for(int i = start; i <= end; i++) {
+		QModelIndex index = model->index(i, 0, sortedModel->mapToSource(parent));
+		QStringList gn;
+		if(model->getType(index) == TIT_GROUP) {
+			gn = model->getGroup(index);
+			QSettings settings;
+			bool expand = settings.value("CList/group_expand/" + gn.join(">"), true).toBool();
+			win->tree()->setExpanded(sortedModel->mapFromSource(index), expand);
+		}
 	}
 }
 

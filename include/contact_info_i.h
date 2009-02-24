@@ -60,7 +60,9 @@ public:
 	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {};
 	Message(Contact *c, const QString &msg, bool incomming, int i, QObject *source = 0): 
 		EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), text(msg), read(!incomming), id(i), contact(c) {}
-	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), text(m.text), read(m.read), contact(m.contact), id(m.id) {}
+	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), text(m.text), read(m.read), contact(m.contact), id(m.id) {
+		timestamp = m.timestamp;
+	}
 	Contact *contact;
 	int id;
 	QString text;

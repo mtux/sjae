@@ -75,6 +75,8 @@ protected:
 protected slots:
 	void aboutToShowMenuSlot(const QPoint &, const QModelIndex &i);
 
+	void rowsInserted(const QModelIndex &parent, int start, int end);
+
 	void treeItemExpanded(const QModelIndex &i);
 	void treeItemCollapsed(const QModelIndex &i);
 	
