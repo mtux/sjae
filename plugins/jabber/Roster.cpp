@@ -16,8 +16,8 @@ RosterItem::RosterItem(Contact *contact, const QString &n, SubscriptionType sub,
 	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE)
 {
 	if(!n.isEmpty()) contact->set_property("name", n);
-	QString gn = g->getFullName();
-	if(!gn.isEmpty()) contact->set_property("group", g->getFullName());
+	QStringList gn = g->getClistName();
+	if(gn.size()) contact->set_property("group", gn);
 }
 
 void RosterItem::setName(const QString &n) {
@@ -28,7 +28,7 @@ void RosterItem::setName(const QString &n) {
 void RosterItem::setParent(RosterTreeNonLeafNode *p) {
 	RosterTreeNonLeafNode::setParent(p);
 	if(p)
-		contact->set_property("group", getGroup()->getFullName());
+		contact->set_property("group", getGroup()->getClistName());
 	else
 		contact->remove_property("group");
 }
@@ -93,17 +93,12 @@ bool RosterItem::is_offline() const {
 }
 
 
-RosterGroup *RosterGroup::get_group(const QString &group, bool create) {
+RosterGroup *RosterGroup::get_group(const QStringList &group, bool create) {
 	if(group.isEmpty())
 		return this;
 
-	QString subgroup, rest;
-	int index;
-	if(!delimiter.isEmpty() && (index = group.indexOf(delimiter)) != -1) {
-		subgroup = group.left(index);
-		rest = group.mid(index + delimiter.length());
-	} else
-		subgroup = group;
+	QStringList gr = group;
+	QString subgroup = gr.takeFirst();
 
 	QVectorIterator<RosterTreeNode *> i(children);
 	RosterGroup *g = 0;
@@ -120,7 +115,7 @@ RosterGroup *RosterGroup::get_group(const QString &group, bool create) {
 		addChild(g);
 	}
 
-	return g ? g->get_group(rest, create) : 0;
+	return g ? g->get_group(gr, create) : 0;
 }
 
 RosterItem *RosterGroup::get_item(const QString &jid) const {

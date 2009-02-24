@@ -178,14 +178,16 @@ void MessageWindow::message_recv(Message &m) {
 			open_window(contact);
 		} else if(current_settings.show_style == MessageWindowOptions::Settings::SS_MINIMIZED) {
 			win->showMinimized();
-			win->activateWindow();
+			//win->activateWindow();
+			QApplication::alert(win, 1500);
 			events_i->fire_event(MessageWinEvent(contact, this));
 		}
 	} else if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
 		win->msgRecv(m);
 		if(history_i && !m.read) history_i->mark_as_read(contact, m.timestamp);
-		win->activateWindow();
+		//win->activateWindow();
+		QApplication::alert(win, 1500);
 	}
 }
 

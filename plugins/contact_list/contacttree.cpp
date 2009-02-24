@@ -4,10 +4,9 @@
 #include <QHelpEvent>
 
 ContactTree::ContactTree(QWidget *parent)
-	: QTreeWidget(parent), tip_shown(false)
+	: QTreeView(parent), tip_shown(false)
 {
 	ui.setupUi(this);
-	setColumnCount(1);
 
 	/*
 	QTreeWidgetItem *header = new QTreeWidgetItem();
@@ -17,7 +16,6 @@ ContactTree::ContactTree(QWidget *parent)
 
 	setMouseTracking(true);
 	setAttribute(Qt::WA_AlwaysShowToolTips, true);
-	setAttribute(Qt::WA_Hover, true);
 }
 
 ContactTree::~ContactTree()
@@ -31,13 +29,13 @@ bool ContactTree::viewportEvent(QEvent *e) {
 		if(tip_shown)
 			emit hide_tip();
 		tip_shown = false;
-		QTreeWidgetItem *i = itemAt(he->pos());
-		if(i) {
+		QModelIndex i = indexAt(he->pos());
+		if(i.isValid()) {
 			tip_shown = true;
 			emit show_tip(i, QCursor::pos()); // mapToGlobal(he->pos());
 		}
 	}
-	return QTreeWidget::viewportEvent(e);
+	return QTreeView::viewportEvent(e);
 }
 
 void ContactTree::mousePressEvent(QMouseEvent *e) {
@@ -45,7 +43,7 @@ void ContactTree::mousePressEvent(QMouseEvent *e) {
 		tip_shown = false;
 		emit hide_tip();
 	}
-	return QTreeWidget::mousePressEvent(e);
+	return QTreeView::mousePressEvent(e);
 }
 
 void ContactTree::mouseReleaseEvent(QMouseEvent *e) {
@@ -53,7 +51,7 @@ void ContactTree::mouseReleaseEvent(QMouseEvent *e) {
 		tip_shown = false;
 		emit hide_tip();
 	}
-	return QTreeWidget::mouseReleaseEvent(e);
+	return QTreeView::mouseReleaseEvent(e);
 }
 
 void ContactTree::mouseMoveEvent(QMouseEvent *e) {
@@ -61,6 +59,6 @@ void ContactTree::mouseMoveEvent(QMouseEvent *e) {
 		tip_shown = false;
 		emit hide_tip();
 	}
-	return QTreeWidget::mouseMoveEvent(e);
+	return QTreeView::mouseMoveEvent(e);
 }
 

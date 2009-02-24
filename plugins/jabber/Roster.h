@@ -7,6 +7,7 @@
 #include <QVariant>
 #include <QDateTime>
 #include <QDebug>
+#include <QTextDocument> // for Qt::escape function
 
 #include <contact_info_i.h>
 
@@ -204,15 +205,14 @@ public:
 	static void setDelimiter(const QString &d) {delimiter = d;}
 	static QString getDelimiter() {return delimiter;}
 
-	RosterGroup *get_group(const QString &group, bool create = true);
+	RosterGroup *get_group(const QStringList &group, bool create = true);
 	RosterItem *get_item(const QString &jid) const;
 
-	QString getFullName() const {
-		if(parent && !parent->getName().isEmpty()) {
-			RosterGroup *pg = static_cast<RosterGroup *>(parent);
-			return pg->getFullName() + delimiter + name;
+	QStringList getClistName() const {
+		if(parent) {
+			return static_cast<RosterGroup *>(parent)->getClistName() << name;
 		} else
-			return name;
+			return QStringList();
 	}
 
 	QStringList all_items() {

@@ -1,6 +1,6 @@
 <ui version="4.0" >
  <class>ContactTreeClass</class>
- <widget class="QTreeWidget" name="ContactTreeClass" >
+ <widget class="QTreeView" name="ContactTreeClass" >
   <property name="geometry" >
    <rect>
     <x>0</x>
@@ -12,11 +12,29 @@
   <property name="contextMenuPolicy" >
    <enum>Qt::CustomContextMenu</enum>
   </property>
+  <property name="acceptDrops" >
+   <bool>true</bool>
+  </property>
   <property name="windowTitle" >
    <string>ContactTree</string>
   </property>
+  <property name="accessibleName" >
+   <string>Contact Tree</string>
+  </property>
   <property name="frameShape" >
    <enum>QFrame::NoFrame</enum>
+  </property>
+  <property name="dragEnabled" >
+   <bool>true</bool>
+  </property>
+  <property name="dragDropMode" >
+   <enum>QAbstractItemView::InternalMove</enum>
+  </property>
+  <property name="iconSize" >
+   <size>
+    <width>16</width>
+    <height>16</height>
+   </size>
   </property>
   <property name="sortingEnabled" >
    <bool>true</bool>
@@ -24,11 +42,6 @@
   <property name="headerHidden" >
    <bool>true</bool>
   </property>
-  <column>
-   <property name="text" >
-    <string>1</string>
-   </property>
-  </column>
  </widget>
  <layoutdefault spacing="6" margin="11" />
  <resources/>

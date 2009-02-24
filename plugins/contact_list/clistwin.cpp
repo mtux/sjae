@@ -5,7 +5,7 @@ CListWin::CListWin(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
-	connect(ui.treeWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(menuReq(const QPoint &)));
+	connect(ui.treeView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(menuReq(const QPoint &)));
 }
 
 CListWin::~CListWin()
@@ -14,10 +14,9 @@ CListWin::~CListWin()
 }
 
 void CListWin::menuReq(const QPoint &p) {
-	QTreeWidgetItem *i = ui.treeWidget->itemAt(p);
-	if(!i) return;
+	QModelIndex i = ui.treeView->indexAt(p);
 
-	QPoint mouse_pos = QCursor::pos(); //mapToGlobal(p);
-	emit aboutToShowMenu(i);
-	contactMenu.exec(mouse_pos);
+	QPoint mouse_pos = QCursor::pos(); 
+	QPoint pos = mapToGlobal(p);
+	emit showMenu(pos, i);
 }

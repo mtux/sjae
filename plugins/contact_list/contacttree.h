@@ -1,11 +1,10 @@
 #ifndef CONTACTTREE_H
 #define CONTACTTREE_H
 
-#include <QTreeWidget>
-#include <QSortFilterProxyModel>
+#include <QTreeView>
 #include "ui_contacttree.h"
 
-class ContactTree : public QTreeWidget
+class ContactTree : public QTreeView
 {
 	Q_OBJECT
 
@@ -14,7 +13,7 @@ public:
 	~ContactTree();
 
 signals:
-	void show_tip(QTreeWidgetItem *i, const QPoint &p);
+	void show_tip(const QModelIndex &index, const QPoint &p);
 	void hide_tip();
 
 protected:

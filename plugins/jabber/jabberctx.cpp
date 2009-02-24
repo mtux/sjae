@@ -13,11 +13,20 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QStringList>
+#include <QTextDocument> // for Qt::unescape function
 
 #include "newrosteritemdialog.h"
 #include "gatewayregister.h"
 
 #include <clist_i.h>
+
+QString unescape(const QString &s) {
+	QString ret = s;
+	ret.replace("&lt;", "<");
+	ret.replace("&gt;", ">");
+	ret.replace("&amp;", "&");
+	return ret;
+}
 
 JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 	: QObject(parent), account(acc), useSSL(false), ignoreSSLErrors(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
@@ -145,7 +154,7 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 				roster.addChild(item);
 			} else if(item) {
 				RosterGroup *g = item->getGroup();
-				if(sstate == SSOK && g->getFullName() != cc.contact->get_property("group").toString()) {
+				if(sstate == SSOK && g->getClistName() != cc.contact->get_property("group").toStringList()) {
 					writer.writeStartElement("iq");
 					writer.writeAttribute("type", "set");
 					writer.writeAttribute("id", "roster_update");
@@ -154,7 +163,7 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 							writer.writeStartElement("item");
 							writer.writeAttribute("jid", cc.contact->contact_id);
 							writer.writeAttribute("name", cc.contact->get_property("name").toString());
-							writer.writeTextElement("group", cc.contact->get_property("group").toString());
+							writer.writeTextElement("group", cc.contact->get_property("group").toStringList().replaceInStrings(Roster::getDelimiter(), "|delim|").join(Roster::getDelimiter()));
 							writer.writeEndElement();
 						writer.writeEndElement();
 					writer.writeEndElement();
@@ -810,7 +819,6 @@ void JabberCtx::parseGroupDelimiter() {
 		QString groupDelim = reader.text().toString();
 		if(!groupDelim.isEmpty()) {
 			RosterGroup::setDelimiter(groupDelim);
-			clist_i->set_group_delimiter(account, groupDelim);
 			log("Delim is " + groupDelim);
 		}
 	}
@@ -828,7 +836,7 @@ void JabberCtx::parseRosterQuery() {
 	changeSessionState(SSOK);
 }
 
-void JabberCtx::setDetails(RosterItem *item, const QString &group, const QString &name, SubscriptionType sub) {
+void JabberCtx::setDetails(RosterItem *item, const QStringList &group, const QString &name, SubscriptionType sub) {
 	RosterGroup *current_group = item->getGroup(),
 		*new_group = roster.get_group(group);
 	if(current_group != new_group) {
@@ -842,7 +850,7 @@ void JabberCtx::setDetails(RosterItem *item, const QString &group, const QString
 	events_i->fire_event(cc);
 }
 
-void JabberCtx::addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub) {
+void JabberCtx::addItem(const QString &jid, const QString &name, const QStringList &group, SubscriptionType sub) {
 	RosterGroup *gr = roster.get_group(group);
 	/*
 	if(!gr) {
@@ -888,10 +896,12 @@ void JabberCtx::parseRosterItem() {
 		subscription = 	reader.attributes().value("subscription").toString(),
 		ask = reader.attributes().value("ask").toString(),
 		group;
+	QStringList gr_proper;
 
 	readMoreIfNecessary();
 	if(reader.isStartElement() && reader.name() == "group") {
 		group = reader.readElementText();
+		gr_proper = group.split(Roster::getDelimiter()).replaceInStrings("|delim|", Roster::getDelimiter());
 	}
 
 	// ensure non-empty name
@@ -905,14 +915,14 @@ void JabberCtx::parseRosterItem() {
 			delete item;
 		}
 	} else if(item) {
-		setDetails(item, group, name, RosterItem::string2sub(subscription));
+		setDetails(item, gr_proper, name, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
 		} //if(subscription == "to")
 			//sendRequestSubscription(jid);
 	} else {
 		//log("Adding id to roster: " + jid + "(group: " + group + ")");
-		addItem(jid, name, group, RosterItem::string2sub(subscription));
+		addItem(jid, name, gr_proper, RosterItem::string2sub(subscription));
 		if(ask == "subscribe") {
 			//emit grantRequested(jid, account_id);
 		} //else if(subscription == "to")
@@ -1358,7 +1368,7 @@ void JabberCtx::editRosterItem() {
 	RosterItem *item = roster.get_item(mid);
 	if(item) {
 		RosterGroup *g = item->getGroup();
-		NewRosterItemDialog d(item->getJID(), item->getName(), g->getFullName());
+		NewRosterItemDialog d(item->getJID(), item->getName(), g->getClistName());
 		if(d.exec() == QDialog::Accepted) {
 			//<iq from='juliet@example.com/balcony' type='set' id='roster_2'>
 			//	<query xmlns='jabber:iq:roster'>
@@ -1375,7 +1385,7 @@ void JabberCtx::editRosterItem() {
 					writer.writeStartElement("item");
 					writer.writeAttribute("jid", d.getJID());
 					writer.writeAttribute("name", d.getName());
-					writer.writeTextElement("group", d.getGroup());
+					writer.writeTextElement("group", d.getGroup().replaceInStrings(Roster::getDelimiter(), "|delim|").join(Roster::getDelimiter()));
 					writer.writeEndElement();
 				writer.writeEndElement();
 			writer.writeEndElement();

@@ -40,6 +40,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="chkHideEmptyGroups" >
+     <property name="text" >
+      <string>Hide empty groups</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer" >
      <property name="orientation" >
       <enum>Qt::Vertical</enum>

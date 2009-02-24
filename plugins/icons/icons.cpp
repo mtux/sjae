@@ -25,14 +25,14 @@ icons::~icons()
 
 const char *def_icon[] = {
 	"dot_grey",
-	"dot_green",
 	"dot_lgreen",
-	"dot_yellow",
-	"dot_orange",
-	"dot_brown",
 	"dot_red",
+	"dot_brown",
 	"dot_orange",
 	"dot_orange",
+	"dot_orange",
+	"dot_yellow",
+	"dot_green",
 	"generic"
 };
 

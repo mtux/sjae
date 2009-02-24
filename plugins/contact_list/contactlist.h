@@ -10,26 +10,29 @@
 #include <QMenu>
 #include <QMutex>
 #include <QMetaType>
+#include <QSortFilterProxyModel>
 
-class SortedTreeWidgetItem: public QTreeWidgetItem {
+#include "clistoptions.h"
+#include "contacttreemodel.h"
+
+class SortedTreeModel: public QSortFilterProxyModel {
 public:
-	SortedTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &strings, int type);
-	SortedTreeWidgetItem(const QStringList &strings, int type);
-	virtual bool operator<( const QTreeWidgetItem &other) const;
-};
+	SortedTreeModel(QObject *parent = 0);
+	void setModel(ContactTreeModel *model);
+	void setHideOffline(bool f);
+	void setHideEmptyGroups(bool f);
 
-class ContactInfo {
-public:
-	//ContactInfo(): item(0), gs(ST_OFFLINE) {}
+	void resort();
+protected:
+	bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+	bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 
-	SortedTreeWidgetItem *item, *parent;
-	Contact *contact;
+	bool hideOffline, hideEmptyGroups;
 };
 
 class ContactList: public CListI {
 	Q_OBJECT
 
-	friend class SortedTreeWidgetItem;
 public:
 	ContactList();
 	virtual ~ContactList();
@@ -40,35 +43,20 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
-	QTreeWidgetItem *add_contact(Contact *contact);
 	QAction *add_contact_action(const QString &label, const QString &icon = "");
+	QAction *add_group_action(const QString &label, const QString &icon = "");
 
 public slots:
-	void set_group_delimiter(Account *account, const QString &delim) {
-		group_delim[account] = delim;
-	}
-
+	void add_contact(Contact *contact);
 	void remove_contact(Contact *contact);
 	void remove_all_contacts(Account *account);
-	void update_label(Contact *contact);
-	void update_group(Contact *contact);
-	void update_status(Contact *contact);
-
-	void set_hide_offline(bool hide);
-	void update_hide_offline();
+	void update_contact(Contact *contact);
 
 	bool event_fired(EventsI::Event &e);
 
-signals:
-	//void contact_clicked(const QString &proto_name, const QString &account_id, const QString &id);
-	//void contact_dbl_clicked(const QString &proto_name, const QString &account_id, const QString &id);
-	//void show_tip(const QString &proto_name, const QString &account_id, const QString &id, const QPoint &p);
-	//void hide_tip();
-	//void aboutToShowContactMenu(const QString &proto_name, const QString &account_id, const QString &id);
-	//void aboutToShowGroupMenu(const QString &proto_name, const QString &account_id, const QString &full_gn);
-
 protected:
-	void set_hidden(Contact *contact, bool hide);
+	ContactTreeModel *model;
+	SortedTreeModel *sortedModel;
 
 	CoreI *core_i;
 	QPointer<MainWindowI> main_win_i;
@@ -78,25 +66,28 @@ protected:
 
 	CListWin *win;
 
-	QMap<Account *, QString> group_delim;
-	QMap<Contact *, SortedTreeWidgetItem *> id_item_map;
+	CListOptions *opt;
+	CListOptions::Settings current_settings;
 
-	QMutex list_mutex;
+	QAction *newGroupAction, *deleteGroupAction;
+	QStringList menuGroup;
 
-	QString getNick(Contact *contact);
 protected slots:
-	void aboutToShowMenuSlot(QTreeWidgetItem *i);
+	void aboutToShowMenuSlot(const QPoint &, const QModelIndex &i);
 
-	void treeItemExpanded(QTreeWidgetItem *i);
-	void treeItemCollapsed(QTreeWidgetItem *i);
+	void treeItemExpanded(const QModelIndex &i);
+	void treeItemCollapsed(const QModelIndex &i);
 	
-	void treeItemClicked(QTreeWidgetItem *i, int col);
-	void treeItemDoubleClicked(QTreeWidgetItem *i, int col);
+	void treeItemClicked(const QModelIndex &i);
+	void treeItemDoubleClicked(const QModelIndex &i);
 
-	void treeShowTip(QTreeWidgetItem *i, const QPoint &pos);
+	void treeShowTip(const QModelIndex &i, const QPoint &pos);
 	void treeHideTip();
-};
 
-Q_DECLARE_METATYPE(ContactInfo)
+	void options_applied();
+
+	void newGroup();
+	void deleteGroup();
+};
 
 #endif // CONTACTLIST_H

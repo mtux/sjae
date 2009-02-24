@@ -13,16 +13,18 @@ public:
 	CListWin(QWidget *parent = 0);
 	~CListWin();
 	
-	ContactTree *tree() {return ui.treeWidget;}
+	QTreeView *tree() {return ui.treeView;}
 	QMenu *contact_menu() {return &contactMenu;}
+	QMenu *group_menu() {return &groupMenu;}
 
 protected slots:
 	void menuReq(const QPoint &p);
 signals:
-	void aboutToShowMenu(QTreeWidgetItem *i);
+	void showMenu(const QPoint &p, const QModelIndex &index);
 
 private:
 	QMenu contactMenu;
+	QMenu groupMenu;
 	Ui::CListWinClass ui;
 };
 

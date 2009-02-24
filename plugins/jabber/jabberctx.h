@@ -187,8 +187,8 @@ protected:
 	void parseDiscoItemsResult(const QString &entity);
 	void parseRegisterResult(const QString &gateway);
 
-	void setDetails(RosterItem *item, const QString &group, const QString &name, SubscriptionType sub);
-	void addItem(const QString &jid, const QString &name, const QString &group, SubscriptionType sub);
+	void setDetails(RosterItem *item, const QStringList &group, const QString &name, SubscriptionType sub);
+	void addItem(const QString &jid, const QString &name, const QStringList &group, SubscriptionType sub);
 	bool setPresence(const QString &full_jid, PresenceType presence, const QString &msg, int prio = 0);
 
 	void sendIqError(const QString &id, const QString &sender, const QString &errorType = "cancel", const QString &definedCondition = "feature-not-implemented");

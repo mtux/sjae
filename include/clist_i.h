@@ -51,8 +51,9 @@ public:
 
 class ShowGroupMenu: public EventsI::Event {
 public:
-	ShowGroupMenu(const QString &full_gn, QObject *source = 0): EventsI::Event(UUID_SHOW_GROUP_MENU, source), full_group_name(full_gn) {}
-	QString full_group_name;
+	ShowGroupMenu(const QStringList &full_gn, int contacts, QObject *source = 0): EventsI::Event(UUID_SHOW_GROUP_MENU, source), full_group_name(full_gn), contactCount(contacts) {}
+	QStringList full_group_name;
+	int contactCount;
 };
 
 
@@ -63,33 +64,17 @@ public:
 
 	const QString get_interface_name() const {return INAME_CLIST;}
 
-	virtual QTreeWidgetItem *add_contact(Contact *contact) = 0;
 	virtual QAction *add_contact_action(const QString &label, const QString &icon = "") = 0;
-
-	virtual bool get_hide_offline() {return hide_offline;}
+	virtual QAction *add_group_action(const QString &label, const QString &icon = "") = 0;
 
 	virtual bool event_fired(EventsI::Event &e) = 0;
 
 public slots:
-	virtual void set_group_delimiter(Account *account, const QString &delim) = 0;
+	virtual void add_contact(Contact *contact) = 0;
 	virtual void remove_contact(Contact *contact) = 0;
 	virtual void remove_all_contacts(Account *account) = 0;
-	virtual void update_label(Contact *contact) = 0;
-	virtual void update_group(Contact *contact) = 0;
-	virtual void update_status(Contact *contact) = 0;
+	virtual void update_contact(Contact *contact) = 0;
 
-	virtual void set_hide_offline(bool hide) {hide_offline = hide;}
-
-signals:
-	//void contact_clicked(const QString &proto_name, const QString &account_id, const QString &id);
-	//void contact_dbl_clicked(const QString &proto_name, const QString &account_id, const QString &id);
-	//void show_tip(const QString &proto_name, const QString &account_id, const QString &id, const QPoint &p);
-	//void hide_tip();
-	//void aboutToShowContactMenu(const QString &proto_name, const QString &account_id, const QString &id);
-	//void aboutToShowGroupMenu(const QString &full_gn);
-
-protected:
-	bool hide_offline;
 };
 
 #endif

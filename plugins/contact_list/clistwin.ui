@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>210</width>
-    <height>398</height>
+    <width>206</width>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -17,12 +17,10 @@
     <number>6</number>
    </property>
    <item>
-    <widget class="ContactTree" name="treeWidget" >
-     <column>
-      <property name="text" >
-       <string>1</string>
-      </property>
-     </column>
+    <widget class="ContactTree" name="treeView" >
+     <property name="acceptDrops" >
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
   </layout>
@@ -31,7 +29,7 @@
  <customwidgets>
   <customwidget>
    <class>ContactTree</class>
-   <extends>QTreeWidget</extends>
+   <extends>QTreeView</extends>
    <header>contacttree.h</header>
   </customwidget>
  </customwidgets>
