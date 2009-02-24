@@ -17,7 +17,11 @@
     <widget class="QComboBox" name="cmbFiles" />
    </item>
    <item>
-    <widget class="QTextEdit" name="edStyleSheet" />
+    <widget class="QTextEdit" name="edStyleSheet" >
+     <property name="acceptRichText" >
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

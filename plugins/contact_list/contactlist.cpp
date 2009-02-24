@@ -45,6 +45,7 @@ bool ContactList::load(CoreI *core) {
 	win->tree()->sortByColumn(0, Qt::AscendingOrder);
 
 	connect(sortedModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SLOT(rowsInserted(const QModelIndex &, int, int)));
+	connect(sortedModel, SIGNAL(rowsRemoved(const QModelIndex &, int, int)), this, SLOT(rowsRemoved(const QModelIndex &, int, int)));
 
 	connect(win, SIGNAL(showMenu(const QPoint &, const QModelIndex &)), this, SLOT(aboutToShowMenuSlot(const QPoint &, const QModelIndex &)));
 
@@ -232,6 +233,22 @@ void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
 			
 			win->tree()->setRowHidden(i, parent, current_settings.hide_empty_groups);
 		} else if(model->getType(sourceIndex) == TIT_CONTACT) {
+			QStringList gn;
+			QModelIndex current = parent;
+			while(current.isValid()) {
+				gn = model->getGroup(sortedModel->mapToSource(current));
+				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups && model->onlineCount(gn) == 0);
+				current = sortedModel->parent(current);
+			}
+		}
+	}
+}
+
+void ContactList::rowsRemoved(const QModelIndex &parent, int start, int end) {
+	for(int i = start; i <= end; i++) {
+		QModelIndex index = sortedModel->index(i, 0, parent), sourceIndex = sortedModel->mapToSource(index);
+		QStringList gn;
+		if(model->getType(sourceIndex) == TIT_CONTACT) {
 			QStringList gn;
 			QModelIndex current = parent;
 			while(current.isValid()) {

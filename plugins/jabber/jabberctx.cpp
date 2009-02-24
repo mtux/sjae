@@ -189,7 +189,7 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 		case LMT_NORMAL:
 			qDebug() << msg.toAscii().data();
 			break;
-		
+		/*
 		case LMT_SEND:
 				if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"))
 					qDebug() << "Jabber (send): Challenge response: CENSORED FOR SECURITY REASONS";
@@ -199,7 +199,7 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 		case LMT_RECV:
 			qDebug() << "Jabber (recv):" << message;
 			break;
-		
+		*/
 		case LMT_WARNING:
 			qWarning() << msg.toAscii().data();
 			break;
