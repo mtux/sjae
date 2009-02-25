@@ -901,7 +901,8 @@ void JabberCtx::parseRosterItem() {
 	readMoreIfNecessary();
 	if(reader.isStartElement() && reader.name() == "group") {
 		group = reader.readElementText();
-		gr_proper = group.split(Roster::getDelimiter()).replaceInStrings("|delim|", Roster::getDelimiter());
+		if(!group.isEmpty())
+			gr_proper = group.split(Roster::getDelimiter()).replaceInStrings("|delim|", Roster::getDelimiter());
 	}
 
 	// ensure non-empty name

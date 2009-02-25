@@ -208,11 +208,10 @@ public:
 	RosterGroup *get_group(const QStringList &group, bool create = true);
 	RosterItem *get_item(const QString &jid) const;
 
-	QStringList getClistName() const {
-		if(parent) {
+	virtual QStringList getClistName() const {
+		if(parent)
 			return static_cast<RosterGroup *>(parent)->getClistName() << name;
-		} else
-			return QStringList();
+		return QStringList();
 	}
 
 	QStringList all_items() {
@@ -242,6 +241,9 @@ public:
 		return full_jid.left(index);
 	}
 
+	QStringList getClistName() const {
+		return QStringList();
+	}
 };
 
 #endif

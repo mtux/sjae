@@ -134,7 +134,7 @@ Qt::ItemFlags ContactTreeModel::flags(const QModelIndex &index) const {
 
 	TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
 	if(item->type() == TIT_CONTACT)
-		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled | Qt::ItemIsDragEnabled;
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
 	else if(item->type() == TIT_GROUP)
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
 	return 0;
@@ -274,7 +274,8 @@ void ContactTreeModel::addGroup(QStringList &full_name) {
 void ContactTreeModel::addContact(Contact *contact) {
 	if(contact_item_map.contains(contact)) return;
 
-	QStringList group = contact->get_property("group").toStringList();
+	QStringList group;
+	if(contact->has_property("group")) group = contact->get_property("group").toStringList();
 
 	TreeItem *group_item = find_group(group, true);
 	//emit layoutAboutToBeChanged();
@@ -376,7 +377,10 @@ bool ContactTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action
 		QModelIndex i = (row == -1 ? parent : index(row, 0, parent));
 		if(getType(i) == TIT_GROUP) group = getGroup(i);
 		else group = getContact(i)->get_property("group").toStringList();
-		d->c->set_property("group", group);
+		if(group.size())
+			d->c->set_property("group", group);
+		else 
+			d->c->remove_property("group");
 		removeContact(d->c);
 		addContact(d->c);
 		if(events_i) events_i->fire_event(ContactChanged(d->c, this));

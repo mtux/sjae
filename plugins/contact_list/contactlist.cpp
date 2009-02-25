@@ -366,15 +366,15 @@ bool SortedTreeModel::lessThan(const QModelIndex &left, const QModelIndex &right
 	if(ltype != rtype) return ltype < rtype;
 
 	if(ltype == TIT_GROUP)
-		return model->getGroup(left).last() < model->getGroup(right).last();
+		return model->getGroup(left).last().localeAwareCompare(model->getGroup(right).last()) < 0;
 	
 	Contact *cleft = model->getContact(left),
 		*cright = model->getContact(right);
 
 	if(cleft->status != cright->status)
-		return cleft->status > cright->status;
+		return cleft->status > cright->status; // inverted on purpose
 
-	return ContactTreeModel::getNick(cleft) < ContactTreeModel::getNick(cright);
+	return ContactTreeModel::getNick(cleft).localeAwareCompare(ContactTreeModel::getNick(cright)) < 0;
 }
 
 /////////////////////////////
