@@ -37,7 +37,7 @@ public:
 	virtual int show_popup(const QString &className, const QString &title, const QString &text) = 0;
 	virtual void close_popup(int id) = 0;
 
-	virtual void show_preview(const PopupI::PopupClass &c, bool round_corners, const QString &title, const QString &text) = 0;
+	virtual int show_custom(const PopupI::PopupClass &c, const QString &title, const QString &text, bool round_corners = true) = 0;
 };
 
 #endif
