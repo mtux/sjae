@@ -1,7 +1,7 @@
 #include <plugin_i.h>
 #include <QMap>
 
-#define VERSION			"Alpha 11"
+#define VERSION			"Alpha 12"
 
 class PluginInfoEx: public PluginInfo{
 public:
