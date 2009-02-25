@@ -51,6 +51,9 @@ bool icons::load(CoreI *core) {
 	add_icon("dot_yellow", QPixmap(":/icons/Resources/c_yellow.png"), "General/yellow dot");
 	add_icon("dot_orange", QPixmap(":/icons/Resources/c_orange.png"), "General/orange dot");
 
+	add_icon("message", QPixmap(":/icons/Resources/message.png"), "Messaging/message");
+	add_icon("alert", QPixmap(":/icons/Resources/alert.png"), "System/alert");
+
 	each_status(gs) {
 		add_alias(status_name[gs], def_icon[gs], QString("Status/") + hr_status_name[gs]);
 	}

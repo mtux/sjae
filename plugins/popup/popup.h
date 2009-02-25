@@ -26,8 +26,8 @@ public:
 	PopupClass get_class(const QString &name);
 
 	int show_popup(const QString &className, const QString &title, const QString &text);
-	void  close_popup(int id);
-	void show_preview(const PopupI::PopupClass &c, bool round_corners, const QString &title, const QString &text);
+	void close_popup(int id);
+	int show_custom(const PopupI::PopupClass &c, const QString &title, const QString &text, bool round_corners = true);
 
 	void popup_closed(int id, PopupDoneType done);
 

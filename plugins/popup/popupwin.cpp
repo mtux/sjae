@@ -1,6 +1,8 @@
 #include "popupwin.h"
 #include <QPalette>
 #include <QDebug>
+#include <QTime>
+#include <QLocale>
 
 QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	QRegion r(x, y, w, h);
@@ -36,6 +38,7 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 	p = ui.lblTitle->palette();
 	p.setColor(QPalette::Foreground, c.title);
 	ui.lblTitle->setPalette(p);
+	ui.lblTime->setPalette(p);
 
 	p = ui.lblText->palette();
 	p.setColor(QPalette::Foreground, c.text);
@@ -49,11 +52,13 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 	}
 
 	ui.lblText->installEventFilter(this);
+
+	QString format = QLocale::system().timeFormat(QLocale::ShortFormat);
+	if(format.endsWith("ss")) format = format.mid(0, format.length() - 3);
+	ui.lblTime->setText(QTime::currentTime().toString(format));
 }
 
-PopupWin::~PopupWin()
-{
-
+PopupWin::~PopupWin() {
 }
 
 bool PopupWin::eventFilter(QObject *obj, QEvent *e) {

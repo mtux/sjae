@@ -28,6 +28,10 @@ public:
 		Event(const QUuid &uuid, QObject *s = 0, EventType t = ET_INTERNAL): uuid(uuid), source(s), type(t) {
 			timestamp = QDateTime::currentDateTime();
 		}
+
+		bool operator<(const Event &other) const {
+			return timestamp < other.timestamp;
+		}
 	};
 
 	class EventListener {

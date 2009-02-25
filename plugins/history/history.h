@@ -25,11 +25,19 @@ public:
 	QList<Message> get_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true);
 	QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true);
 
+	QList<Message> get_latest_events(QList<Contact *> contacts, QDateTime earliest, bool mark_read = true);
+	QList<Message> get_latest_events(QList<Contact *> contacts, int count, bool mark_read = true);
+
 	void mark_as_read(Contact *contact, QDateTime timestamp);
+	void mark_all_as_read(Contact *contact);
+	void wipe_history(Contact *contact);
 	
 	void enable_history(Contact *contact, bool enable);
 
 protected:
+	QList<Message> read_history(Contact *contact, QSqlQuery &query, bool mark_read);
+	void mark_as_read(Contact *contact, double timestamp);
+
 	CoreI *core_i;
 	QPointer<EventsI> events_i;
 	QPointer<ContactInfoI> contact_info_i;

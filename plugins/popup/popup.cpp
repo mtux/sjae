@@ -94,7 +94,7 @@ bool Popup::register_class(const PopupClass &c)  {
 	current_settings.classes[c.name] = c;
 
 	QSettings settings;
-	current_settings.classes[c.name].icon = QIcon(settings.value("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(64, 64)).value<QPixmap>());
+	current_settings.classes[c.name].icon = QIcon(settings.value("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(256, 256)).value<QPixmap>());
 	current_settings.classes[c.name].title = settings.value("Popup/Class/" + c.name + "/TitleCol", c.title).value<QColor>();
 	current_settings.classes[c.name].text = settings.value("Popup/Class/" + c.name + "/TextCol", c.text).value<QColor>();
 	current_settings.classes[c.name].background = settings.value("Popup/Class/" + c.name + "/BackgroundCol", c.background).value<QColor>();
@@ -112,19 +112,7 @@ PopupI::PopupClass Popup::get_class(const QString &name) {
 
 int Popup::show_popup(const QString &className, const QString &title, const QString &text) {
 	if(current_settings.enabled && current_settings.classes.contains(className)) {
-		int id = nextWinId++;
-		PopupWin *win = new PopupWin(current_settings.classes[className], id, current_settings.round_corners);
-		connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
-
-		QString t = Qt::escape(text);
-		t.replace("\n", "<br />\n");
-		linkUrls(t);
-		win->setContent(title, t);
-
-		windows.append(win);
-		layoutPopups();
-		win->show();
-		return id;
+		return show_custom(current_settings.classes[className], title, text, current_settings.round_corners);
 	}
 	return -1;
 }
@@ -138,8 +126,9 @@ void Popup::close_popup(int id) {
 	}
 }
 
-void Popup::show_preview(const PopupI::PopupClass &c, bool round_corners, const QString &title, const QString &text) {
-	PopupWin *win = new PopupWin(c, nextWinId++, round_corners);
+int Popup::show_custom(const PopupI::PopupClass &c, const QString &title, const QString &text, bool round_corners) {
+	int id = nextWinId++;
+	PopupWin *win = new PopupWin(c, id, round_corners);
 	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
 
 	QString t = Qt::escape(text);
@@ -150,6 +139,7 @@ void Popup::show_preview(const PopupI::PopupClass &c, bool round_corners, const 
 	windows.append(win);
 	layoutPopups();
 	win->show();
+	return id;
 }
 
 void Popup::layoutPopups() {
@@ -186,7 +176,7 @@ void Popup::options_applied() {
 	settings.setValue("Popup/RoundCorners", current_settings.round_corners);
 
 	foreach(PopupI::PopupClass c, current_settings.classes) {
-		settings.setValue("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(64, 64));
+		settings.setValue("Popup/Class/" + c.name + "/Icon", c.icon.pixmap(256, 256));
 		settings.setValue("Popup/Class/" + c.name + "/TitleCol", c.title);
 		settings.setValue("Popup/Class/" + c.name + "/TextCol", c.text);
 		settings.setValue("Popup/Class/" + c.name + "/BackgroundCol", c.background);

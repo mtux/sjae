@@ -102,7 +102,15 @@ void PopupOptions::on_btnTextCol_clicked()
 void PopupOptions::on_btnPreview_clicked()
 {
 	PopupI::PopupClass c = current_settings.classes[ui.lstClasses->currentItem()->text()];
-	popup_i->show_preview(c, ui.chkRoundCorners->isChecked(), "Preview", "How do I look?");
+	popup_i->show_custom(c, "Preview", "How do I look?", ui.chkRoundCorners->isChecked());
+	popup_i->show_custom(c, "Preview", "This is what happens when there's a lot of text in the popup. And I do mean a lot.\n"
+		"Here then I have an opportunity to either fill this space with a lot of useless junk, or try to say something that "
+		"I feel is important and that may be of use to somebody. I would choose the latter, except that in my brief 34 years "
+		"I haven't learned anything that important :) I guess if there's something I'd like my kids to beleive, it's that there's "
+		"always a counterexampe; there's an exception to every rule. A little less certainty could go a long way. If more people beleived that, "
+		"it would lead to a little less selfishness, and a little less oppression.", 
+			ui.chkRoundCorners->isChecked());
+	popup_i->show_custom(c, "Preview with a Really Really Long, Long, Long Title", "How do I look?", ui.chkRoundCorners->isChecked());
 }
 
 void PopupOptions::on_btnIcon_clicked()

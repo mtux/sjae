@@ -122,6 +122,9 @@ QVariant ContactTreeModel::data(const QModelIndex &index, int role) const {
 	}
 	if(icons_i && item->type() == TIT_CONTACT && role == Qt::DecorationRole && index.column() == 0) {
 		Contact *contact = static_cast<TreeItemContact *>(item)->getContact();
+		if(contact->has_property("PendingMsg")) 
+			return QIcon(icons_i->get_icon("message"));
+
 		return QIcon(icons_i->get_account_status_icon(contact->account, contact->status));
 	}
 

@@ -34,7 +34,7 @@ bool ContactList::load(CoreI *core) {
 
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
-	events_i->add_event_listener(this, UUID_MSG);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
 
 	model = new ContactTreeModel(icons_i, events_i, this);
 	sortedModel = new SortedTreeModel(this);
@@ -86,10 +86,6 @@ bool ContactList::modules_loaded() {
 		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
 	}
 
-	// test
-	//add_contact("test", "test", "test", "offline");
-	//add_contact_action("test action", "dot_blue");
-	//remove_contact("test");
 	return true;
 }
 
@@ -144,7 +140,14 @@ bool ContactList::event_fired(EventsI::Event &e) {
 		}
 	} else if(e.uuid == UUID_ACCOUNT_CHANGED) {
 		AccountChanged &ac = static_cast<AccountChanged &>(e);
-		if(ac.removed) remove_all_contacts(ac.account);
+		if(ac.removed || ac.account->status == ST_OFFLINE) remove_all_contacts(ac.account);
+	} else if(e.uuid == UUID_MSG) {
+		Message &m = static_cast<Message &>(e);
+		if(!m.read) {
+			if(m.contact->has_property("ClistHideUntilMsg")) {
+				m.contact->remove_property("CListHideUntilMsg");
+			}
+		}
 	}
 	return true;
 }
@@ -250,6 +253,7 @@ void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
 }
 
 void ContactList::rowsRemoved(const QModelIndex &parent, int start, int end) {
+	// rows already removed from source model - mappings to source invalid
 	for(int i = start; i <= end; i++) {
 		QModelIndex current = parent;
 		while(current.isValid()) {
@@ -265,23 +269,6 @@ void ContactList::rowsRemoved(const QModelIndex &parent, int start, int end) {
 			}
 			current = sortedModel->parent(current);
 		}
-		// rows already removed from source model - mappings to source invalid
-		/*
-		QModelIndex index = sortedModel->index(i, 0, parent), sourceIndex = sortedModel->mapToSource(index);
-		QStringList gn;
-		if(model->getType(sourceIndex) == TIT_CONTACT) {
-			Contact *contact = model->getContact(sourceIndex);
-			qDebug() << "removing contact:" << contact->contact_id;
-			QStringList gn;
-			QModelIndex current = parent;
-			while(current.isValid()) {
-				gn = model->getGroup(sortedModel->mapToSource(current));
-				qDebug() << "hiding group:" << gn.join(">");
-				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups && model->onlineCount(gn) == 0);
-				current = sortedModel->parent(current);
-			}
-		}
-		*/
 	}
 }
 
@@ -320,8 +307,9 @@ void ContactList::treeItemClicked(const QModelIndex &i) {
 
 void ContactList::treeItemDoubleClicked(const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
-	if(contact) 
+	if(contact) {
 		events_i->fire_event(ContactDblClicked(contact, this));
+	}
 }
 
 void ContactList::treeShowTip(const QModelIndex &i, const QPoint &pos) {
@@ -352,9 +340,11 @@ void SortedTreeModel::setHideOffline(bool f) {
 bool SortedTreeModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
 	ContactTreeModel *model = static_cast<ContactTreeModel *>(sourceModel());
 	TreeItemType type = model->getType(model->index(source_row, 0, source_parent));
-	if(type == TIT_CONTACT && hideOffline) {
+	if(type == TIT_CONTACT) {
 		Contact *c = model->getContact(model->index(source_row, 0, source_parent));
-		if(c->status == ST_OFFLINE) return false;
+		if(hideOffline && c->status == ST_OFFLINE) return false;
+		if(c->has_property("CListHide")) return false;
+		if(c->has_property("CListHideUntilMsg")) return false;
 	}
 	return true;
 }

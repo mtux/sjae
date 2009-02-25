@@ -246,9 +246,6 @@ void JabberCtx::changeSessionState(const SessionState &newState) {
 			setStatus(ST_OFFLINE);
 			log("Disconnected");
 			sslSocket.close();
-			//newRosterItemAction->setEnabled(false);
-			//setAllOffline();
-			clist_i->remove_all_contacts(account);
 			roster.clear();
 			break;
 		case SSSTARTSSL:

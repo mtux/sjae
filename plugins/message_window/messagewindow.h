@@ -26,6 +26,11 @@ public:
 	const PluginInfo &get_plugin_info();
 
 	bool event_fired(EventsI::Event &e);
+
+	bool window_open(Contact *contact);
+public slots:
+	void open_window(Contact *contact);
+
 protected:
 	CoreI *core_i;
 	QPointer<AccountsI> accounts_i;
@@ -54,8 +59,6 @@ protected slots:
 
 	void options_applied();
 
-public slots:
-	void open_window(Contact *contact);
 };
 
 #endif // MESSAGEWINDOW_H

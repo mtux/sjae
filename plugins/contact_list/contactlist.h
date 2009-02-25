@@ -28,7 +28,7 @@ protected:
 	bool hideOffline, hideEmptyGroups;
 };
 
-class ContactList: public CListI {
+class ContactList: public CListI, public EventsI::EventListener {
 	Q_OBJECT
 
 public:

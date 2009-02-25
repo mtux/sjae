@@ -208,6 +208,10 @@ void MessageWindow::open_window(Contact *contact) {
 	events_i->fire_event(MessageWinEvent(contact, this));
 }
 
+bool MessageWindow::window_open(Contact *contact) {
+	return window_exists(contact);
+}
+
 void MessageWindow::destroy_window(Contact *contact) {
 	delete windows[contact];
 	windows.remove(contact);

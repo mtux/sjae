@@ -22,6 +22,7 @@ class MessageWindowI: public PluginI {
 public:
 	const QString get_interface_name() const {return INAME_MESSAGE_WINDOW;}
 
+	virtual bool window_open(Contact *contact) = 0;
 public slots:
 	virtual void open_window(Contact *contact) = 0;
 };

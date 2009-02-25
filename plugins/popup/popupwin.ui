@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>179</width>
-    <height>81</height>
+    <width>219</width>
+    <height>104</height>
    </rect>
   </property>
   <property name="contextMenuPolicy" >
@@ -16,62 +16,12 @@
    <string>PopupWin</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" >
-   <property name="margin" >
-    <number>4</number>
-   </property>
    <item>
     <layout class="QGridLayout" name="gridLayout" >
-     <item row="0" column="2" >
-      <widget class="QLabel" name="lblTitle" >
-       <property name="text" >
-        <string>TextLabel</string>
-       </property>
-       <property name="alignment" >
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-       <property name="wordWrap" >
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags" >
-        <set>Qt::NoTextInteraction</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2" >
-      <widget class="QLabel" name="lblText" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Minimum" hsizetype="Minimum" >
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize" >
-        <size>
-         <width>130</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="maximumSize" >
-        <size>
-         <width>200</width>
-         <height>400</height>
-        </size>
-       </property>
-       <property name="text" >
-        <string>TextLabel</string>
-       </property>
-       <property name="alignment" >
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-       <property name="wordWrap" >
-        <bool>true</bool>
-       </property>
-       <property name="openExternalLinks" >
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" >
+     <property name="sizeConstraint" >
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <item row="0" column="0" >
       <widget class="QLabel" name="lblSidebar" >
        <property name="minimumSize" >
         <size>
@@ -96,6 +46,100 @@
        </property>
        <property name="alignment" >
         <set>Qt::AlignHCenter|Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLabel" name="lblTitle" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+         <horstretch>2</horstretch>
+         <verstretch>1</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font" >
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>8</pointsize>
+         <weight>75</weight>
+         <italic>false</italic>
+         <bold>true</bold>
+         <underline>false</underline>
+         <strikeout>false</strikeout>
+        </font>
+       </property>
+       <property name="text" >
+        <string>TextLabel</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="wordWrap" >
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags" >
+        <set>Qt::NoTextInteraction</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2" >
+      <widget class="QLabel" name="lblTime" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Maximum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font" >
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>8</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
+         <underline>false</underline>
+         <strikeout>false</strikeout>
+        </font>
+       </property>
+       <property name="text" >
+        <string>22:54</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignHCenter|Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2" >
+      <widget class="QLabel" name="lblText" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+         <horstretch>2</horstretch>
+         <verstretch>1</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize" >
+        <size>
+         <width>150</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="maximumSize" >
+        <size>
+         <width>250</width>
+         <height>300</height>
+        </size>
+       </property>
+       <property name="text" >
+        <string>TextLabel</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+       <property name="wordWrap" >
+        <bool>true</bool>
+       </property>
+       <property name="openExternalLinks" >
+        <bool>true</bool>
        </property>
       </widget>
      </item>

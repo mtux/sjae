@@ -220,40 +220,188 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath=".\Resources\alert.png"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\Resources\c_black.PNG"
 				>
 			</File>
 			<File
 				RelativePath=".\Resources\c_blue.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_brown.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_cyan.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_green.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_grey.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lblue.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lcyan.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lgreen.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lgrey.PNG"
@@ -262,18 +410,82 @@
 			<File
 				RelativePath=".\Resources\c_lmagenta.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lred.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_lyellow.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Resources\c_magenta.PNG"
+				RelativePath=".\Resources\c_magenta.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_navy.PNG"
@@ -282,22 +494,102 @@
 			<File
 				RelativePath=".\Resources\c_orange.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_purple.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_red.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_white.png"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\c_yellow.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\icons.qrc"
@@ -309,7 +601,7 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing icons.qrc..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;icons&quot; -no-compress &quot;.\icons.qrc&quot; -o .\GeneratedFiles\qrc_icons.cpp&#x0D;&#x0A;"
-						AdditionalDependencies=".\icons.qrc;.\Resources\c_blue.png;.\Resources\c_brown.png;.\Resources\c_cyan.png;.\Resources\c_green.png;.\Resources\c_grey.png;.\Resources\c_lblue.png;.\Resources\c_lcyan.png;.\Resources\c_lgreen.png;.\Resources\c_lmagenta.png;.\Resources\c_lred.png;.\Resources\c_lyellow.png;.\Resources\c_magenta.png;.\Resources\c_orange.png;.\Resources\c_purple.png;.\Resources\c_red.png;.\Resources\c_white.png;.\Resources\c_yellow.png;.\Resources\s.png"
+						AdditionalDependencies=".\icons.qrc;.\Resources\alert.png;.\Resources\c_blue.png;.\Resources\c_brown.png;.\Resources\c_cyan.png;.\Resources\c_green.png;.\Resources\c_grey.png;.\Resources\c_lblue.png;.\Resources\c_lcyan.png;.\Resources\c_lgreen.png;.\Resources\c_lmagenta.png;.\Resources\c_lred.png;.\Resources\c_lyellow.png;.\Resources\c_magenta.png;.\Resources\c_orange.png;.\Resources\c_purple.png;.\Resources\c_red.png;.\Resources\c_white.png;.\Resources\c_yellow.png;.\Resources\message.png;.\Resources\s.png"
 						Outputs=".\GeneratedFiles\qrc_icons.cpp"
 					/>
 				</FileConfiguration>
@@ -320,14 +612,50 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing icons.qrc..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;icons&quot; -no-compress &quot;.\icons.qrc&quot; -o .\GeneratedFiles\qrc_icons.cpp&#x0D;&#x0A;"
-						AdditionalDependencies=".\icons.qrc;.\Resources\c_blue.png;.\Resources\c_brown.png;.\Resources\c_cyan.png;.\Resources\c_green.png;.\Resources\c_grey.png;.\Resources\c_lblue.png;.\Resources\c_lcyan.png;.\Resources\c_lgreen.png;.\Resources\c_lmagenta.png;.\Resources\c_lred.png;.\Resources\c_lyellow.png;.\Resources\c_magenta.png;.\Resources\c_orange.png;.\Resources\c_purple.png;.\Resources\c_red.png;.\Resources\c_white.png;.\Resources\c_yellow.png;.\Resources\s.png"
+						AdditionalDependencies=".\icons.qrc;.\Resources\alert.png;.\Resources\c_blue.png;.\Resources\c_brown.png;.\Resources\c_cyan.png;.\Resources\c_green.png;.\Resources\c_grey.png;.\Resources\c_lblue.png;.\Resources\c_lcyan.png;.\Resources\c_lgreen.png;.\Resources\c_lmagenta.png;.\Resources\c_lred.png;.\Resources\c_lyellow.png;.\Resources\c_magenta.png;.\Resources\c_orange.png;.\Resources\c_purple.png;.\Resources\c_red.png;.\Resources\c_white.png;.\Resources\c_yellow.png;.\Resources\message.png;.\Resources\s.png"
 						Outputs=".\GeneratedFiles\qrc_icons.cpp"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Resources\message.png"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Resources\s.PNG"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -337,10 +665,10 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\GeneratedFiles\Release\moc_icons_i.cpp"
+				RelativePath=".\GeneratedFiles\Debug\moc_icons_i.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -349,10 +677,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\GeneratedFiles\Debug\moc_icons_i.cpp"
+				RelativePath=".\GeneratedFiles\Release\moc_icons_i.cpp"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

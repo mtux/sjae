@@ -57,7 +57,7 @@ public:
 };
 
 
-class CListI: public PluginI, public EventsI::EventListener {
+class CListI: public PluginI {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
 public:
@@ -66,15 +66,6 @@ public:
 
 	virtual QAction *add_contact_action(const QString &label, const QString &icon = "") = 0;
 	virtual QAction *add_group_action(const QString &label, const QString &icon = "") = 0;
-
-	virtual bool event_fired(EventsI::Event &e) = 0;
-
-public slots:
-	virtual void add_contact(Contact *contact) = 0;
-	virtual void remove_contact(Contact *contact) = 0;
-	virtual void remove_all_contacts(Account *account) = 0;
-	virtual void update_contact(Contact *contact) = 0;
-
 };
 
 #endif
