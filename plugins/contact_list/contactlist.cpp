@@ -6,6 +6,7 @@
 #include <QtPlugin>
 #include <QMutexLocker>
 #include <QInputDialog>
+//#include "../../modeltest/modeltest.h"
 
 PluginInfo info = {
 	0x400,
@@ -39,6 +40,8 @@ bool ContactList::load(CoreI *core) {
 	sortedModel = new SortedTreeModel(this);
 	sortedModel->setDynamicSortFilter(true);
 	sortedModel->setModel(model);
+
+	//new ModelTest(sortedModel, this);
 	
 	win = new CListWin();
 	win->tree()->setModel(sortedModel);
@@ -46,6 +49,7 @@ bool ContactList::load(CoreI *core) {
 
 	connect(sortedModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)), this, SLOT(rowsInserted(const QModelIndex &, int, int)));
 	connect(sortedModel, SIGNAL(rowsRemoved(const QModelIndex &, int, int)), this, SLOT(rowsRemoved(const QModelIndex &, int, int)));
+	connect(sortedModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(dataChanged(const QModelIndex &, const QModelIndex &)));
 
 	connect(win, SIGNAL(showMenu(const QPoint &, const QModelIndex &)), this, SLOT(aboutToShowMenuSlot(const QPoint &, const QModelIndex &)));
 
@@ -237,7 +241,8 @@ void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
 			QModelIndex current = parent;
 			while(current.isValid()) {
 				gn = model->getGroup(sortedModel->mapToSource(current));
-				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups && model->onlineCount(gn) == 0);
+				bool hide = current_settings.hide_empty_groups && model->onlineCount(gn) == 0;
+				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), hide);
 				current = sortedModel->parent(current);
 			}
 		}
@@ -246,19 +251,54 @@ void ContactList::rowsInserted(const QModelIndex &parent, int start, int end) {
 
 void ContactList::rowsRemoved(const QModelIndex &parent, int start, int end) {
 	for(int i = start; i <= end; i++) {
+		QModelIndex current = parent;
+		while(current.isValid()) {
+			if(current_settings.hide_empty_groups) {
+				bool all_rows_hidden = true;
+				for(int j = 0; j < sortedModel->rowCount(current); j++)
+					if(!win->tree()->isRowHidden(j, current)) {
+						all_rows_hidden = false;
+						break;
+					}
+				if(all_rows_hidden)
+					win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups);
+			}
+			current = sortedModel->parent(current);
+		}
+		// rows already removed from source model - mappings to source invalid
+		/*
 		QModelIndex index = sortedModel->index(i, 0, parent), sourceIndex = sortedModel->mapToSource(index);
 		QStringList gn;
 		if(model->getType(sourceIndex) == TIT_CONTACT) {
+			Contact *contact = model->getContact(sourceIndex);
+			qDebug() << "removing contact:" << contact->contact_id;
 			QStringList gn;
 			QModelIndex current = parent;
 			while(current.isValid()) {
 				gn = model->getGroup(sortedModel->mapToSource(current));
+				qDebug() << "hiding group:" << gn.join(">");
 				win->tree()->setRowHidden(current.row(), sortedModel->parent(current), current_settings.hide_empty_groups && model->onlineCount(gn) == 0);
 				current = sortedModel->parent(current);
 			}
 		}
+		*/
 	}
 }
+
+void ContactList::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight) {
+	QModelIndex index = topLeft, sourceIndex = sortedModel->mapToSource(index);
+	if(model->getType(sourceIndex) == TIT_CONTACT) {
+		QStringList gn;
+		QModelIndex current = sortedModel->parent(index);
+		while(current.isValid()) {
+			gn = model->getGroup(sortedModel->mapToSource(current));
+			bool hide = current_settings.hide_empty_groups && model->onlineCount(gn) == 0;
+			win->tree()->setRowHidden(current.row(), sortedModel->parent(current), hide);
+			current = sortedModel->parent(current);
+		}
+	}
+}
+
 
 void ContactList::treeItemExpanded(const QModelIndex &i) {
 	QSettings settings;
@@ -305,7 +345,8 @@ void SortedTreeModel::setModel(ContactTreeModel *model) {
 
 void SortedTreeModel::setHideOffline(bool f) {
 	hideOffline = f;
-	invalidateFilter();
+	invalidate();
+	sort(0, Qt::AscendingOrder);
 }
 
 bool SortedTreeModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {

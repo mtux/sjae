@@ -75,6 +75,7 @@ protected slots:
 
 	void rowsInserted(const QModelIndex &parent, int start, int end);
 	void rowsRemoved(const QModelIndex &parent, int start, int end);
+	void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 
 	void treeItemExpanded(const QModelIndex &i);
 	void treeItemCollapsed(const QModelIndex &i);

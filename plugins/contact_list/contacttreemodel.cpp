@@ -203,33 +203,6 @@ void ContactTreeModel::recursive_data_change(TreeItem *child) {
 	}
 }
 
-
-TreeItemGroup *ContactTreeModel::find_group(QStringList &names, bool create) {
-	TreeItemGroup *parent = rootItem, *g;
-	foreach(QString name, names) {
-		g = parent->find_group_child(name);
-		if(g == 0) {
-			if(create) {
-				if(parent == rootItem)
-					beginInsertRows(QModelIndex(), parent->childCount(), parent->childCount());
-				else
-					beginInsertRows(createIndex(parent->row(), 0, parent), parent->childCount(), parent->childCount());
-				g = new TreeItemGroup(name, parent);
-				parent->appendChild(g);
-				endInsertRows();
-				//recursive_data_change(parent);
-			} else
-				return 0;
-		}
-		parent = g;
-	}
-	return parent;
-}
-
-void ContactTreeModel::addGroup(QStringList &full_name) {
-	find_group(full_name, true);
-}
-
 TreeItemType ContactTreeModel::getType(const QModelIndex &index) const {
 	if(index.isValid()) {
 		TreeItem *item = static_cast<TreeItem *>(index.internalPointer());
@@ -269,20 +242,48 @@ bool ContactTreeModel::has_contact(Contact *contact) const {
 	return contact_item_map.contains(contact);
 }
 
+TreeItemGroup *ContactTreeModel::find_group(QStringList &names, bool create) {
+	TreeItemGroup *parent = rootItem, *g;
+	foreach(QString name, names) {
+		g = parent->find_group_child(name);
+		if(g == 0) {
+			if(create) {
+				//emit layoutAboutToBeChanged();
+				if(parent == rootItem) beginInsertRows(QModelIndex(), parent->childCount(), parent->childCount());
+				else beginInsertRows(createIndex(parent->row(), 0, parent), parent->childCount(), parent->childCount());
+
+				g = new TreeItemGroup(name, parent);
+				parent->appendChild(g);
+
+				//emit layoutChanged();
+				endInsertRows();
+				
+				//recursive_data_change(parent);
+			} else
+				return 0;
+		}
+		parent = g;
+	}
+	return parent;
+}
+
+void ContactTreeModel::addGroup(QStringList &full_name) {
+	find_group(full_name, true);
+}
+
 void ContactTreeModel::addContact(Contact *contact) {
 	if(contact_item_map.contains(contact)) return;
 
-	QStringList group;
-	if(contact->has_property("group")) group = contact->get_property("group").toStringList();
+	QStringList group = contact->get_property("group").toStringList();
 
 	TreeItem *group_item = find_group(group, true);
-	if(group_item == rootItem)
-		beginInsertRows(QModelIndex(), group_item->childCount(), group_item->childCount());
-	else
-		beginInsertRows(createIndex(group_item->row(), 0, group_item), group_item->childCount(), group_item->childCount());
+	//emit layoutAboutToBeChanged();
+	if(group_item == rootItem) beginInsertRows(QModelIndex(), group_item->childCount(), group_item->childCount());
+	else beginInsertRows(createIndex(group_item->row(), 0, group_item), group_item->childCount(), group_item->childCount());
 	TreeItemContact *item = new TreeItemContact(contact, group_item);
 	group_item->appendChild(item);
 	contact_item_map[contact] = item;
+	//emit layoutChanged();
 	endInsertRows();
 	//recursive_data_change(group_item);
 }
@@ -291,14 +292,14 @@ void ContactTreeModel::removeContact(Contact *contact) {
 	if(contact_item_map.contains(contact)) {
 		TreeItemContact *item = contact_item_map[contact];
 		TreeItem *group_item = item->parent();
-		if(group_item == rootItem)
-			beginRemoveRows(QModelIndex(), item->row(), item->row());
-		else
-			beginRemoveRows(createIndex(group_item->row(), 0, group_item), item->row(), item->row());
+		//emit layoutAboutToBeChanged();
+		if(group_item == rootItem) beginRemoveRows(QModelIndex(), item->row(), item->row());
+		else beginRemoveRows(createIndex(group_item->row(), 0, group_item), item->row(), item->row());
 		group_item->removeChild(item);
 		contact_item_map.remove(contact);
 		delete item;
 		endRemoveRows();
+		//emit layoutChanged();
 		//recursive_data_change(group_item);
 	}
 }
@@ -307,12 +308,12 @@ void ContactTreeModel::removeGroup(QStringList &full_name) {
 	TreeItemGroup *g = find_group(full_name, false);
 	if(g) {
 		TreeItem *group_item = g->parent();
-		if(group_item == rootItem)
-			beginRemoveRows(QModelIndex(), g->row(), g->row());
-		else
-			beginRemoveRows(createIndex(group_item->row(), 0, group_item), g->row(), g->row());
+		//emit layoutAboutToBeChanged();
+		if(group_item == rootItem) beginRemoveRows(QModelIndex(), g->row(), g->row());
+		else beginRemoveRows(createIndex(group_item->row(), 0, group_item), g->row(), g->row());
 		group_item->removeChild(g);
 		delete g;
+		//emit layoutChanged();
 		endRemoveRows();
 		//recursive_data_change(group_item);
 	}
@@ -373,10 +374,8 @@ bool ContactTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action
 	if(d) {
 		QStringList group;
 		QModelIndex i = (row == -1 ? parent : index(row, 0, parent));
-		if(getType(i) == TIT_GROUP)
-			group = getGroup(i);
-		else
-			group = getContact(i)->get_property("group").toStringList();
+		if(getType(i) == TIT_GROUP) group = getGroup(i);
+		else group = getContact(i)->get_property("group").toStringList();
 		d->c->set_property("group", group);
 		removeContact(d->c);
 		addContact(d->c);
