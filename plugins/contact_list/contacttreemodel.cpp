@@ -374,7 +374,7 @@ QMimeData* ContactTreeModel::mimeData(const QModelIndexList &indexes) const {
 }
 
 bool ContactTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) {
-	ContactMimeData *d = qobject_cast<ContactMimeData *>(data);
+	ContactMimeData *d = qobject_cast<ContactMimeData *>(const_cast<QMimeData *>(data));
 	if(d) {
 		QStringList group;
 		QModelIndex i = (row == -1 ? parent : index(row, 0, parent));

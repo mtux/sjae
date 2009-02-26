@@ -83,7 +83,7 @@ void LogFrame::showHideToggle() {
 
 /////////////////////////////////////
 PluginInfo info = {
-	0x020,
+	0x010,
 	"Log Window",
 	"Scott Ellis",
 	"mail@scottellis.com.au",

@@ -58,6 +58,8 @@ Section "Qt Runtime Libraries"
   File "${QTDIR}\bin\QtXml4.dll"
   File "${QTDIR}\bin\QtScript4.dll"
   File "${QTDIR}\bin\QtWebKit4.dll"
+  File "${QTDIR}\bin\phonon4.dll"
+  File "${QTDIR}\bin\QtSql4.dll"
  
 SectionEnd
 

@@ -32,9 +32,18 @@ bool jabber::load(CoreI *core) {
 
 	core_i = core;
 	// interfaces required for contexts and protocol object
-	if(core_i->get_interface(INAME_EVENTS) == 0) return false;
-	if(core_i->get_interface(INAME_CONTACTINFO) == 0) return false;
-	if(core_i->get_interface(INAME_ACCOUNTS) == 0) return false;
+	if(core_i->get_interface(INAME_EVENTS) == 0) {
+		qDebug() << "Jabber load failed: no events interface";
+		return false;
+	}
+	if(core_i->get_interface(INAME_CONTACTINFO) == 0) {
+		qDebug() << "Jabber load failed: no contact info interface";
+		return false;
+	}
+	if(core_i->get_interface(INAME_ACCOUNTS) == 0) {
+		qDebug() << "Jabber load failed: no accounts interface";
+		return false;
+	}
 
 	IconsI *icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	if(icons_i) icons_i->add_icon("Proto/Jabber", QPixmap(":/icons/Resources/bulb.PNG"), "Protocols/Jabber");

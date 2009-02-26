@@ -4,7 +4,7 @@
 #include <QMutexLocker>
 
 PluginInfo info = {
-	0x010,
+	0x020,
 	"Events",
 	"Scott Ellis",
 	"mail@scottellis.com.au",
