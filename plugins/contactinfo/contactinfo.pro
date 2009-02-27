@@ -5,6 +5,6 @@ DEPENDPATH += . GeneratedFiles
 QT += gui
 
 # Input
-HEADERS += contactinfo.h
+HEADERS += contactinfo.h \
 	../../include/contact_info_i.h
 SOURCES += contactinfo.cpp
