@@ -1103,7 +1103,8 @@ void JabberCtx::parseMessage() {
 						state = CS_GONE;
 					}
 				}
-				events_i->fire_event(ChatState(i->getContact(), state, true, this));
+				ChatState cs(i->getContact(), state, true, this);
+				events_i->fire_event(cs);
 			}
 		}
 	} else {

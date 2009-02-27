@@ -93,7 +93,8 @@ bool accounts::parse_account_node(QDomElement node) {
 	account_list[acc->proto][acc->account_id] = acc;
 	icons_i->setup_account_status_icons(acc);			
 
-	events_i->fire_event(AccountChanged(acc, this));
+	AccountChanged ac(acc, this);
+	events_i->fire_event(ac);
 	proto->parse_extra_data(node, acc);
 
 	return true;
@@ -265,7 +266,8 @@ Account *accounts::set_account_info(const Account &acc) {
 		account_list[acc.proto][acc.account_id]->desiredStatus = dgs;
 	}
 
-	events_i->fire_event(AccountChanged(account_list[acc.proto][acc.account_id], this));
+	AccountChanged ac(account_list[acc.proto][acc.account_id], this);
+	events_i->fire_event(ac);
 
 	return account_list[acc.proto][acc.account_id];
 }

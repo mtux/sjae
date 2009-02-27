@@ -386,7 +386,11 @@ bool ContactTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action
 			d->c->remove_property("group");
 		removeContact(d->c);
 		addContact(d->c);
-		if(events_i) events_i->fire_event(ContactChanged(d->c, this));
+
+		if(events_i) {
+			ContactChanged cc(d->c, this);
+			events_i->fire_event(cc);
+		}
 	}
 	return true;
 }

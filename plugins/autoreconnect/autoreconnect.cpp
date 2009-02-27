@@ -82,7 +82,8 @@ void AutoReconnect::reconnect() {
 			foreach(QString account_id, account_ids) {
 				Account *acc = accounts_i->account_info(proto_name, account_id);
 				if(acc->status != acc->desiredStatus && acc->status != ST_CONNECTING) {
-					events_i->fire_event(AccountStatusReq(acc, acc->desiredStatus, this));
+					AccountStatusReq asr(acc, acc->desiredStatus, this);
+					events_i->fire_event(asr);
 				}
 			}
 		}

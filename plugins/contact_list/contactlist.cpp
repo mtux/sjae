@@ -193,15 +193,17 @@ void ContactList::update_contact(Contact *contact) {
 void ContactList::aboutToShowMenuSlot(const QPoint &pos, const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
 	if(contact) {
-		events_i->fire_event(ShowContactMenu(contact, this));
+		ShowContactMenu scm(contact, this);
+		events_i->fire_event(scm);
 		win->contact_menu()->exec(pos);
 	} else {
 		menuGroup = model->getGroup(sortedModel->mapToSource(i));
 		int contactCount = model->contactCount(menuGroup);
 		
 		deleteGroupAction->setEnabled(menuGroup.size() && contactCount == 0);
-
-		events_i->fire_event(ShowGroupMenu(menuGroup, contactCount, this));
+		
+		ShowGroupMenu sgm(menuGroup, contactCount, this);
+		events_i->fire_event(sgm);
 		win->group_menu()->exec(pos);
 	}
 }
@@ -301,25 +303,31 @@ void ContactList::treeItemCollapsed(const QModelIndex &i) {
 
 void ContactList::treeItemClicked(const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
-	if(contact) 
-		events_i->fire_event(ContactClicked(contact, this));
+	if(contact) {
+		ContactClicked cc(contact, this);
+		events_i->fire_event(cc);
+	}
 }
 
 void ContactList::treeItemDoubleClicked(const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
 	if(contact) {
-		events_i->fire_event(ContactDblClicked(contact, this));
+		ContactDblClicked cdc(contact, this);
+		events_i->fire_event(cdc);
 	}
 }
 
 void ContactList::treeShowTip(const QModelIndex &i, const QPoint &pos) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
-	if(contact) 
-		events_i->fire_event(ShowTip(contact, this));
+	if(contact) {
+		ShowTip st(contact, this);
+		events_i->fire_event(st);
+	}
 }
 
 void ContactList::treeHideTip() {
-	events_i->fire_event(HideTip(this));
+	HideTip ht(this);
+	events_i->fire_event(ht);
 }
 
 /////////////////////////////

@@ -87,8 +87,10 @@ void SplitterWin::setContactChatState(ChatStateType state) {
 void SplitterWin::setUserChatState(ChatStateType state) {
 	if(state != chatState) {
 		chatState = state;
-		if(sendChatState)
-			events_i->fire_event(ChatState(contact, chatState, false, this));
+		if(sendChatState) {
+			ChatState cs(contact, chatState, false, this);
+			events_i->fire_event(cs);
+		}
 	}
 }
 

@@ -147,7 +147,8 @@ void StatusBar::actionTriggered(QObject *action) {
 			QStringList account_ids = accounts_i->account_ids(proto_name);
 			foreach(QString account_id, account_ids) {
 				Account *acc = accounts_i->account_info(proto_name, account_id);
-				events_i->fire_event(AccountStatusReq(acc, gs, this));
+				AccountStatusReq asr(acc, gs, this);
+				events_i->fire_event(asr);
 			}
 		}
 	}

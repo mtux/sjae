@@ -130,7 +130,8 @@ bool History::event_fired(EventsI::Event &e) {
 			} else {
 				m.contact->mark_transient("PendingMsg");
 				m.contact->set_property("PendingMsg", QList<QVariant>() << t);
-				events_i->fire_event(ContactChanged(m.contact, this));
+				ContactChanged cc(m.contact, this);
+				events_i->fire_event(cc);
 			}
 		}
 	}
@@ -245,7 +246,8 @@ void History::mark_as_read(Contact *contact, double timestamp) {
 				times.removeAt(index);
 			if(times.size() == 0) {
 				contact->remove_property("PendingMsg");
-				events_i->fire_event(ContactChanged(contact, this));
+				ContactChanged cc(contact, this);
+				events_i->fire_event(cc);
 			} else
 				contact->set_property("PendingMsg", times);
 		}
@@ -263,7 +265,8 @@ void History::mark_all_as_read(Contact *contact) {
 	else
 		if(contact->has_property("PendingMsg")) {
 			contact->remove_property("PendingMsg");
-			events_i->fire_event(ContactChanged(contact, this));
+			ContactChanged cc(contact, this);
+			events_i->fire_event(cc);
 		}
 }
 
@@ -280,7 +283,8 @@ void History::enable_history(Contact *contact, bool enable) {
 	if(enable) contact->remove_property("DisableHistory");
 	else contact->set_property("DisableHistory", true);
 
-	events_i->fire_event(ContactChanged(contact, this));
+	ContactChanged cc(contact, this);
+	events_i->fire_event(cc);
 }
 
 /////////////////////////////

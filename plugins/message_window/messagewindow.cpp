@@ -180,7 +180,8 @@ void MessageWindow::message_recv(Message &m) {
 			win->showMinimized();
 			//win->activateWindow();
 			QApplication::alert(win, 1500);
-			events_i->fire_event(MessageWinEvent(contact, this));
+			MessageWinEvent mwe(contact, this);
+			events_i->fire_event(mwe);
 		}
 	} else if(window_exists(contact)) {
 		SplitterWin *win = get_window(contact);
@@ -205,7 +206,8 @@ void MessageWindow::open_window(Contact *contact) {
 	win->activateWindow();
 	win->raise();
 
-	events_i->fire_event(MessageWinEvent(contact, this));
+	MessageWinEvent mwe(contact, this);
+	events_i->fire_event(mwe);
 }
 
 bool MessageWindow::window_open(Contact *contact) {

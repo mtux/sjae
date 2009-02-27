@@ -105,7 +105,9 @@ void AutoAway::checkIdle() {
 
 void AutoAway::goIdle() {
 	idle = true;
-	events_i->fire_event(AutoAwayStatus(idle, idle_time, this));
+	
+	AutoAwayStatus aas(idle, idle_time, this);
+	events_i->fire_event(aas);
 
 	if(current_settings.enable) {
 		QStringList protos = accounts_i->protocol_names();
@@ -115,7 +117,8 @@ void AutoAway::goIdle() {
 				Account *acc = accounts_i->account_info(proto_name, account_id);
 				if(acc->status != ST_OFFLINE && acc->status != ST_INVISIBLE) {
 					if(current_settings.restore) saved_status[acc] = acc->status;
-					events_i->fire_event(AccountStatusReq(acc, current_settings.status, this));
+					AccountStatusReq asr(acc, current_settings.status, this);
+					events_i->fire_event(asr);
 				}
 			}
 		}
@@ -124,11 +127,14 @@ void AutoAway::goIdle() {
 
 void AutoAway::returnFromIdle() {
 	idle = false;
-	events_i->fire_event(AutoAwayStatus(idle, idle_time, this));
+
+	AutoAwayStatus aas(idle, idle_time, this);
+	events_i->fire_event(aas);
 
 	if(current_settings.enable && current_settings.restore) 
 		foreach(Account *acc, saved_status.keys()) {
-			events_i->fire_event(AccountStatusReq(acc, saved_status[acc], this));
+			AccountStatusReq asr(acc, saved_status[acc], this);
+			events_i->fire_event(asr);
 		}
 
 	saved_status.clear();
