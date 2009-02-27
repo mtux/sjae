@@ -64,10 +64,12 @@ Section "Qt Runtime Libraries"
 SectionEnd
 
 Section "Qt Plugins"
-  SetOutPath $INSTDIR  
-
+  SetOutPath $INSTDIR\accessible
   File "${QTDIR}\plugins\accessible\qtaccessiblewidgets4.dll"
+  SetOutPath $INSTDIR\imageformats
   File "${QTDIR}\plugins\imageformats\qjpeg4.dll"
+  File "${QTDIR}\plugins\imageformats\qgif4.dll"
+  SetOutPath $INSTDIR\sqldrivers
   File "${QTDIR}\plugins\sqldrivers\qsqlite4.dll"
  
 SectionEnd
@@ -143,6 +145,9 @@ Section "Uninstall"
 
   ; Remove files and uninstaller
   Delete "$INSTDIR\plugins\*.*"
+  Delete "$INSTDIR\accessible\*.*"
+  Delete "$INSTDIR\sqldrivers\*.*"
+  Delete "$INSTDIR\imageformats\*.*"
   Delete "$INSTDIR\*.*"
 
   ; Remove shortcuts, if any
