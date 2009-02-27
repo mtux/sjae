@@ -2,7 +2,7 @@ include(../plugin_pro.inc)
 
 DEPENDPATH += . GeneratedFiles
 
-QT += gui
+QT += gui sql
 
 # Input
 HEADERS += history.h \

@@ -183,7 +183,7 @@ void JabberProto::connect_context(JabberCtx *context) {
 	}
 }
 
-const GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
+GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 	switch(gs) {
 		case ST_OFFLINE: 
 		case ST_ONLINE: 

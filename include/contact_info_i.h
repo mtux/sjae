@@ -59,8 +59,8 @@ class Message: public EventsI::Event {
 public:
 	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {};
 	Message(Contact *c, const QString &msg, bool incomming, int i, QObject *source = 0): 
-		EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), text(msg), read(!incomming), id(i), contact(c) {}
-	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), text(m.text), read(m.read), contact(m.contact), id(m.id) {
+                EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), id(i), text(msg), read(!incomming)   {}
+        Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), contact(m.contact), id(m.id), text(m.text), read(m.read) {
 		timestamp = m.timestamp;
 	}
 	Contact *contact;

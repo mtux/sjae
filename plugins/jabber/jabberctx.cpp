@@ -29,8 +29,8 @@ QString unescape(const QString &s) {
 }
 
 JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
-	: QObject(parent), account(acc), useSSL(false), ignoreSSLErrors(false), core_i(core), sstate(SSNONE), writer(&sendBuffer), 
-		sessionRequired(false), tlsAvailable(false), tlsRequired(false),
+        : QObject(parent), account(acc), useSSL(false), ignoreSSLErrors(false), core_i(core), writer(&sendBuffer),
+                sstate(SSNONE), sessionRequired(false), tlsAvailable(false), tlsRequired(false),
 		priority(DEFAULT_PRIORITY)
 {
 	sendBuffer.open(QIODevice::WriteOnly);
@@ -785,6 +785,7 @@ void JabberCtx::sendPresence(const QString &to) {
 	switch(account->status) {
 		case ST_OFFLINE: type = "unavailable"; break;
 		case ST_INVISIBLE: type = "invisible"; break;
+                default:
 		case ST_ONLINE: break;
 		case ST_SHORTAWAY: show = "away"; break;
 		case ST_LONGAWAY: show = "xa"; break;
@@ -932,6 +933,7 @@ GlobalStatus presenceToStatus(PresenceType pt) {
 	switch(pt) {
 		case PT_UNAVAILABLE:	return ST_OFFLINE;
 		case PT_INVISIBLE:		return ST_INVISIBLE;
+                default:
 		case PT_ONLINE:			return ST_ONLINE;
 		case PT_AWAY:			return ST_SHORTAWAY;
 		case PT_DND:			return ST_DND;

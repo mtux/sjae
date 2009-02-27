@@ -56,7 +56,6 @@ void Events::add_event_filter(EventListener *l, int order, const QUuid &id, int 
 
 void Events::remove_event_listener(EventListener *l, const QUuid &id) {
 	QMutexLocker locker(&lmutex);
-	int i;
 	if(listeners.contains(id)) {
 		for(int i = 0; i < listeners[id].size();) {
 			if(listeners[id].at(i).listener == l)
@@ -70,7 +69,6 @@ void Events::remove_event_listener(EventListener *l, const QUuid &id) {
 
 void Events::remove_event_filter(EventListener *l, const QUuid &id) {
 	QMutexLocker locker(&lmutex);
-	int i;
 	if(filters.contains(id)) {
 		for(int i = 0; i < filters[id].size();) {
 			if(filters[id].at(i).filter == l)

@@ -30,11 +30,11 @@ public:
 	// return an empty string to disable
 	const QString nick_label() const {return QString();}
 	// return true to allow the user to specify a port
-	const bool allowSetPort() const {return true;}
+        bool allowSetPort() const {return true;}
 	// return true to allow the user to specify a host
-	const bool allowSetHost() const {return true;}
+        bool allowSetHost() const {return true;}
 
-	const quint16 defaultPort() const {return 5222;}
+        quint16 defaultPort() const {return 5222;}
 	const QString defaultHost() const {return "jabber.org";}
 
 	// called when reading/writing account data to XML
@@ -49,7 +49,7 @@ public:
 	bool update_account_data(Account *account);
 
 	const QList<GlobalStatus> statuses() const;
-	const GlobalStatus closest_status_to(GlobalStatus gs) const;
+        GlobalStatus closest_status_to(GlobalStatus gs) const;
 
 	bool event_fired(EventsI::Event &e);
 

@@ -42,7 +42,7 @@ protected:
 	public:
 		EventListener *filter;
 		int mask, order;
-		FilterInfo(EventListener *f, int o, int m): filter(f), order(o), mask(m) {}
+                FilterInfo(EventListener *f, int o, int m): filter(f), mask(m), order(o) {}
 
 		bool operator<(const FilterInfo &other) const {return order < other.order;}
 	};

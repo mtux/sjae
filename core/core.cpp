@@ -208,7 +208,7 @@ bool Core::load_plugins() {
 	QDir pluginDir(plugin_dir);	
 	foreach(QString file_name, pluginDir.entryList(QDir::Files)) {
 		QPluginLoader loader(pluginDir.absoluteFilePath(file_name));
-		if(iface = qobject_cast<PluginI *>(loader.instance())) {
+                if((iface = qobject_cast<PluginI *>(loader.instance())) != 0) {
 			const PluginInfo &pi = iface->get_plugin_info();
 			qDebug() << "Got plugin info for " << pi.name;
 			pix.load_order = pi.load_order;
@@ -216,7 +216,8 @@ bool Core::load_plugins() {
 			pix.iface = iface;
 			pix.filename = file_name;
 			load_order_map.insert(pi.load_order, pix);
-		}
+                } else
+                    qDebug() << "failed to load" << file_name << loader.errorString();
 	}
 
 	// load in order, but record the db interface so that plugins loaded after it can be disabled via db settings

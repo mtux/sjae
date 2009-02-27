@@ -26,8 +26,6 @@ bool AccountsOptions::isValid(const Account &account) {
 	int pos = 0;
 	return (account.host.isEmpty() == false
 		//&& info.password.isEmpty() == false
-		&& account.port >= 0
-		&& account.port <= 65535
 		&& account.nick.isEmpty() == false
 		&& account.username.isEmpty() == false
 		&& account.proto != 0);

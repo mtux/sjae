@@ -70,11 +70,11 @@ public:
 	// return an empty string to disable
 	virtual const QString nick_label() const = 0;
 	// return true to allow the user to specify a port
-	virtual const bool allowSetPort() const = 0;
+        virtual bool allowSetPort() const = 0;
 	// return true to allow the user to specify a host
-	virtual const bool allowSetHost() const = 0;
+        virtual bool allowSetHost() const = 0;
 
-	virtual const quint16 defaultPort() const = 0;
+        virtual quint16 defaultPort() const = 0;
 	virtual const QString defaultHost() const = 0;
 
 	// called when reading/writing account data to XML - override to read/store proto-specific data
@@ -91,7 +91,7 @@ public:
 
 	// don't include ST_CONNECTING here
 	virtual const QList<GlobalStatus> statuses() const = 0;
-	virtual const GlobalStatus closest_status_to(GlobalStatus gs) const = 0;
+        virtual GlobalStatus closest_status_to(GlobalStatus gs) const = 0;
 
 	virtual bool event_fired(EventsI::Event &e) = 0;
 };
