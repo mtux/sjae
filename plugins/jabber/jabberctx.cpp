@@ -311,13 +311,13 @@ void JabberCtx::sendWriteBuffer() {
 }
 
 void JabberCtx::socketError(QAbstractSocket::SocketError socketError) {
-	log("Socket error:" + sslSocket.errorString(), LMT_ERROR);
+	log("Socket error:" + sslSocket.errorString(), LMT_WARNING);
 	changeSessionState(SSNONE);
 }
 
 void JabberCtx::sslErrors(const QList<QSslError> &errors) {
 	for(int i = 0; i < errors.size(); i++) {
-		log("SSL error: " + errors.at(i).errorString(), (ignoreSSLErrors ? LMT_NORMAL : LMT_ERROR));
+		log("SSL error: " + errors.at(i).errorString(), (ignoreSSLErrors ? LMT_WARNING : LMT_ERROR));
 	}
 	if(ignoreSSLErrors)
 		sslSocket.ignoreSslErrors();
