@@ -26,9 +26,11 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 {
 	ui.setupUi(this);
 
-	setWindowFlags(Qt::Tool	| Qt::FramelessWindowHint| Qt::WindowStaysOnTopHint);
+        // last flag is prevent window from being hidden when app is inactive under X (tested with KDE4)
+        setWindowFlags(Qt::Tool	| Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
 	setAttribute(Qt::WA_DeleteOnClose, true);
-	setAttribute(Qt::WA_X11NetWmWindowTypeNotification, true); // prevent window from being hidden when app is inactive under X (tested with KDE4)
+        // just 'cause we should :)
+        setAttribute(Qt::WA_X11NetWmWindowTypeNotification, true);
 
 	QPalette p = palette();
 	p.setColor(QPalette::Background, c.background);
