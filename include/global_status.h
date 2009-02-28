@@ -1,9 +1,13 @@
 #ifndef _GLOBAL_STATUS_H
 #define _GLOBAL_STATUS_H
 
+#ifndef __GNUG__
+#define __attribute__((unused))
+#endif
+
 typedef enum {ST_OFFLINE, ST_INVISIBLE, ST_DND, ST_LONGAWAY, ST_SHORTAWAY, ST_OUTTOLUNCH, ST_ONTHEPHONE, ST_FREETOCHAT, ST_ONLINE, ST_CONNECTING} GlobalStatus;
 
-static const char *status_name[] = {
+static __attribute__((unused)) const char *  status_name[] = {
 	"status_offline",
 	"status_invisible",
 	"status_dnd",
@@ -16,7 +20,7 @@ static const char *status_name[] = {
 	"status_connecting"
 };
 
-static const char *hr_status_name[] = {
+static __attribute__((unused)) const char * hr_status_name[] = {
 	"Offline",
 	"Invisible",
 	"DND",

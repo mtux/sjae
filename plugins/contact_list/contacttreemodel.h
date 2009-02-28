@@ -12,7 +12,7 @@ typedef enum {TIT_GROUP = 1, TIT_CONTACT = 2} TreeItemType;
 class TreeItem {
 public:
 	TreeItem(TreeItem *parent = 0);
-	~TreeItem();
+	virtual ~TreeItem();
 
 	void appendChild(TreeItem *child);
 	void removeChild(TreeItem *child);
@@ -33,7 +33,7 @@ protected:
 class TreeItemContact: public TreeItem {
 public:
 	TreeItemContact(Contact *c, TreeItem *parent = 0);
-	~TreeItemContact();
+	virtual ~TreeItemContact();
 	TreeItemType type() const {return TIT_CONTACT;}
 	Contact *getContact() const {return contact;}
 
@@ -44,7 +44,7 @@ private:
 class TreeItemGroup: public TreeItem {
 public:
 	TreeItemGroup(const QString &n, TreeItem *parent = 0);
-	~TreeItemGroup();
+	virtual ~TreeItemGroup();
 	TreeItemType type() const {return TIT_GROUP;}
 	QString getName() const {return name;}
 

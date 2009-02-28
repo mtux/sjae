@@ -12,8 +12,9 @@ QString Resource::full_jid() const {
 }
 
 RosterItem::RosterItem(Contact *contact, const QString &n, SubscriptionType sub, RosterGroup *g)
-	:RosterTreeNonLeafNode(n, g), subscription(sub), contact(contact),
-	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE)
+	:RosterTreeNonLeafNode(n, g), subscription(sub),
+	userChatState(CS_INACTIVE), contactChatState(CS_INACTIVE), contact(contact)
+
 {
 	if(!n.isEmpty()) contact->set_property("name", n);
 	QStringList gn = g->getClistName();

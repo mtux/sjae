@@ -18,7 +18,7 @@
 
 SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 	: QSplitter(parent), contact(c), events_i(ei),
-		showDate(true), showTime(true), showNick(true), sendChatState(true), contactChatState(CS_INACTIVE), chatState(CS_INACTIVE)
+		showDate(true), showTime(true), showNick(true), chatState(CS_INACTIVE), contactChatState(CS_INACTIVE), sendChatState(true)
 {
 	ui.setupUi(this);
 
@@ -127,7 +127,7 @@ QString SplitterWin::format_text(Message &m) {
 
 QString SplitterWin::getContent() {
 	QString ret;
-	bool first = true, incomming, last_incomming;
+	bool first = true, incomming, last_incomming = false;
 	foreach(Message item, content) {
 		incomming = (item.type == EventsI::ET_INCOMMING);
 		if(first || incomming != last_incomming) {

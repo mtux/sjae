@@ -17,8 +17,9 @@ CONFIG(debug, debug|release) {
         DESTDIR = ../bin/debug
 }
 
-win32 {
-        debug {
-                CONFIG += console
-        }
+debug {
+        CONFIG += console
+}
+release {
+        CONFIG -= console
 }

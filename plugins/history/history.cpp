@@ -11,7 +11,7 @@ double timestamp_encode(const QDateTime &d) {
 
 QDateTime timestamp_decode(const double val) {
 	uint secs = (uint)val;
-	int msecs = (val - secs) * 1000 + 0.5;
+	int msecs = (int)((val - secs) * 1000 + 0.5);
 	return QDateTime::fromTime_t(secs).addMSecs(msecs);
 }
 

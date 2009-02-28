@@ -96,7 +96,7 @@ void AutoAway::checkIdle() {
 		if(idle) returnFromIdle();
 	} else {
 		if(!idle) {
-			uint secs = QDateTime::currentDateTime().toTime_t() - idle_time.toTime_t();
+			int secs = QDateTime::currentDateTime().toTime_t() - idle_time.toTime_t();
 			if(secs > current_settings.min * 60)
 				goIdle();
 		}

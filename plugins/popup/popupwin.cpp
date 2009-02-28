@@ -12,7 +12,7 @@ QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	r -= QRegion(x + w - radius, y + h - radius, radius, radius);
 	r -= QRegion(x, y + h - radius, radius, radius);
 	// add rounded ones
-	double daimeter = radius * 2;
+	int daimeter = radius * 2;
 	r += QRegion(x, y, daimeter, daimeter, QRegion::Ellipse);
 	r += QRegion(x + w - daimeter, y, daimeter, daimeter, QRegion::Ellipse);
 	r += QRegion(x + w - daimeter, y + h - daimeter, daimeter, daimeter, QRegion::Ellipse);

@@ -36,15 +36,11 @@ UninstPage instfiles
 ;--------------------------------
 
 ; The stuff to install
-Section "Microsoft Visual C Runtime"
+Section "MiinGW Runtime"
 
   SetOutPath "$INSTDIR"
 
-  File "vcredist_x86.exe"
-
-  nsExec::ExecToStack 'vcredist_x86.exe'
-  
-  Delete "$INSTDIR\vcredist_x86.exe"
+  File "${QTDIR}\bin\mingwm10.dll"
   
 SectionEnd
 
@@ -58,7 +54,6 @@ Section "Qt Runtime Libraries"
   File "${QTDIR}\bin\QtXml4.dll"
   File "${QTDIR}\bin\QtScript4.dll"
   File "${QTDIR}\bin\QtWebKit4.dll"
-  File "${QTDIR}\bin\phonon4.dll"
   File "${QTDIR}\bin\QtSql4.dll"
  
 SectionEnd

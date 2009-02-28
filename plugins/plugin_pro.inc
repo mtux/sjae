@@ -4,7 +4,7 @@ TEMPLATE = lib
 TARGET =
 
 DEPENDPATH += . GeneratedFiles
-INCLUDEPATH += ../../include GeneratedFiles
+INCLUDEPATH += ../../include GeneratedFiles .
 CONFIG += plugin
 
 MOC_DIR = GeneratedFiles

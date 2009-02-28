@@ -23,7 +23,6 @@ AccountsOptions::~AccountsOptions()
 }
 
 bool AccountsOptions::isValid(const Account &account) {
-	int pos = 0;
 	return (account.host.isEmpty() == false
 		//&& info.password.isEmpty() == false
 		&& account.nick.isEmpty() == false
@@ -184,7 +183,6 @@ void AccountsOptions::setAccInfo(const QString &proto, int acc_index) {
 
 
 void AccountsOptions::on_btnCreate_clicked() {
-	bool ok;
 
 	ProtocolI *proto = accounts_i->get_proto_interface(ui.cmbProto->currentText());
 	// make new account

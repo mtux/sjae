@@ -61,6 +61,8 @@ void MessageWindowOptions::reset() {
 		case Settings::LH_COUNT: 
 			ui.radHistoryCount->setChecked(true); 
 			break;
+		case Settings::LH_NONE:
+			break;
 	}
 	ui.spnHistoryDays->setValue(s.history_days);
 	ui.spnHistoryCount->setValue(s.history_count);
@@ -77,3 +79,4 @@ void MessageWindowOptions::on_chkHistory_toggled(bool f)
 	ui.spnHistoryDays->setEnabled(enable_history && f && ui.radHistoryDays->isChecked());
 	ui.spnHistoryCount->setEnabled(enable_history && f && ui.radHistoryCount->isChecked());
 }
+
