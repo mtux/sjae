@@ -66,6 +66,7 @@ MainWin::MainWin(CoreI *core, QWidget *parent)
 	systray = new QSystemTrayIcon(this);
 	if(icons_i) systray->setIcon(icons_i->get_icon("generic"));
 	connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(systrayActivated(QSystemTrayIcon::ActivationReason)));
+	systray->setToolTip("saje");
 	systray->setContextMenu(winMenu);
 	systray->show();
 
