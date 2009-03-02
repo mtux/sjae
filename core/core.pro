@@ -16,10 +16,3 @@ CONFIG(release, debug|release) {
 CONFIG(debug, debug|release) {
         DESTDIR = ../bin/debug
 }
-
-debug {
-        CONFIG += console
-}
-release {
-        CONFIG -= console
-}
