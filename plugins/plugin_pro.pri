@@ -1,4 +1,4 @@
-include (../global_pro.inc)
+include (../global_pro.pri)
 
 TEMPLATE = lib
 TARGET =

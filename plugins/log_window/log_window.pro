@@ -1,4 +1,4 @@
-include (../plugin_pro.inc)
+include (../plugin_pro.pri)
 QT += gui
 HEADERS += LogWindow.h \
     ../../include/plugin_i.h
