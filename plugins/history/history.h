@@ -45,6 +45,9 @@ protected:
 
 	QSqlDatabase db;
 	QSqlQuery *writeQuery, *readQueryTime, *readQueryCount;
+
+	Contact *get_contact(const QString &contact_hash);
+	QMap<QString, Contact *> hashMap;
 };
 
 #endif // HISTORY

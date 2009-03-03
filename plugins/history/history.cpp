@@ -2,6 +2,7 @@
 #include <QtPlugin>
 #include <QDebug>
 #include <QSqlError>
+#include <QCryptographicHash>
 
 #define DB_FILE_NAME		"message_history.db"
 
@@ -48,6 +49,7 @@ bool History::load(CoreI *core) {
     if(!db.open()) return false;
 
 	QSqlQuery q(db);
+	/*
 	if(!q.exec("CREATE TABLE messages ("
 		"  protocol varchar(256),"
 		"  account varchar(256),"
@@ -59,19 +61,92 @@ bool History::load(CoreI *core) {
 	{
 		qWarning() << "History db error:" << q.lastError().text();
 	}
-	
+	*/
+
+	if(!q.exec("CREATE TABLE message_history ("
+		"  contact_hash_id varchar(256),"
+		"  timestamp number,"
+		"  incomming boolean,"
+		"  msg_read boolean,"
+		"  message text);"))
+	{
+		qWarning() << "History db error:" << q.lastError().text();
+	}
+
+	if(!q.exec("CREATE TABLE contact_hash ("
+		"  contact_hash_id varchar(256),"
+		"  protocol varchar(256),"
+		"  account varchar(256),"
+		"  contact_id varchar(256));"))
+	{
+		qWarning() << "History db error:" << q.lastError().text();
+	}
+
+	// migrate old message history to new format
+	if(q.exec("SELECT * FROM messages;")) {
+		QSqlQuery qi(db), qm(db);
+		qi.prepare("INSERT INTO message_history VALUES(?, ?, ?, ?, ?);");
+		qm.prepare("INSERT INTO contact_hash VALUES(?, ?, ?, ?);");
+		QString hash_id;
+
+		QCryptographicHash hasher(QCryptographicHash::Sha1);
+		while(q.next()) {
+			hasher.reset();
+			hasher.addData(q.value(0).toString().toUtf8());
+			hasher.addData(q.value(1).toString().toUtf8());
+			hasher.addData(q.value(2).toString().toUtf8());
+			hash_id = hasher.result().toBase64();
+
+			qm.addBindValue(hash_id);
+			qm.addBindValue(q.value(0).toString());
+			qm.addBindValue(q.value(1).toString());
+			qm.addBindValue(q.value(2).toString());
+			if(!qm.exec())
+				qWarning() << "Error migrating history(1):" << qm.lastError().text();
+			qm.finish();
+
+			qi.addBindValue(hash_id);
+			qi.addBindValue(q.value(3));
+			qi.addBindValue(q.value(4));
+			qi.addBindValue(q.value(5));
+			qi.addBindValue(q.value(6));
+			if(!qi.exec())
+				qWarning() << "Error migrating history(2):" << qi.lastError().text();
+			qi.finish();
+
+		}
+		if(!q.exec("DROP TABLE messages;"))
+			qWarning() << "Error migrating history(3):" << q.lastError().text();
+	} else
+		qWarning() << "Error migrating history:" << q.lastError().text();
+
 	return true;
+}
+
+Contact *History::get_contact(const QString &contact_hash) {
+	if(hashMap.contains(contact_hash))
+		return hashMap[contact_hash];
+
+	QSqlQuery qm(db);
+	if(!qm.exec("SELECT proto, account, contact_id FROM contact_hash WHERE contact_hash_id='" + contact_hash + "';"))
+		qDebug() << "Read contact account data failed:" << qm.lastError().text();
+	Account *account = accounts_i->account_info(qm.value(0).toString(), qm.value(1).toString());
+	if(account) {
+		Contact *contact = contact_info_i->get_contact(account, qm.value(2).toString());
+		hashMap[contact->hash_id] = contact;
+		return contact;
+	}
+	return 0;
 }
 
 bool History::modules_loaded() {
 	QSqlQuery unread(db);
-	if(!unread.exec("SELECT protocol, account, contact_id, message, incomming, timestamp FROM messages WHERE msg_read='false';"))
+	if(!unread.exec("SELECT contact_hash_id, message, incomming, timestamp FROM message_history WHERE msg_read='false';"))
 		qWarning() << "History read unread failed:" << unread.lastError().text();
 
 	while(unread.next()) {
-		Account *account = accounts_i->account_info(unread.value(0).toString(), unread.value(1).toString());
-		if(account) {
-			Contact *contact = contact_info_i->get_contact(account, unread.value(2).toString());
+		Contact *contact = get_contact(unread.value(0).toString());
+		if(contact) {
 			ContactChanged cc(contact, this);
 			events_i->fire_event(cc);
 			Message m(contact, unread.value(3).toString(), unread.value(4).toBool(), 0, this);
@@ -103,25 +178,35 @@ bool History::event_fired(EventsI::Event &e) {
 		Message &m = static_cast<Message &>(e);
 		double t = timestamp_encode(m.timestamp);
 		if(m.source != this) {
-			if(m.contact->has_property("DisableHistory"))
+			if(m.contact->has_property("DisableHistory") && m.contact->get_property("DisableHistory").toBool() == true)
 				return true;
 
-			writeQuery = new QSqlQuery(db);
-			writeQuery->prepare("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?);");
-
-			writeQuery->addBindValue(m.contact->account->proto->name());
-			writeQuery->addBindValue(m.contact->account->account_id);
-			writeQuery->addBindValue(m.contact->contact_id);
-			writeQuery->addBindValue(t);
-			writeQuery->addBindValue(m.type == EventsI::ET_INCOMMING);
-			writeQuery->addBindValue(m.read);
-			writeQuery->addBindValue(m.text);
-
-			if(!writeQuery->exec()) {
-				qWarning() << "History write failed:" << writeQuery->lastError().text();
+			if(!hashMap.contains(m.contact->hash_id)) {
+				QSqlQuery writeInfoQuery(db);
+				writeInfoQuery.prepare("INSERT INTO contact_hash VALUES(?, ?, ?, ?);");
+				writeInfoQuery.addBindValue(m.contact->hash_id);
+				writeInfoQuery.addBindValue(m.contact->account->proto->name());
+				writeInfoQuery.addBindValue(m.contact->account->account_id);
+				writeInfoQuery.addBindValue(m.contact->contact_id);
+				if(!writeInfoQuery.exec()) {
+					qWarning() << "History write info failed:" << writeInfoQuery.lastError().text();
+				}
+				hashMap[m.contact->hash_id] = m.contact;
 			}
 
-			delete writeQuery;
+			QSqlQuery writeMessageQuery(db);
+			writeMessageQuery.prepare("INSERT INTO message_history VALUES(?, ?, ?, ?, ?);");
+
+			writeMessageQuery.addBindValue(m.contact->hash_id);
+			writeMessageQuery.addBindValue(t);
+			writeMessageQuery.addBindValue(m.type == EventsI::ET_INCOMMING);
+			writeMessageQuery.addBindValue(m.read);
+			writeMessageQuery.addBindValue(m.text);
+
+			if(!writeMessageQuery.exec()) {
+				qWarning() << "History write failed:" << writeMessageQuery.lastError().text();
+			}
+
 		}
 
 		if(!m.read) {
@@ -156,18 +241,17 @@ QList<Message> History::read_history(Contact *contact, QSqlQuery &query, bool ma
 		ret << m;
 	}
 
+	qSort(ret);
 	return ret;
 }
 
 QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest, bool mark_read) {
 
 	QSqlQuery readQuery(db);
-	readQuery.prepare("SELECT message, incomming, timestamp FROM messages WHERE protocol=:proto AND account=:account AND contact_id=:contact_id AND timestamp>=:timestamp ORDER BY timestamp ASC;");
+	readQuery.prepare("SELECT message, incomming, timestamp FROM message_history WHERE contact_hash_id=:hash AND timestamp>=:timestamp ORDER BY timestamp ASC;");
 
-	readQuery.bindValue(":proto", contact->account->proto->name());
-	readQuery.bindValue(":account", contact->account->account_id);
-	readQuery.bindValue(":contact_id", contact->contact_id);
-	readQuery.bindValue(":timestamp", earliest.toTime_t() + earliest.time().msec() / 1000.0);
+	readQuery.bindValue(":hash", contact->hash_id);
+	readQuery.bindValue(":timestamp", timestamp_encode(earliest));
 
 	return read_history(contact, readQuery, mark_read);
 
@@ -176,11 +260,9 @@ QList<Message> History::get_latest_events(Contact *contact, QDateTime earliest, 
 QList<Message> History::get_latest_events(Contact *contact, int count, bool mark_read) {
 
 	QSqlQuery readQuery(db);
-	readQuery.prepare("SELECT message, incomming, timestamp FROM messages WHERE protocol=:proto AND account=:account AND contact_id=:contact_id ORDER BY timestamp ASC LIMIT :count;");
+	readQuery.prepare("SELECT message, incomming, timestamp FROM message_history WHERE contact_hash_id=:hash ORDER BY timestamp DESC LIMIT :count;");
 
-	readQuery.bindValue(":proto", contact->account->proto->name());
-	readQuery.bindValue(":account", contact->account->account_id);
-	readQuery.bindValue(":contact_id", contact->contact_id);
+	readQuery.bindValue(":hash", contact->hash_id);
 	readQuery.bindValue(":count", count);
 
 	return read_history(contact, readQuery, mark_read);
@@ -196,24 +278,6 @@ QList<Message> History::get_latest_events(QList<Contact *> contacts, QDateTime e
 }
 
 QList<Message> History::get_latest_events(QList<Contact *> contacts, int count, bool mark_read) {
-	/*
-	QString queryString = "SELECT message, incomming, timestamp FROM messages WHERE ";
-	bool first = true;
-	foreach(Contact *contact, contacts) {
-		if(!first) queryString += " OR ";
-		queryString += "(protocol='" + contact->account->proto->name() + "'";
-		queryString += " AND account='" + contact->account->account_id + "'";
-		queryString += " AND contact_id='" + contact->contact_id + "')";
-		first = false;
-	}
-	queryString += " ORDER BY timestamp DESC LIMIT :count;";
-
-	QSqlQuery readQuery(db);
-	readQuery.prepare(queryString);
-	readQuery.bindValue(":count", count);
-
-	return read_history(0, readQuery, mark_read);
-	*/
 	QList<Message> ret;
 	foreach(Contact *contact, contacts) {
 		ret += get_latest_events(contact, count, mark_read);
@@ -228,9 +292,7 @@ void History::mark_as_read(Contact *contact, QDateTime timestamp) {
 
 void History::mark_as_read(Contact *contact, double timestamp) {
 	QSqlQuery mrq(db);
-	QString queryText = "UPDATE messages SET msg_read='true' WHERE protocol='" + contact->account->proto->name() + "'"
-		+ " AND account='" + contact->account->account_id + "'"
-		+ " AND contact_id='" + contact->contact_id + "'" + 
+	QString queryText = "UPDATE message_history SET msg_read='true' WHERE contact_hash_id='" + contact->hash_id + "'"
 		+ " AND timestamp=:timestamp;";
 	
 	mrq.prepare(queryText);
@@ -255,9 +317,7 @@ void History::mark_as_read(Contact *contact, double timestamp) {
 
 void History::mark_all_as_read(Contact *contact) {
 	QSqlQuery mrq(db);
-	QString queryText = "UPDATE messages SET msg_read='true' WHERE protocol='" + contact->account->proto->name() + "'"
-		+ " AND account='" + contact->account->account_id + "'"
-		+ " AND contact_id='" + contact->contact_id + "'" + 
+	QString queryText = "UPDATE message_history SET msg_read='true' WHERE contact_hash_id='" + contact->hash_id + "'"
 		+ " AND msg_read='false';";
 	
 	if(!mrq.exec(queryText))
@@ -272,11 +332,10 @@ void History::mark_all_as_read(Contact *contact) {
 
 void History::wipe_history(Contact *contact) {
 	QSqlQuery wq(db);
-	QString queryText = "DELETE FROM messages WHERE protocol='" + contact->account->proto->name() + "'"
-		+ " AND account='" + contact->account->account_id + "'"
-		+ " AND contact_id='" + contact->contact_id + "';";
+	QString queryText = "DELETE FROM message_history,contact_hash WHERE contact_hash_id='" + contact->hash_id + "';";
 	if(!wq.exec(queryText))
 		qWarning() << "History wipe failed:" << wq.lastError().text();
+	hashMap.remove(contact->hash_id);
 }
 
 void History::enable_history(Contact *contact, bool enable) {

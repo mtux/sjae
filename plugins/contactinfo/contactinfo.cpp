@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QCryptographicHash>
 
 #define DB_FILE_NAME		"contact_info.db"
 
@@ -98,6 +99,12 @@ Contact *ContactInfo::get_contact(Account *acc, const QString &contact_id) {
 
 	Contact *contact = new Contact(acc, contact_id);
 	contacts[acc][contact_id] = contact;
+
+	QCryptographicHash hasher(QCryptographicHash::Sha1);
+	hasher.addData(acc->proto->name().toUtf8());
+	hasher.addData(acc->account_id.toUtf8());
+	hasher.addData(contact_id.toUtf8());
+	contact->hash_id = hasher.result().toBase64();
 
 	get_props->bindValue(":proto", contact->account->proto->name());
 	get_props->bindValue(":account_id", contact->account->account_id);

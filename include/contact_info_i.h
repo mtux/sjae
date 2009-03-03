@@ -17,6 +17,8 @@ public:
 	Account *account;
 	QString contact_id;
 
+	QString hash_id;
+
 	GlobalStatus status;
 	QVariant get_property(const QString &key) {if(properties.contains(key)) return properties[key]; return QVariant();}
 	void set_property(const QString &key, const QVariant &v) {
