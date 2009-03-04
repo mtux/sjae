@@ -4,5 +4,5 @@ HAVE_GCC {
        QMAKE_CXXFLAGS_DEBUG += -g3 -ggdb -O0 -Wno-non-virtual-dtor -Wno-long-long -pedantic -Wconversion
  }
  
- CONFIG += qt thread debug_and_release build_all warn_on
+CONFIG += qt thread debug_and_release build_all warn_on
 QT += gui script
