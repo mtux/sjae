@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QTime>
 #include <QLocale>
+#include <QWebPage>
+#include <QWebFrame>
 
 QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 	QRegion r(x, y, w, h);
@@ -61,6 +63,9 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 	QString format = QLocale::system().timeFormat(QLocale::ShortFormat);
 	if(format.endsWith("ss")) format = format.mid(0, format.length() - 3);
 	ui.lblTime->setText(QTime::currentTime().toString(format));
+
+	ui.wvText->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical, Qt::ScrollBarAlwaysOff);
+	ui.wvText->page()->mainFrame()->setScrollBarPolicy(Qt::Horizontal, Qt::ScrollBarAlwaysOff);
 }
 
 PopupWin::~PopupWin() {
@@ -117,11 +122,11 @@ void PopupWin::setContent(const QString &title, const QString &text) {
 	QString style = qApp->styleSheet();
 	QString page = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
 	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Popup</title><style type='text/css'>" + style
-			+ "</style>"
-			+ "</head>\n<body class='popup' bgcolor='" + pclass.background.name() + "'>\n" + text + "</body>\n</html>";
+			+ "</style></head>\n"
+			+ "<body class='popup' bgcolor='" + pclass.background.name() + "'>\n" + text + "</body>\n</html>";
 	ui.wvText->setContent(page.toUtf8(), "application/xhtml+xml", QUrl::fromLocalFile(QApplication::applicationFilePath()));
 
-	//adjustSize();
+	adjustSize();
 	if(round_corners) {
 		QRegion r = roundRectRegion(0, 0, width(), height(), 6);
 		setMask(r);
