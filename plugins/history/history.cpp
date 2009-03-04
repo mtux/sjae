@@ -183,12 +183,16 @@ QList<Message> History::read_history(QSqlQuery &query, bool mark_read) {
 
 	QList<Message> ret;
 	Contact *contact;
+	double t;
 	while(query.next()) {
 		contact = get_contact(query.value(0).toString());
 		if(contact) {
 			Message m(contact, query.value(1).toString(), query.value(2).toBool(), 0, this);
 			m.read = query.value(3).toBool();
-			m.timestamp = timestamp_decode(query.value(4).toDouble());
+			t = query.value(4).toDouble();
+			m.timestamp = timestamp_decode(t);
+			if(!m.read && mark_read)
+				mark_as_read(contact, t);
 			ret << m;
 		}
 	}
