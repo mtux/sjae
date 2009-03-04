@@ -27,7 +27,7 @@ Smileys::~Smileys()
 bool Smileys::load(CoreI *core) {
 	core_i = core;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_filter(this, 0x400, UUID_MSG, EventsI::ET_INCOMMING | EventsI::ET_OUTGOING);
+	events_i->add_event_filter(this, 0x400, UUID_MSG, EVENT_TYPE_MASK_INCOMMING | EVENT_TYPE_MASK_OUTGOING);
 
 	QSettings s;
 	current_settings.enable = s.value("Smileys/Enable", true).toBool();

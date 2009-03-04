@@ -69,8 +69,9 @@ div.incomming > div.message:first-child { margin-left: 0px }
 div.outgoing > div.message:first-child > span.info { display: inline }
 div.outgoing > div.message:first-child { margin-left: 0px }
 
-/* align smileys and scale to match font */
+/* align smileys */
 img.smiley {
   vertical-align: bottom;
-  height: 1.4em;
+  /* and scale to match font */
+  /* height: 1.4em; */
 }
