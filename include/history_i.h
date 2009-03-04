@@ -16,15 +16,15 @@ public:
 
 	const QString get_interface_name() const {return INAME_HISTORY;}
 
-	/// get a sorted list of all messages after a certain time for the given contact
-	virtual QList<Message> get_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true) = 0;
-	/// get a sorted list of the last n messages for the given contact, where n = count
-	virtual QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true) = 0;
+	/// refire a sorted list of all message events after a certain time for the given contact
+	virtual void refire_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true) = 0;
+	/// refire a sorted list of the last n message events for the given contact, where n = count
+	virtual void refire_latest_events(Contact *contact, int count, bool mark_read = true) = 0;
 
-	/// get a sorted list of all messages after a certain time for the given list of contacts (Message.contact set to source)
-	virtual QList<Message> get_latest_events(QList<Contact *> contacts, QDateTime earliest, bool mark_read = true) = 0;
-	/// get a sorted list of the last n messages for the given list of contacts, where n = count (Message.contact set to source)
-	virtual QList<Message> get_latest_events(QList<Contact *> contacts, int count, bool mark_read = true) = 0;
+	/// refire a sorted list of all message events after a certain time for the given list of contacts (Message.contact set to source)
+	virtual void refire_latest_events(QList<Contact *> contacts, QDateTime earliest, bool mark_read = true) = 0;
+	/// refire a sorted list of the last n message events for the given list of contacts, where n = count (Message.contact set to source)
+	virtual void refire_latest_events(QList<Contact *> contacts, int count, bool mark_read = true) = 0;
 
 	/// mark all messages at the given timestamp as read
 	virtual void mark_as_read(Contact *contact, QDateTime timestamp) = 0;

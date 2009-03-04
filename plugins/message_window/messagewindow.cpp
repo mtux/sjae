@@ -141,11 +141,9 @@ SplitterWin *MessageWindow::get_window(Contact *contact) {
 		win->setLogStyleSheet(qApp->styleSheet());
 		if(history_i && current_settings.load_history != MessageWindowOptions::Settings::LH_NONE) {
 			if(current_settings.load_history == MessageWindowOptions::Settings::LH_TIME) {
-				QList<Message> history = history_i->get_latest_events(contact, QDateTime::currentDateTime().addDays(current_settings.history_days * -1));
-				win->addEvents(history);
+				history_i->refire_latest_events(contact, QDateTime::currentDateTime().addDays(current_settings.history_days * -1));
 			} else if(current_settings.load_history == MessageWindowOptions::Settings::LH_COUNT) {
-				QList<Message> history = history_i->get_latest_events(contact, current_settings.history_count);
-				win->addEvents(history);
+				history_i->refire_latest_events(contact, current_settings.history_count);
 			}
 		}
 

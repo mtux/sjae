@@ -27,7 +27,7 @@ Smileys::~Smileys()
 bool Smileys::load(CoreI *core) {
 	core_i = core;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_filter(this, 10, UUID_MSG, EventsI::ET_INCOMMING | EventsI::ET_OUTGOING);
+	events_i->add_event_filter(this, 0x400, UUID_MSG, EventsI::ET_INCOMMING | EventsI::ET_OUTGOING);
 
 	QSettings s;
 	current_settings.enable = s.value("Smileys/Enable", true).toBool();
@@ -96,7 +96,7 @@ bool Smileys::event_fired(EventsI::Event &e) {
 		Message &m = static_cast<Message &>(e);
 		foreach(QString sub, current_settings.subs.keys()) {
 			QString newtext =  "<img class='smiley' src='" + QUrl::fromLocalFile(current_settings.subs[sub]).toString() + "' alt='" + sub + "' />";
-			qDebug() << "smileys module replacing '" + sub + "' with '" + newtext + "'";
+			//qDebug() << "smileys module replacing '" + sub + "' with '" + newtext + "'";
 			m.text.replace(sub, newtext);
 		}
 	}

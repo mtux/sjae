@@ -44,7 +44,7 @@ public:
 	virtual void fire_event(Event &e) = 0;
 
 	virtual void add_event_listener(EventListener *l, const QUuid &id = QUuid(), int mask = EVENT_TYPE_MASK_ALL) = 0;
-	virtual void add_event_filter(EventListener *f, int order = 0, const QUuid &id = QUuid(), int mask = EVENT_TYPE_MASK_ALL) = 0;
+	virtual void add_event_filter(EventListener *f, int order = 0x800, const QUuid &id = QUuid(), int mask = EVENT_TYPE_MASK_ALL) = 0;
 	virtual void remove_event_listener(EventListener *l, const QUuid &id = QUuid()) = 0;
 	virtual void remove_event_filter(EventListener *f, const QUuid &id = QUuid()) = 0;
 };

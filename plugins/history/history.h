@@ -22,11 +22,11 @@ public:
 
 	bool event_fired(EventsI::Event &e);
 
-	QList<Message> get_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true);
-	QList<Message> get_latest_events(Contact *contact, int count, bool mark_read = true);
+	void refire_latest_events(Contact *contact, QDateTime earliest, bool mark_read = true);
+	void refire_latest_events(Contact *contact, int count, bool mark_read = true);
 
-	QList<Message> get_latest_events(QList<Contact *> contacts, QDateTime earliest, bool mark_read = true);
-	QList<Message> get_latest_events(QList<Contact *> contacts, int count, bool mark_read = true);
+	void refire_latest_events(QList<Contact *> contacts, QDateTime earliest, bool mark_read = true);
+	void refire_latest_events(QList<Contact *> contacts, int count, bool mark_read = true);
 
 	void mark_as_read(Contact *contact, QDateTime timestamp);
 	void mark_all_as_read(Contact *contact);
@@ -35,7 +35,7 @@ public:
 	void enable_history(Contact *contact, bool enable);
 
 protected:
-	QList<Message> read_history(Contact *contact, QSqlQuery &query, bool mark_read);
+	QList<Message> read_history(QSqlQuery &query, bool mark_read);
 	void mark_as_read(Contact *contact, double timestamp);
 
 	CoreI *core_i;
