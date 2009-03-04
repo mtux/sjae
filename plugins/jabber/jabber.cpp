@@ -82,7 +82,7 @@ JabberProto::JabberProto(CoreI *core) {
 
 	accounts_i->register_protocol(this);
 
-	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_OUTGOING);
+	events_i->add_event_listener(this, UUID_MSG_SEND);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_ACCOUNT_STATUS_REQ);
@@ -203,10 +203,10 @@ GlobalStatus JabberProto::closest_status_to(GlobalStatus gs) const {
 }
 
 bool JabberProto::event_fired(EventsI::Event &e) {
-	if(e.uuid == UUID_MSG) {
-		Message &m = static_cast<Message &>(e);
+	if(e.uuid == UUID_MSG_SEND) {
+		MessageSendReq &m = static_cast<MessageSendReq &>(e);
 		if(ctx.contains(m.contact->account))
-			ctx[m.contact->account]->msgSend(m.contact->contact_id, m.text, m.id);
+			ctx[m.contact->account]->msgSend(m.contact, m.text, m.id);
 	} else if(e.uuid == UUID_ACCOUNT_STATUS_REQ) {
 		AccountStatusReq &as = static_cast<AccountStatusReq &>(e);
 		if(ctx.contains(as.account))

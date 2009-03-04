@@ -74,6 +74,9 @@ bool ContactInfo::pre_shutdown() {
 }
 
 bool ContactInfo::unload() {
+	if(db.isOpen())
+		db.close();
+
 	QMapIterator<Account *, QMap<QString, Contact *> > i(contacts);
 	while(i.hasNext()) {
 		i.next();

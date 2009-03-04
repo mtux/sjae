@@ -52,7 +52,7 @@ public:
 
 	bool event_fired(EventsI::Event &e);
 public slots:
-	void msgSend(const QString &jid, const QString &msg, int id);
+	void msgSend(Contact *contact, const QString &msg, int id);
 	void requestStatus(GlobalStatus gs);
 	void addContact(const QString &jid);
 	void removeContact(const QString &jid);

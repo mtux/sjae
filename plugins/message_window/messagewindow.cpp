@@ -29,7 +29,7 @@ bool MessageWindow::load(CoreI *core) {
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING | EVENT_TYPE_MASK_OUTGOING);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
@@ -98,7 +98,7 @@ void MessageWindow::options_applied() {
 bool MessageWindow::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_MSG) {
 		Message &m = static_cast<Message &>(e);
-		message_recv(m);
+		message_event(m);
 	} else if(e.uuid == UUID_CONTACT_CHANGED) {
 		ContactChanged &cc = static_cast<ContactChanged &>(e);
 		if(window_exists(cc.contact)) {
@@ -167,31 +167,35 @@ void MessageWindow::account_removed(Account *account) {
 	}
 }
 
-void MessageWindow::message_recv(Message &m) {
-	Contact *contact = m.contact;
-	if(current_settings.show_style != MessageWindowOptions::Settings::SS_NONE && !window_exists(contact) && !m.read) {
-		SplitterWin *win = get_window(contact);
-		// if we're loading history, this event has been loaded already
-		if(current_settings.load_history == MessageWindowOptions::Settings::LH_NONE) {
-			win->msgRecv(m);
-			if(history_i) history_i->mark_as_read(contact, m.timestamp);
-		}
-
-		if(current_settings.show_style == MessageWindowOptions::Settings::SS_POPUP) {
-			open_window(contact);
-		} else if(current_settings.show_style == MessageWindowOptions::Settings::SS_MINIMIZED) {
-			win->showMinimized();
+void MessageWindow::message_event(Message &m) {
+	if(window_exists(m.contact)) {
+		SplitterWin *win = get_window(m.contact);
+		win->msgEvent(m);
+		if(history_i && !m.read) {
+			history_i->mark_as_read(m.contact, m.timestamp);
 			//win->activateWindow();
 			QApplication::alert(win, 1500);
-			MessageWinEvent mwe(contact, this);
-			events_i->fire_event(mwe);
 		}
-	} else if(window_exists(contact)) {
-		SplitterWin *win = get_window(contact);
-		win->msgRecv(m);
-		if(history_i && !m.read) history_i->mark_as_read(contact, m.timestamp);
-		//win->activateWindow();
-		QApplication::alert(win, 1500);
+	} else {
+		Contact *contact = m.contact;
+		if(current_settings.show_style != MessageWindowOptions::Settings::SS_NONE && !window_exists(contact) && !m.read) {
+			SplitterWin *win = get_window(contact);
+			// if we're loading history, this event has been loaded already
+			if(current_settings.load_history == MessageWindowOptions::Settings::LH_NONE) {
+				win->msgEvent(m);
+				if(history_i && !m.read) history_i->mark_as_read(contact, m.timestamp);
+			}
+
+			if(current_settings.show_style == MessageWindowOptions::Settings::SS_POPUP) {
+				open_window(contact);
+			} else if(current_settings.show_style == MessageWindowOptions::Settings::SS_MINIMIZED) {
+				win->showMinimized();
+				//win->activateWindow();
+				QApplication::alert(win, 1500);
+				MessageWinEvent mwe(contact, this);
+				events_i->fire_event(mwe);
+			}
+		}
 	}
 }
 

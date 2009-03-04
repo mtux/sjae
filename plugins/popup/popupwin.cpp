@@ -22,15 +22,16 @@ QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 }
 
 PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *parent)
-	: QWidget(parent), listener(c.listener), id(i), round_corners(round)
+	: QWidget(parent), listener(c.listener), id(i), round_corners(round), pclass(c)
 {
 	ui.setupUi(this);
 
-        // last flag is prevent window from being hidden when app is inactive under X (tested with KDE4)
-        setWindowFlags(Qt::Tool	| Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
+	// last flag is prevent window from being hidden when app is inactive under X (tested with KDE4)
+	//setWindowFlags(Qt::Tool	| Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+	setWindowFlags(Qt::Tool	| Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
 	setAttribute(Qt::WA_DeleteOnClose, true);
-        // just 'cause we should :)
-        setAttribute(Qt::WA_X11NetWmWindowTypeNotification, true);
+	// just 'cause we should :)
+	setAttribute(Qt::WA_X11NetWmWindowTypeNotification, true);
 
 	QPalette p = palette();
 	p.setColor(QPalette::Background, c.background);
@@ -43,9 +44,10 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 	ui.lblTitle->setPalette(p);
 	ui.lblTime->setPalette(p);
 
-	p = ui.lblText->palette();
+	p = ui.wvText->palette();
 	p.setColor(QPalette::Foreground, c.text);
-	ui.lblText->setPalette(p);
+	p.setColor(QPalette::Background, c.background);
+	ui.wvText->setPalette(p);
 
 	if(c.timeout != 0) {
 		closeTimer.setSingleShot(true);
@@ -54,7 +56,7 @@ PopupWin::PopupWin(const PopupI::PopupClass &c, int i, bool round, QWidget *pare
 		closeTimer.start();
 	}
 
-	ui.lblText->installEventFilter(this);
+	ui.wvText->installEventFilter(this);
 
 	QString format = QLocale::system().timeFormat(QLocale::ShortFormat);
 	if(format.endsWith("ss")) format = format.mid(0, format.length() - 3);
@@ -78,6 +80,11 @@ void PopupWin::closeManual() {
 void PopupWin::timeout() {
 	listener->popup_closed(id, PopupI::PDT_TIMEOUT);
 	close();
+}
+
+void PopupWin::resizeEvent(QResizeEvent *e) {
+	QWidget::resizeEvent(e);
+	emit resized();
 }
 
 void PopupWin::closeEvent(QCloseEvent *e) {
@@ -106,11 +113,22 @@ void PopupWin::setIcon(const QIcon &icon) {
 
 void PopupWin::setContent(const QString &title, const QString &text) {
 	ui.lblTitle->setText(QString("<b><big>%1</big></b>").arg(title));
-	ui.lblText->setText(text);
 
-	adjustSize();
+	QString style = qApp->styleSheet();
+	QString page = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Popup</title><style type='text/css'>" + style
+			+ "</style>"
+			+ "</head>\n<body class='popup' bgcolor='" + pclass.background.name() + "'>\n" + text + "</body>\n</html>";
+	ui.wvText->setContent(page.toUtf8(), "application/xhtml+xml", QUrl::fromLocalFile(QApplication::applicationFilePath()));
+
+	//adjustSize();
 	if(round_corners) {
 		QRegion r = roundRectRegion(0, 0, width(), height(), 6);
 		setMask(r);
 	}
+}
+
+QSize PopupWin::sizeHint() const {
+	//return QSize(200, 100);
+	return QWidget::sizeHint();
 }

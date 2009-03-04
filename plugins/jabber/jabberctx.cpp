@@ -1045,10 +1045,10 @@ void JabberCtx::parsePresence() {
 	*/
 }
 
-void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
+void JabberCtx::msgSend(Contact *contact, const QString &msg, int id) {
 	writer.writeStartElement("message");
 	writer.writeAttribute("from", jid);
-	writer.writeAttribute("to", cid);
+	writer.writeAttribute("to", contact->contact_id);
 	writer.writeAttribute("type", "chat");
 	writer.writeAttribute("id", QString("%1").arg(id));
 	writer.writeAttribute("xml:lang", "en");
@@ -1057,7 +1057,10 @@ void JabberCtx::msgSend(const QString &cid, const QString &msg, int id) {
 		writer.writeDefaultNamespace("http://jabber.org/protocol/chatstates");
 	writer.writeEndElement();
 	sendWriteBuffer();
-	log("Sent message to " + cid);
+	log("Sent message to " + contact->contact_id);
+
+	Message m(contact, msg, false, 0, this);
+	events_i->fire_event(m);
 }
 
 void JabberCtx::parseMessageBody(const QString &source) {

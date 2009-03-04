@@ -2,7 +2,7 @@ include(../plugin_pro.pri)
 
 DEPENDPATH += . GeneratedFiles
 
-QT += gui
+QT += gui webkit
 
 # Input
 HEADERS += popup.h popupoptions.h popupwin.h \

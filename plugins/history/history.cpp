@@ -163,7 +163,8 @@ bool History::pre_shutdown() {
 }
 
 bool History::unload() {
-	db.close();
+	if(db.isOpen())
+		db.close();
 	return true;
 }
 

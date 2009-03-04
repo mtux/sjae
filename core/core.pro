@@ -1,7 +1,7 @@
 include (../global_pro.pri)
 
 TEMPLATE = app
-TARGET = core 
+TARGET = saje 
 DEPENDPATH += .
 INCLUDEPATH += ../include
 

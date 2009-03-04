@@ -22,7 +22,7 @@ public:
 
 	void addEvents(QList<Message> &events);
 public slots:
-	void msgRecv(Message &m);
+	void msgEvent(Message &m);
 	void msgSend(const QString &msg);
 
 	void setLogStyleSheet(const QString &styleSheet);
@@ -51,6 +51,7 @@ protected:
 	void linkUrls(QString &s);
 
 protected slots:
+	void scrollLogToBottom();
 	void openLink(const QUrl &url);
 	
 	// chat state

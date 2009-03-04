@@ -35,6 +35,7 @@ SplitterWin::SplitterWin(Contact *c, EventsI *ei, QWidget *parent)
 
 	ui.edMsgLog->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 	connect(ui.edMsgLog, SIGNAL(linkClicked(const QUrl &)), this, SLOT(openLink(const QUrl &)));
+	connect(ui.edMsgLog, SIGNAL(loadFinished(bool)), this, SLOT(scrollLogToBottom()));
 
 	connect(&pauseTimer, SIGNAL(timeout()), this, SLOT(paused()));
 	connect(&inactiveTimer, SIGNAL(timeout()), this, SLOT(inactive()));
@@ -91,6 +92,7 @@ void SplitterWin::setUserChatState(ChatStateType state) {
 			ChatState cs(contact, chatState, false, this);
 			events_i->fire_event(cs);
 		}
+		update_log();
 	}
 }
 
@@ -110,16 +112,13 @@ QString SplitterWin::format_text(Message &m) {
 	QString msg = m.text;
 	if(msg.startsWith("/me "))
 		msg.replace(0, 4, "* " + nick + " ");
-	QString dispMsg = Qt::escape(msg);
-	dispMsg.replace("\n", "<br />\n");
-	linkUrls(dispMsg);
 	
 	QString text = "<div class='message'>";
 	text += "<span class='info'>";
 	text += timestamp(m.timestamp);
 	text += "<span class='nick'>" + nick + " </span>";
 	text += "<span class='separator'>: </span></span>";
-	text += "<span class='text'>" + dispMsg + "</span>";
+	text += "<span class='text'>" + msg + "</span>";
 	text += "</div>";
 
 	return text;
@@ -166,8 +165,14 @@ QString SplitterWin::getContent() {
 
 void SplitterWin::update_log() {
 	QString page = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
-	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Saje Message Log</title><style type='text/css'>" + style + "</style></head>\n<body>\n" + getContent() + "</body>\n</html>";
+	page += "<html xmlns='http://www.w3.org/1999/xhtml'>\n<head><title>Saje Message Log</title>"
+			"<style type='text/css'>" + style + "</style></head>\n"
+			+ "<body class='messagelog'>\n" + getContent() + "</body>\n</html>";
+	//qDebug() << "message log content:" << page;
 	ui.edMsgLog->setContent(page.toUtf8(), "application/xhtml+xml", QUrl::fromLocalFile(QApplication::applicationFilePath()));
+}
+
+void SplitterWin::scrollLogToBottom() {
 	ui.edMsgLog->page()->mainFrame()->setScrollBarValue(Qt::Vertical, ui.edMsgLog->page()->mainFrame()->scrollBarMaximum(Qt::Vertical));
 }
 
@@ -239,26 +244,25 @@ void SplitterWin::addToLog(Message &m) {
 		content.removeFirst();
 }
 
-void SplitterWin::msgRecv(Message &m) {
+void SplitterWin::msgEvent(Message &m) {
 	addToLog(m);
 
-	if(contactChatState != CS_ACTIVE)
-		setContactChatState(CS_ACTIVE);
-	else
-		update_log();
-	
-	active();
+	if(m.type == EventsI::ET_INCOMMING) {
+		if(contactChatState != CS_ACTIVE)
+			setContactChatState(CS_ACTIVE);
+		else
+			update_log();
+	} else if(m.type == EventsI::ET_OUTGOING) {
+		if(chatState != CS_ACTIVE)
+			setUserChatState(CS_ACTIVE);
+		else
+			update_log();
+	}
 }
 
 void SplitterWin::msgSend(const QString &msg) {
-	Message m(contact, msg, false, 0, this);
-	addToLog(m);
-
-	update_log();
-	
+	MessageSendReq m(contact, msg, 0, this);
 	events_i->fire_event(m);
-
-	active();
 }
 
 ////////////////////////

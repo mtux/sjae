@@ -3,15 +3,8 @@
 #include <QRect>
 #include <QDesktopWidget>
 #include <QSettings>
+#include <QDesktopWidget>
 #include <QDebug>
-#include <QTextDocument>	// for Qt::escape function
-
-#define RX_DOMAIN		"(?:\\w+\\.)+(?:co(?:m)?|org|net|gov|biz|info|travel|ous|[a-z]{2})"
-#define RX_PROTOS		"(?:http(?:s)?://|ftp://|mailto:)?"
-#define RX_PORT			"(?:\\:\\d{1,5})?"
-#define RX_EMAIL		"\\w+@" RX_DOMAIN
-#define RX_OTHER		RX_DOMAIN RX_PORT "(?:[/\\?]\\S+)?"
-#define LP				"\\b(" RX_PROTOS ")(" RX_EMAIL "|" RX_OTHER ")\\b"
 
 PluginInfo info = {
 	0x600,
@@ -130,28 +123,26 @@ int Popup::show_custom(const PopupI::PopupClass &c, const QString &title, const 
 	int id = nextWinId++;
 	PopupWin *win = new PopupWin(c, id, round_corners);
 	connect(win, SIGNAL(closed(int)), this, SLOT(win_closed(int)));
+	//connect(win, SIGNAL(resized()), this, SLOT(layoutPopups()));
 
-	QString t = Qt::escape(text);
-	t.replace("\n", "<br />\n");
-	linkUrls(t);
-	win->setContent(title, t);
+	win->setContent(title, text);
 
 	windows.append(win);
 	layoutPopups();
 	win->show();
+
 	return id;
 }
 
 void Popup::layoutPopups() {
-	QRect r, screen = desktop.availableGeometry();
+	QRect r, screen = QApplication::desktop()->availableGeometry();
 	int y = screen.height();
+	//qDebug() << "y:" << y;
 	for(int i = windows.size() - 1; i >= 0; --i) {
-		r.setWidth(windows.at(i)->size().width());
-		r.setHeight(windows.at(i)->size().height());
-		y -= r.height() + 6;
-		
-		r.moveTo(screen.width() - r.width() - 6, y);
-		windows.at(i)->setGeometry(r);
+		//qDebug() << "window #" << i << "height:" << windows.at(i)->height();
+		y -= (windows.at(i)->height() + 6);
+		//qDebug() << "new y:" << y;
+		windows.at(i)->move(screen.width() - (windows.at(i)->width() + 6), y);
 	}
 }
 
@@ -185,41 +176,6 @@ void Popup::options_applied() {
 }
 
 /////////////////////////////
-
-void Popup::linkUrls(QString &str) {
-	//dispMsg.replace(QRegExp(LP), "<a href='http://\\2'>\\1</a>");
-
-	QRegExp rx(LP), rx_email("^" RX_EMAIL);
-	int pos = 0, len;
-	QString scheme, after;
-	bool valid;
-	while ((pos = rx.indexIn(str, pos)) != -1) {
-		len = rx.matchedLength();
-
-		//rx.cap(0) is whole match, rx.cap(1) is url scheme, rx.cap(2) is the rest
-		
-		scheme = rx.cap(1);
-		valid = true;
-		if(scheme.isEmpty()) {
-			if(rx_email.indexIn(rx.cap(2)) != -1)
-				scheme = "mailto:";
-			else
-				scheme = "http://";
-		} else 
-		if((scheme == "mailto:" && rx_email.indexIn(rx.cap(2)) == -1)
-			|| (scheme != "mailto:" && rx_email.indexIn(rx.cap(2)) != -1)) 
-		{
-			valid = false;
-		}
-		if(valid) {
-			after = "<a href='" + scheme + rx.cap(2) + "'>" + rx.cap(0) + "</a>";
-			str.replace(pos, len, after);
-			len = after.length();
-		}
-
-		pos += len;
-	}
-}
 
 Q_EXPORT_PLUGIN2(popup, Popup)
 

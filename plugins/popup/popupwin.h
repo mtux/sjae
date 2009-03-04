@@ -5,6 +5,7 @@
 #include "ui_popupwin.h"
 #include <popup_i.h>
 #include <QCloseEvent>
+#include <QResizeEvent>
 #include <QMouseEvent>
 #include <QTimer>
 
@@ -21,14 +22,18 @@ public:
 
 	int getId() {return id;}
 	void closeManual();
+
+	QSize sizeHint() const;
 signals:
 	void closed(int i);
+	void resized();
 
 protected slots:
 	void timeout();
 	void mouseClose();
 
 protected:
+	void resizeEvent(QResizeEvent *e);
 	void closeEvent(QCloseEvent *e);
 	void mousePressEvent(QMouseEvent *e);
 	bool eventFilter(QObject *obj, QEvent *e);
@@ -40,6 +45,7 @@ private:
 	bool round_corners;
 
 	PopupI::PopupDoneType mouseCloseReason;
+	PopupI::PopupClass pclass;
 };
 
 #endif // POPUPWIN_H

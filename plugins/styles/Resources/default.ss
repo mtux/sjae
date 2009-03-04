@@ -68,3 +68,9 @@ div.incomming > div.message:first-child > span.info { display: inline }
 div.incomming > div.message:first-child { margin-left: 0px }
 div.outgoing > div.message:first-child > span.info { display: inline }
 div.outgoing > div.message:first-child { margin-left: 0px }
+
+/* align smileys and scale to match font */
+img.smiley {
+  vertical-align: bottom;
+  height: 1.4em;
+}

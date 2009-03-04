@@ -7,7 +7,6 @@
 #include "popupwin.h"
 
 #include <QMap>
-#include <QDesktopWidget>
 
 class Popup: public PopupI, public PopupI::PopupListener
 {
@@ -34,6 +33,7 @@ public:
 protected slots:
 	void options_applied();
 	void win_closed(int id);
+	void layoutPopups();
 
 protected:
 	CoreI *core_i;
@@ -41,9 +41,6 @@ protected:
 	PopupOptions *opt;
 	QList<PopupWin *> windows;
 	int nextWinId;
-
-	void layoutPopups();
-	QDesktopWidget desktop;
 
 	void linkUrls(QString &str);
 };

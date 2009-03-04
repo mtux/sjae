@@ -75,7 +75,8 @@ Section "Saje (required)"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR  
   ; Put files there
-  File "..\bin\release\core.exe"
+  File "..\bin\release\saje.exe"
+  File "..\core\saje.ico"
 
   ; Set output path to the plugins directory.
   SetOutPath $INSTDIR\plugins  
@@ -92,13 +93,19 @@ Section "Saje (required)"
   File "..\bin\release\plugins\jabber.dll"
   File "..\bin\release\plugins\log_window.dll"
   File "..\bin\release\plugins\main_window.dll"
+  File "..\bin\release\plugins\messageformat.dll"
   File "..\bin\release\plugins\messagenotify.dll"
   File "..\bin\release\plugins\message_window.dll"
   File "..\bin\release\plugins\options.dll"
   File "..\bin\release\plugins\popup.dll"
+  File "..\bin\release\plugins\smileys.dll"
   File "..\bin\release\plugins\startup_status.dll"
   File "..\bin\release\plugins\status_bar.dll"
   File "..\bin\release\plugins\styles.dll"
+  
+  ; smiley images
+  SetOutPath $INSTDIR\smileys
+  File "..\plugins\smileys\images\*.png"
 	
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_SAJE "Install_Dir" "$INSTDIR"
@@ -115,7 +122,7 @@ SectionEnd
 Section "Desktop Shortcut"
 
 ;create desktop shortcut
-  CreateShortCut "$DESKTOP\Saje.lnk" "$INSTDIR\core.exe" ""
+  CreateShortCut "$DESKTOP\Saje.lnk" "$INSTDIR\saje.exe" "" "$INSTDIR\saje.ico" 0
 
 SectionEnd
 
@@ -123,7 +130,7 @@ Section "Start Menu Shortcuts"
 
 ; start menu shortcuts
   CreateDirectory "$SMPROGRAMS\Saje"
-  CreateShortCut "$SMPROGRAMS\Saje\Saje.lnk" "$INSTDIR\core.exe" "" "$INSTDIR\core.exe" 0
+  CreateShortCut "$SMPROGRAMS\Saje\Saje.lnk" "$INSTDIR\saje.exe" "" "$INSTDIR\saje.ico" 0
   CreateShortCut "$SMPROGRAMS\Saje\Uninstall Saje.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
@@ -143,6 +150,7 @@ Section "Uninstall"
   Delete "$INSTDIR\accessible\*.*"
   Delete "$INSTDIR\sqldrivers\*.*"
   Delete "$INSTDIR\imageformats\*.*"
+  Delete "$INSTDIR\smileys\*.*"
   Delete "$INSTDIR\*.*"
 
   ; Remove shortcuts, if any
@@ -153,7 +161,10 @@ Section "Uninstall"
 
   ; Remove directories used
   RMDir "$INSTDIR\plugins"
+  RMDir "$INSTDIR\accessible"
+  RMDir "$INSTDIR\sqldrivers"
+  RMDir "$INSTDIR\imageformats"
+  RMDir "$INSTDIR\smileys"
   RMDir "$INSTDIR"
-  RMDir "$PROGRAMFILES\Saje"
   
 SectionEnd

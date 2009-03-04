@@ -8,6 +8,7 @@
 
 #define UUID_CONTACT_CHANGED		"{3602C4D5-2589-4be5-AC4D-A2DCA5A4F8F0}"
 #define UUID_MSG					"{99D59C72-F5C6-4a20-84CF-1BAA6612E945}"
+#define UUID_MSG_SEND				"{1660647B-A4B3-4138-BFB6-67DE1D8F44C9}"
 #define UUID_CHAT_STATE				"{AC8F9710-54B5-40af-9CA1-779AB4ED59DB}"
 
 class Contact {
@@ -59,16 +60,25 @@ public:
 
 class Message: public EventsI::Event {
 public:
-	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {};
+	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {}
 	Message(Contact *c, const QString &msg, bool incomming, int i, QObject *source = 0): 
-                EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), id(i), text(msg), read(!incomming)   {}
-        Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), contact(m.contact), id(m.id), text(m.text), read(m.read) {
+				EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), id(i), text(msg), read(!incomming)   {}
+	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), contact(m.contact), id(m.id), text(m.text), read(m.read) {
 		timestamp = m.timestamp;
 	}
 	Contact *contact;
 	int id;
 	QString text;
 	bool read;
+};
+
+class MessageSendReq: public EventsI::Event {
+public:
+	MessageSendReq(Contact *c, const QString &msg, int i, QObject *source = 0):
+				EventsI::Event(UUID_MSG_SEND, source, EventsI::ET_INTERNAL), contact(c), id(i), text(msg)   {}
+	Contact *contact;
+	int id;
+	QString text;
 };
 
 typedef enum {CS_ACTIVE, CS_COMPOSING, CS_PAUSED, CS_INACTIVE, CS_GONE}  ChatStateType;
