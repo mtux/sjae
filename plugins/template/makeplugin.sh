@@ -64,12 +64,13 @@ then
 	done  
 	echo "HEADERS += ../../include/options_i.h ${LOWER}options.h" >> ../$LOWER/$LOWER.pro
 	echo "SOURCES += ${LOWER}options.cpp" >> ../$LOWER/$LOWER.pro
-	echo "FORMST += ${LOWER}options.ui" >> ../$LOWER/$LOWER.pro
+	echo "FORMS += ${LOWER}options.ui" >> ../$LOWER/$LOWER.pro
 fi
 
 if [ $DO_INTERFACE -eq 1 ]
 then
 	sed "s/Template/$NAME/g" template_i.temp_h | sed "s/template/$LOWER/g" | sed "s/TEMPLATE/$UPPER/g" > ../../include/${LOWER}_i.h
+	echo "HEADERS += ../../include/${LOWER}_i.h" >> ../$LOWER/$LOWER.pro
 fi
 
 # replace the vc project's guid with a new one
