@@ -1,0 +1,16 @@
+#ifndef _I_TEMPLATE_H
+#define _I_TEMPLATE_H
+
+#include "plugin_i.h"
+
+#define INAME_TEMPLATE	"TemplateInterface"
+
+class TemplateI: public PluginI {
+	Q_OBJECT
+	Q_INTERFACES(PluginI)
+public:
+
+	const QString get_interface_name() const {return INAME_TEMPLATE;}
+};
+
+#endif

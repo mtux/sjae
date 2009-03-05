@@ -27,6 +27,12 @@ bool Template::load(CoreI *core) {
 }
 
 bool Template::modules_loaded() {
+	OptionsI *options_i = (OptionsI *)core_i->get_interface(INAME_OPTIONS);		// OPT_CODE
+	if(options_i) {																// OPT_CODE
+		opt = new TemplateOptions();											// OPT_CODE
+		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));			// OPT_CODE
+		options_i->add_page("Template", opt);									// OPT_CODE
+	}																			// OPT_CODE
 	return true;
 }
 
@@ -44,7 +50,8 @@ const PluginInfo &Template::get_plugin_info() {
 
 /////////////////////////////
 
-
+void Template::options_applied() {												// OPT_CODE
+}																				// OPT_CODE
 
 /////////////////////////////
 
