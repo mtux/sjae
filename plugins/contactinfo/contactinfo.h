@@ -21,6 +21,7 @@ public:
 	const PluginInfo &get_plugin_info();
 
 	Contact *get_contact(Account *acc, const QString &contact_id);
+	Contact *get_contact(const QString &contact_hash_id);
 	bool delete_contact(Contact *contact);
 
 	bool event_fired(EventsI::Event &e);
@@ -32,6 +33,7 @@ protected:
 
 	QMutex dataMutex;
 	QMap<Account *, QMap<QString, Contact *> > contacts;
+	QMap<QString, Contact *> hashMap;
 	QSqlQuery *get_props, *replace_prop, *delete_prop, *delete_props;
 
 	QSqlDatabase db;

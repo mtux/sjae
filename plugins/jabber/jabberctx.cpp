@@ -45,27 +45,24 @@ JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 
 	menus_i = (MenusI *)core_i->get_interface(INAME_MENUS);
 	if(menus_i) {
-
-		editRosterItemAction = menus_i->add_contact_action("Edit...");
-		connect(editRosterItemAction, SIGNAL(triggered()), this, SLOT(editRosterItem()));
-
-		removeRosterItemAction = menus_i->add_contact_action("Remove");
-		connect(removeRosterItemAction, SIGNAL(triggered()), this, SLOT(removeRosterItem()));
-
-
-		grantAction = menus_i->add_contact_action("Grant");
-		connect(grantAction, SIGNAL(triggered()), this, SLOT(grantSubscription()));
-
-		revokeAction = menus_i->add_contact_action("Revoke");
-		connect(revokeAction, SIGNAL(triggered()), this, SLOT(revokeSubscription()));
-
-		requestAction = menus_i->add_contact_action("Request");
+		requestAction = menus_i->add_menu_action("Contact Menu", "Request");
 		connect(requestAction, SIGNAL(triggered()), this, SLOT(requestSubscription()));
 
+		revokeAction = menus_i->add_menu_action("Contact Menu", "Revoke");
+		connect(revokeAction, SIGNAL(triggered()), this, SLOT(revokeSubscription()));
+
+		grantAction = menus_i->add_menu_action("Contact Menu", "Grant");
+		connect(grantAction, SIGNAL(triggered()), this, SLOT(grantSubscription()));
+
+		removeRosterItemAction = menus_i->add_menu_action("Contact Menu", "Remove");
+		connect(removeRosterItemAction, SIGNAL(triggered()), this, SLOT(removeRosterItem()));
+
+		editRosterItemAction = menus_i->add_menu_action("Contact Menu", "Edit...");
+		connect(editRosterItemAction, SIGNAL(triggered()), this, SLOT(editRosterItem()));
 	}
 
 	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
-	events_i->add_event_listener(this, UUID_SHOW_CONTACT_MENU);
+	events_i->add_event_listener(this, UUID_SHOW_MENU);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 
 	contact_info_i = (ContactInfoI*)core_i->get_interface(INAME_CONTACTINFO);
@@ -90,7 +87,7 @@ JabberCtx::~JabberCtx()
 	disconnect(&sslSocket, SIGNAL(sslErrors(const QList<QSslError> &)), this, SLOT(sslErrors(const QList<QSslError> &)));
 	disconnect(&sslSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 
-	events_i->remove_event_listener(this, UUID_SHOW_CONTACT_MENU);
+	events_i->remove_event_listener(this, UUID_SHOW_MENU);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
 }
 
@@ -99,17 +96,19 @@ Account *JabberCtx::get_account_info() {
 }
 
 bool JabberCtx::event_fired(EventsI::Event &e) {
-	if(e.uuid == UUID_SHOW_CONTACT_MENU) {
-		ShowContactMenu &sm = static_cast<ShowContactMenu &>(e);
+	if(e.uuid == UUID_SHOW_MENU) {
+		ShowMenu &sm = static_cast<ShowMenu &>(e);
+		if(sm.properties["name"] != "Contact Menu") return true;
+		Contact *contact = contact_info_i->get_contact(sm.properties["ContactHashId"].toString());
 
-		bool vis = (sm.contact->account == account);
+		bool vis = (contact->account == account);
 		//newRosterItemAction->setVisible(vis);
 
 		removeRosterItemAction->setVisible(vis);
 		editRosterItemAction->setVisible(vis);
 
 		if(vis) {
-			RosterItem *item = roster.get_item(sm.contact->contact_id);
+			RosterItem *item = roster.get_item(contact->contact_id);
 			SubscriptionType sub = item->getSubscription();
 
 			bool to = (sub == ST_BOTH || sub == ST_TO),
@@ -120,7 +119,7 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 
 			requestAction->setVisible(vis && !from);
 
-			mid = sm.contact->contact_id;
+			mid = contact->contact_id;
 		} else {
 			grantAction->setVisible(false);
 			revokeAction->setVisible(false);

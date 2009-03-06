@@ -60,35 +60,7 @@ bool History::load(CoreI *core) {
 		qWarning() << "History db error:" << q.lastError().text();
 	}
 
-	if(!q.exec("CREATE TABLE contact_hash ("
-		"  contact_hash_id varchar(256),"
-		"  protocol varchar(256),"
-		"  account varchar(256),"
-		"  contact_id varchar(256));"))
-	{
-		qWarning() << "History db error:" << q.lastError().text();
-	}
-
-
 	return true;
-}
-
-Contact *History::get_contact(const QString &contact_hash) {
-	if(hashMap.contains(contact_hash))
-		return hashMap[contact_hash];
-
-	QSqlQuery qm(db);
-	if(!qm.exec("SELECT protocol, account, contact_id FROM contact_hash WHERE contact_hash_id='" + contact_hash + "';"))
-		qDebug() << "Read contact account data failed:" << qm.lastError().text();
-	if(qm.next()) {
-		Account *account = accounts_i->account_info(qm.value(0).toString(), qm.value(1).toString());
-		if(account) {
-			Contact *contact = contact_info_i->get_contact(account, qm.value(2).toString());
-			hashMap[contact->hash_id] = contact;
-			return contact;
-		}
-	}
-	return 0;
 }
 
 bool History::modules_loaded() {
@@ -97,7 +69,7 @@ bool History::modules_loaded() {
 		qWarning() << "History read unread failed:" << unread.lastError().text();
 
 	while(unread.next()) {
-		Contact *contact = get_contact(unread.value(0).toString());
+		Contact *contact = contact_info_i->get_contact(unread.value(0).toString());
 		if(contact) {
 			ContactChanged cc(contact, this);
 			events_i->fire_event(cc);
@@ -133,19 +105,6 @@ bool History::event_fired(EventsI::Event &e) {
 		if(m.source != this) {
 			if(m.contact->has_property("DisableHistory") && m.contact->get_property("DisableHistory").toBool() == true)
 				return true;
-
-			if(!hashMap.contains(m.contact->hash_id)) {
-				QSqlQuery writeInfoQuery(db);
-				writeInfoQuery.prepare("INSERT INTO contact_hash VALUES(?, ?, ?, ?);");
-				writeInfoQuery.addBindValue(m.contact->hash_id);
-				writeInfoQuery.addBindValue(m.contact->account->proto->name());
-				writeInfoQuery.addBindValue(m.contact->account->account_id);
-				writeInfoQuery.addBindValue(m.contact->contact_id);
-				if(!writeInfoQuery.exec()) {
-					qWarning() << "History write info failed:" << writeInfoQuery.lastError().text();
-				}
-				hashMap[m.contact->hash_id] = m.contact;
-			}
 
 			QSqlQuery writeMessageQuery(db);
 			writeMessageQuery.prepare("INSERT INTO message_history VALUES(?, ?, ?, ?, ?);");
@@ -185,7 +144,7 @@ QList<Message> History::read_history(QSqlQuery &query, bool mark_read) {
 	Contact *contact;
 	double t;
 	while(query.next()) {
-		contact = get_contact(query.value(0).toString());
+		contact = contact_info_i->get_contact(query.value(0).toString());
 		if(contact) {
 			Message m(contact, query.value(1).toString(), query.value(2).toBool(), 0, this);
 			m.read = query.value(3).toBool();
@@ -314,7 +273,6 @@ void History::wipe_history(Contact *contact) {
 	QString queryText = "DELETE FROM message_history,contact_hash WHERE contact_hash_id='" + contact->hash_id + "';";
 	if(!wq.exec(queryText))
 		qWarning() << "History wipe failed:" << wq.lastError().text();
-	hashMap.remove(contact->hash_id);
 }
 
 void History::enable_history(Contact *contact, bool enable) {

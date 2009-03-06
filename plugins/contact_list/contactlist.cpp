@@ -81,8 +81,8 @@ bool ContactList::modules_loaded() {
 		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
 	}
 
-	newGroupAction = menus_i->add_group_action("New group...");
-	deleteGroupAction = menus_i->add_group_action("Delete group");
+	deleteGroupAction = menus_i->add_menu_action("Group Menu", "Delete group");
+	newGroupAction = menus_i->add_menu_action("Group Menu", "New group...");
 
 	connect(newGroupAction, SIGNAL(triggered()), this, SLOT(newGroup()));
 	connect(deleteGroupAction, SIGNAL(triggered()), this, SLOT(deleteGroup()));
@@ -181,14 +181,20 @@ void ContactList::update_contact(Contact *contact) {
 void ContactList::aboutToShowMenuSlot(const QPoint &pos, const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
 	if(contact) {
-		menus_i->show_contact_menu(contact, pos);
+		QMap<QString, QVariant> props;
+		props["ContactHashId"] = contact->hash_id;
+		menus_i->show_menu("Contact Menu", props, pos);
 	} else {
+		QMap<QString, QVariant> props;
 		menuGroup = model->getGroup(sortedModel->mapToSource(i));
 		int contactCount = model->contactCount(menuGroup);
+
+		props["Group"] = menuGroup;
+		props["ContactCount"] = contactCount;
 		
 		deleteGroupAction->setEnabled(menuGroup.size() && contactCount == 0);
 		
-		menus_i->show_group_menu(menuGroup, contactCount, pos);
+		menus_i->show_menu("Group Menu", props, pos);
 	}
 }
 

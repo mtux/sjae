@@ -7,10 +7,10 @@
 
 #define DB_FILE_NAME		"contact_info.db"
 
-#define GET_PROPS_QUERY				"SELECT parameter, value FROM contact_info WHERE protocol=:proto AND account=:account_id AND contact_id=:contact_id;"
-#define REPLACE_PROP_QUERY			"REPLACE INTO contact_info VALUES(:proto, :a, :c, :param, :v);"
-#define DELETE_PROP_QUERY			"DELETE FROM contact_info WHERE protocol=:proto AND account=:account_id AND contact_id=:contact_id AND parameter=:param;"
-#define DELETE_PROPS_QUERY			"DELETE FROM contact_info WHERE protocol=:proto AND account=:account_id AND contact_id=:contact_id;"
+#define GET_PROPS_QUERY				"SELECT parameter, value FROM contact_information WHERE contact_hash_id=:hash;"
+#define REPLACE_PROP_QUERY			"REPLACE INTO contact_information VALUES(:hash, :param, :v);"
+#define DELETE_PROP_QUERY			"DELETE FROM contact_information WHERE contact_hash_id=:hash AND parameter=:param;"
+#define DELETE_PROPS_QUERY			"DELETE FROM contact_information WHERE contact_hash_id=:hash;"
 
 
 PluginInfo info = {
@@ -44,13 +44,18 @@ bool ContactInfo::load(CoreI *core) {
 	db.setDatabaseName(core_i->get_config_dir() + "/" + DB_FILE_NAME);
     if(!db.open()) return false;
 
-	db.exec("CREATE TABLE contact_info ("
+	db.exec("CREATE TABLE contact_information ("
+		"  contact_hash_id varchar(256),"
+		"  parameter varchar(256),"
+		"  value text,"
+		"  PRIMARY KEY (contact_hash_id));");
+
+	db.exec("CREATE TABLE contact_hash ("
+		"  contact_hash_id varchar(256),"
 		"  protocol varchar(256),"
 		"  account varchar(256),"
 		"  contact_id varchar(256),"
-		"  parameter varchar(256),"
-		"  value text,"
-		"  PRIMARY KEY (protocol, account, contact_id, parameter));");
+		"  PRIMARY KEY (contact_hash_id));");
 
 	get_props = new QSqlQuery(db);
 	replace_prop = new QSqlQuery(db);
@@ -109,9 +114,20 @@ Contact *ContactInfo::get_contact(Account *acc, const QString &contact_id) {
 	hasher.addData(contact_id.toUtf8());
 	contact->hash_id = hasher.result().toBase64();
 
-	get_props->bindValue(":proto", contact->account->proto->name());
-	get_props->bindValue(":account_id", contact->account->account_id);
-	get_props->bindValue(":contact_id", contact->contact_id);
+	if(!hashMap.contains(contact->hash_id)) {
+		QSqlQuery writeInfoQuery(db);
+		writeInfoQuery.prepare("INSERT INTO contact_hash VALUES(?, ?, ?, ?);");
+		writeInfoQuery.addBindValue(contact->hash_id);
+		writeInfoQuery.addBindValue(contact->account->proto->name());
+		writeInfoQuery.addBindValue(contact->account->account_id);
+		writeInfoQuery.addBindValue(contact->contact_id);
+		if(!writeInfoQuery.exec()) {
+			//qWarning() << "ContactInfo hash data write failed:" << writeInfoQuery.lastError().text();
+		}
+		hashMap[contact->hash_id] = contact;
+	}
+
+	get_props->bindValue(":hash", contact->hash_id);
 
 	if(!get_props->exec())
 		qWarning() << "ContactInfo read properties failed:" << get_props->lastError().text();
@@ -125,27 +141,44 @@ Contact *ContactInfo::get_contact(Account *acc, const QString &contact_id) {
 	return contact;
 }
 
+Contact *ContactInfo::get_contact(const QString &contact_hash_id) {
+	if(hashMap.contains(contact_hash_id))
+		return hashMap[contact_hash_id];
+
+	QSqlQuery qm(db);
+	if(!qm.exec("SELECT protocol, account, contact_id FROM contact_hash WHERE contact_hash_id='" + contact_hash_id + "';"))
+		qDebug() << "Read contact account data failed:" << qm.lastError().text();
+	if(qm.next()) {
+		Account *account = accounts_i->account_info(qm.value(0).toString(), qm.value(1).toString());
+		if(account) {
+			return get_contact(account, qm.value(2).toString());
+		}
+	}
+	return 0;
+}
+
 bool ContactInfo::delete_contact(Contact *contact) {
 	Account *acc = contact->account;
 	QString contact_id = contact->contact_id;
-	if(contacts.contains(acc) && contacts[acc].contains(contact_id)) {
+	if(contacts.contains(acc) && contacts[acc].contains(contact_id)) {		
 		if(events_i) {
 			ContactChanged cc(contact, this);
 			cc.removed = true;
 			events_i->fire_event(cc);
 		}
 
-		delete_props->bindValue(":proto", contact->account->proto->name());
-		delete_props->bindValue(":account_id", contact->account->account_id);
-		delete_props->bindValue(":contact_id", contact->contact_id);
+		delete_props->bindValue(":hash", contact->hash_id);
 
 		if(!delete_props->exec())
 			qWarning() << "ContactInfo delete query error:" << delete_props->lastError().text();
 
 		delete_props->finish();
 
+		hashMap.remove(contact->hash_id);
+
 		delete contacts[acc][contact_id];
 		contacts[acc].remove(contact_id);
+
 		if(contacts[acc].size() == 0)
 			contacts.remove(acc);
 
@@ -164,20 +197,16 @@ bool ContactInfo::event_fired(EventsI::Event &e) {
 		foreach(QString prop, changed_props) {
 			if(cc.contact->has_property(prop)) {
 				//qDebug() << "replacing prop" << prop;
-				replace_prop->bindValue(":v", cc.contact->get_property(prop));
-				replace_prop->bindValue(":proto", cc.contact->account->proto->name());
-				replace_prop->bindValue(":a", cc.contact->account->account_id);
-				replace_prop->bindValue(":c", cc.contact->contact_id);
+				replace_prop->bindValue(":hash", cc.contact->hash_id);
 				replace_prop->bindValue(":param", prop);
+				replace_prop->bindValue(":v", cc.contact->get_property(prop));
 
 				if(!replace_prop->exec())
 					qWarning() << "ContactInfo property insert failed:" << replace_prop->lastError().text();
 
 				replace_prop->finish();
 			} else {
-				delete_prop->bindValue(":proto", cc.contact->account->proto->name());
-				delete_prop->bindValue(":a", cc.contact->account->account_id);
-				delete_prop->bindValue(":c", cc.contact->contact_id);
+				delete_prop->bindValue(":hash", cc.contact->hash_id);
 				delete_prop->bindValue(":param", prop);
 
 				if(!delete_prop->exec())

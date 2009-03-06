@@ -100,6 +100,7 @@ public:
 	const QString get_interface_name() const {return INAME_CONTACTINFO;}
 
 	virtual Contact *get_contact(Account *acc, const QString &contact_id) = 0;
+	virtual Contact *get_contact(const QString &contact_hash_id) = 0;
 	virtual bool delete_contact(Contact *contact) = 0;
 };
 

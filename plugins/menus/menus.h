@@ -22,14 +22,10 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
-	QAction *add_contact_action(const QString &label, const QString &icon = "");
-	QAction *add_group_action(const QString &label, const QString &icon = "");
 	QAction *add_menu_action(const QString &menu_id, const QString &label, const QString &icon = "", QAction *prev = 0);
 	QAction *add_menu_separator(const QString &menu_id, QAction *prev = 0);
 
-	void show_contact_menu(Contact *c, const QPoint &p = QPoint());
-	void show_group_menu(const QStringList &full_gn, int contactCount, const QPoint &p = QPoint());
-	void show_menu(const QString &id, const QPoint &p = QPoint());
+	void show_menu(const QString &id, const QMap<QString, QVariant> &properties, const QPoint &p = QPoint());
 
 	QMenu *get_menu(const QString &id);
 
@@ -43,7 +39,6 @@ protected:
 
 	MenusOptions *opt;
 
-	QMenu *contact_menu, *group_menu;
 	QMap<QString, QMenu *> menus;
 };
 
