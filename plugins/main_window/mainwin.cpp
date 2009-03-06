@@ -36,22 +36,22 @@ MainWin::MainWin(CoreI *core, QWidget *parent)
 	ui.setupUi(this);
 
 	icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
-	winMenu = new QMenu("MainMenu", this);
-	if(icons_i) {
-		setWindowIcon(icons_i->get_icon("generic"));
-		//winMenu = menuBar()->addMenu(QIcon(icons_i->get_icon("dot_grey")), "");
-		winMenu->setIcon(icons_i->get_icon("dot_grey"));
-	} //else 
-		//winMenu = menuBar()->addMenu("Main Menu");
+	if(icons_i) setWindowIcon(icons_i->get_icon("generic"));
+	menus_i = (MenusI *)core_i->get_interface(INAME_MENUS);
 
-	sepAction = winMenu->addSeparator();
-
-	QAction *exitAct = new QAction(QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton), tr("E&xit"), this);
+	QAction *exitAct;
+	if(menus_i) {
+		exitAct = menus_i->add_menu_action("Main Menu", tr("E&xit"), "quit");
+		sepAction = menus_i->add_menu_separator("Main Menu", exitAct);
+		winMenu = menus_i->get_menu("Main Menu");
+	} else {
+		winMenu = new QMenu("Main Menu", this);
+		sepAction = winMenu->addSeparator();
+		exitAct = new QAction(QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton), tr("E&xit"), this);
+		winMenu->addAction(exitAct);
+	}
 	exitAct->setShortcut(tr("Ctrl+Q"));
-	//exitAct->setStatusTip(tr("Exit the application"));
 	connect(exitAct, SIGNAL(triggered()), this, SLOT(quit()));
-	
-	winMenu->addAction(exitAct);
 
 	QToolButton *mainMenuButton = new QToolButton(this);
 	mainMenuButton->setMenu(winMenu);
@@ -78,6 +78,9 @@ MainWin::~MainWin()
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
 	settings.setValue("MainWin/hiddenState", isHidden());
+}
+
+void MainWin::modules_loaded() {
 }
 
 void MainWin::ensureOnScreen(int screenChanged) {
@@ -172,12 +175,14 @@ void MainWin::add_window(QWidget *w) {
 	manage_window_position(w);
 
 	QAction *action;
-	winMenu->insertAction(sepAction, action = new QAction(w->windowIcon(), w->windowTitle(), this));
+	if(menus_i) {
+		if(icons_i) icons_i->add_icon(w->windowTitle(), w->windowIcon().pixmap(32, 32), w->windowTitle());
+		action = menus_i->add_menu_action("Main Menu", w->windowTitle(), w->windowTitle(), sepAction);
+	} else {
+		action = new QAction(w->windowIcon(), w->windowTitle(), this);
+		winMenu->insertAction(sepAction, action);
+	}
 	connect(action, SIGNAL(triggered()), w, SLOT(show()));
-}
-
-void MainWin::add_submenu(QMenu *menu) {
-	winMenu->insertMenu(sepAction, menu);
 }
 
 bool MainWin::eventFilter(QObject *target, QEvent *e) {

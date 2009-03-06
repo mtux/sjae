@@ -1,5 +1,6 @@
 #include "menus.h"
 #include <QtPlugin>
+#include <QDebug>
 
 PluginInfo info = {
 	0x200,
@@ -75,12 +76,36 @@ QAction *Menus::add_group_action(const QString &label, const QString &icon) {
 	return action;
 }
 
-QAction *Menus::add_menu_action(const QString &id, const QString &label, const QString &icon) {
-	QAction *action = new QAction(QIcon(icons_i->get_icon(icon)), label, 0);
-	if(!menus.contains(id))
-		menus[id] = new QMenu();
-	menus[id]->addAction(action);
-	return action;
+QAction *Menus::add_menu_action(const QString &menu_id, const QString &label, const QString &icon, QAction *prev) {
+	QStringList path = menu_id.split("/");
+	QString p, parent;
+	if(path.size()) {
+		QAction *action = new QAction(icons_i ? icons_i->get_icon(icon) : QIcon(), label, 0);
+		while(path.size()) {
+			parent = p;
+			if(p.size()) p += "/";
+			p += path.first();
+
+			if(!menus.contains(p)) {
+				menus[p] = new QMenu(path.first());
+			}
+			if(parent.size()) {
+				menus[parent]->insertMenu(menus[parent]->actions().value(0), menus[p]);
+			}
+
+			path.takeFirst();
+		}
+
+		menus[menu_id]->insertAction(prev ? prev : menus[menu_id]->actions().value(0), action);
+		return action;
+	}
+	return 0;
+}
+
+QAction *Menus::add_menu_separator(const QString &menu_id, QAction *prev) {
+	if(!menus.contains(menu_id))
+		menus[menu_id] = new QMenu();
+	return menus[menu_id]->insertSeparator(prev);
 }
 
 void Menus::show_contact_menu(Contact *contact, const QPoint &p) {
@@ -107,6 +132,13 @@ void Menus::show_menu(const QString &id, const QPoint &p) {
 		if(p.isNull()) pos = QCursor::pos();
 		menus[id]->exec(pos);
 	}
+}
+
+QMenu *Menus::get_menu(const QString &id) {
+	if(!menus.contains(id))
+		menus[id] = new QMenu();
+
+	return menus[id];
 }
 
 /////////////////////////////

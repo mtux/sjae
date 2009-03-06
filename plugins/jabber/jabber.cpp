@@ -105,23 +105,20 @@ JabberProto::JabberProto(CoreI *core) {
 }
 
 void JabberProto::modules_loaded() {
-	main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
-	if(main_win_i) {
-		menu = new QMenu(tr("Jabber"));
-
-		QAction *act = menu->addAction(tr("Service Discovery"));
+	MenusI *menus_i = (MenusI *)core_i->get_interface(INAME_MENUS);
+	MainWindowI *main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW);
+	if(menus_i) {
+		QAction *act = menus_i->add_menu_action("Main Menu/Jabber", tr("Service Discovery"));
 		connect(act, SIGNAL(triggered()), service_discovery, SLOT(show()));
-		main_win_i->manage_window_position(service_discovery);
+		if(main_win_i) main_win_i->manage_window_position(service_discovery);
 
-		act = menu->addAction(tr("Gateways"));
+		act = menus_i->add_menu_action("Main Menu/Jabber", tr("Gateways"));
 		connect(act, SIGNAL(triggered()), gateways, SLOT(show()));
-		main_win_i->manage_window_position(gateways);
+		if(main_win_i) main_win_i->manage_window_position(gateways);
 
-		act = menu->addAction(tr("Send Direct"));
+		act = menus_i->add_menu_action("Main Menu/Jabber", tr("Send Direct"));
 		connect(act, SIGNAL(triggered()), send_direct, SLOT(show()));
-		main_win_i->manage_window_position(send_direct);
-
-		main_win_i->add_submenu(menu);
+		if(main_win_i) main_win_i->manage_window_position(send_direct);
 	} else {
 		service_discovery->show();
 		gateways->show();
@@ -230,12 +227,13 @@ bool JabberProto::event_fired(EventsI::Event &e) {
 const QList<GlobalStatus> JabberProto::statuses() const {
 	return QList<GlobalStatus>() 
 		<< ST_OFFLINE
-		<< ST_ONLINE
-//		<< ST_INVISIBLE
-//		<< ST_FREETOCHAT
-		<< ST_SHORTAWAY
+		<< ST_DND
 		<< ST_LONGAWAY
-		<< ST_DND;
+		<< ST_SHORTAWAY
+//		<< ST_FREETOCHAT
+//		<< ST_INVISIBLE
+		<< ST_ONLINE
+	;
 }
 
 void JabberProto::add_contact(const QString &account_id, const QString &contact_id) {

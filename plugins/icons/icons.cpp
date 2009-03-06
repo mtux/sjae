@@ -1,6 +1,7 @@
 #include "icons.h"
 #include <global_status.h>
 #include <QtPlugin>
+#include <QStyle>
 
 PluginInfo info = {
 	0x100,
@@ -53,7 +54,7 @@ bool icons::load(CoreI *core) {
 
 	add_icon("message", QPixmap(":/icons/Resources/message.png"), "Messaging/message");
 	add_icon("alert", QPixmap(":/icons/Resources/alert.png"), "System/alert");
-
+	add_icon("quit", QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton).pixmap(16, 16), "System/quit");
 	each_status(gs) {
 		add_alias(status_name[gs], def_icon[gs], QString("Status/") + hr_status_name[gs]);
 	}
@@ -119,8 +120,10 @@ void icons::setup_account_status_icons(Account *account) {
 	foreach(GlobalStatus status, statuses) {
 		add_alias("Proto/" + account->proto->name() + "/Account/" + account->account_id + "/" + status_name[status], 
 			"Proto/" +account->proto->name() + "/" + status_name[status], 
-			"Protocols/" + account->proto->name() + "/Accounts/" + account->account_id + "/" + hr_status_name[status]);
+			"Protocols/" + account->proto->name() + "/Accounts/" + account->account_name + "/" + hr_status_name[status]);
 	}
+	add_alias("Proto/" + account->proto->name() + "/Account/" + account->account_id, "Proto/" + account->proto->name(),
+			  "Protocols/" + account->proto->name() + "/Accounts/" + account->account_name);
 }
 
 QPixmap icons::get_account_status_icon(Account *account, GlobalStatus gs) {

@@ -7,6 +7,7 @@
 
 #include <QAction>
 #include <QStringList>
+#include <QMenu>
 
 #define INAME_MENUS	"MenusInterface"
 
@@ -41,11 +42,14 @@ public:
 
 	virtual QAction *add_contact_action(const QString &label, const QString &icon = "") = 0;
 	virtual QAction *add_group_action(const QString &label, const QString &icon = "") = 0;
-	virtual QAction *add_menu_action(const QString &menu_id, const QString &label, const QString &icon = "") = 0;
+	virtual QAction *add_menu_action(const QString &menu_id, const QString &label, const QString &icon = "", QAction *prev = 0) = 0;
+	virtual QAction *add_menu_separator(const QString &menu_id, QAction *prev = 0) = 0;
 
 	virtual void show_contact_menu(Contact *c, const QPoint &p = QPoint()) = 0;
 	virtual void show_group_menu(const QStringList &full_gn, int contactCount, const QPoint &p = QPoint()) = 0;
 	virtual void show_menu(const QString &id, const QPoint &p = QPoint()) = 0;
+
+	virtual QMenu *get_menu(const QString &id) = 0;
 };
 
 #endif

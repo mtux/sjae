@@ -22,7 +22,6 @@ public:
 
 	void add_window(QWidget *w);
 	void manage_window_position(QWidget *w);
-	void add_submenu(QMenu *menu);
 protected slots:
 	void options_applied();
 protected:

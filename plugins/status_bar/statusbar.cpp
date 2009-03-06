@@ -32,6 +32,7 @@ bool StatusBar::load(CoreI *core) {
 	if((main_win_i = (MainWindowI *)core_i->get_interface(INAME_MAINWINDOW)) == 0) return false;
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
+	if((menus_i = (MenusI *)core_i->get_interface(INAME_MENUS)) == 0) return false;
 
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
@@ -50,16 +51,18 @@ bool StatusBar::load(CoreI *core) {
 	QToolButton *tb = new QToolButton();
 	tb->setIcon(icons_i->get_icon("generic"));
 	tb->setToolTip("Global Status");
-	QMenu *menu = new QMenu();
+
+	QMenu *menu = menus_i->get_menu("Global Status");
 	//connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-	menu->addAction(icons_i->get_icon("generic"), "Global Status");
-	menu->addSeparator();
 	each_contact_status(gs) {
-		QAction *a = menu->addAction(icons_i->get_icon(status_name[gs]), hr_status_name[gs]);
+		QAction *a = menus_i->add_menu_action("Global Status", hr_status_name[gs], status_name[gs]);
 		a->setData(gs);
 		connect(a, SIGNAL(triggered()), menuMapper, SLOT(map()));
 		menuMapper->setMapping(a, a);
 	}
+	menus_i->add_menu_action("Global Status", "Global Status", "generic");
+	menus_i->add_menu_separator("Global Status", menu->actions().at(1));
+
 	tb->setMenu(menu);
 	tb->setPopupMode(QToolButton::InstantPopup);
 	tb->hide();
@@ -102,17 +105,19 @@ bool StatusBar::event_fired(EventsI::Event &e) {
 			QToolButton *tb = new QToolButton();
 			tb->setIcon(icons_i->get_account_status_icon(ac.account, ac.account->status));
 			tb->setToolTip(proto_name + ": " + account_name);
-			QMenu *menu = new QMenu();
+
+			QMenu *menu = menus_i->get_menu(proto_name + ": " + account_name);
 			//connect(proto, SIGNAL(local_status_change(const QString &, const QString &, GlobalStatus)) , this, SLOT(local_status_change(const QString &, const QString &, GlobalStatus)));
-			menu->addAction(icons_i->get_icon("Proto/" + proto_name), proto_name + ": " + account_name);
-			menu->addSeparator();
 			QList<GlobalStatus> statuses = ac.account->proto->statuses();
 			foreach(GlobalStatus gs, statuses) {
-				QAction *a = menu->addAction(icons_i->get_account_status_icon(ac.account, gs), hr_status_name[gs]);
+				QAction *a = menus_i->add_menu_action(proto_name + ": " + account_name, hr_status_name[gs], "Proto/" + proto_name + "/Account/" + account_id + "/" + status_name[gs]);
 				a->setData(QVariantList() << proto_name << account_id << gs);
 				connect(a, SIGNAL(triggered()), menuMapper, SLOT(map()));
 				menuMapper->setMapping(a, a);
 			}
+			menus_i->add_menu_action(proto_name + ": " + account_name, proto_name + ": " + account_name, "Proto/" + proto_name + "/Account/" + account_id);
+			menus_i->add_menu_separator(proto_name + ": " + account_name, menu->actions().at(1));
+
 			tb->setMenu(menu);
 			tb->setPopupMode(QToolButton::InstantPopup);
 			//status_bar->addWidget(tb);

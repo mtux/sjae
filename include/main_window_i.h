@@ -18,7 +18,6 @@ public:
 	virtual void set_status_bar(QStatusBar *sb) = 0;
 	virtual void add_window(QWidget *w) = 0;
 	virtual void manage_window_position(QWidget *w) = 0;
-	virtual void add_submenu(QMenu *menu) = 0;
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <accounts_i.h>
 #include <main_window_i.h>
+#include <menus_i.h>
 #include <QPointer>
 #include <QMap>
 #include "jabberctx.h"
@@ -77,7 +78,6 @@ protected:
 	CoreI *core_i;
 	QPointer<AccountsI> accounts_i;
 	QPointer<EventsI> events_i;
-	QPointer<MainWindowI> main_win_i;
 
 	QMap<Account *, JabberCtx *> ctx;
 	ServiceDiscovery *service_discovery;

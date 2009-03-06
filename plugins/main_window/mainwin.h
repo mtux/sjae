@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "ui_mainwin.h"
 #include <icons_i.h>
+#include <menus_i.h>
 #include <QPointer>
 #include <QSystemTrayIcon>
 #include <QPoint>
@@ -19,9 +20,9 @@ public:
 
 	void add_window(QWidget *w);
 	void manage_window_position(QWidget *w);
-	void add_submenu(QMenu *menu);
 	void restoreHiddenState();
 
+	void modules_loaded();
 	void set_options(MainWinOptions::Settings settings);
 
 public slots:
@@ -40,6 +41,7 @@ protected:
 
 	CoreI *core_i;
 	QPointer<IconsI> icons_i;
+	QPointer<MenusI> menus_i;
 
 	QMenu *winMenu;
 

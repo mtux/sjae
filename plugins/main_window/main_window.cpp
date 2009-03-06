@@ -3,7 +3,7 @@
 #include <QSettings>
 
 PluginInfo info = {
-	0x200,
+	0x210,
 	"Main Window",
 	"Scott Ellis",
 	"mail@scottellis.com.au",
@@ -46,6 +46,7 @@ bool main_window::modules_loaded() {
 		options_i->add_page("Appearance/Main Window", opt);
 	}
 
+	win->modules_loaded();
 	win->set_options(s);
 	win->restoreHiddenState();
 
@@ -92,10 +93,6 @@ void main_window::add_window(QWidget *w) {
 
 void main_window::manage_window_position(QWidget *w) {
 	if(win) win->manage_window_position(w);
-}
-
-void main_window::add_submenu(QMenu *menu) {
-	if(win) win->add_submenu(menu);
 }
 
 Q_EXPORT_PLUGIN2(mainWindow, main_window)

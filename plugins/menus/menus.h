@@ -8,8 +8,6 @@
 #include <icons_i.h>
 #include "menusoptions.h"
 
-#include <QMenu>
-
 class Menus: public MenusI 	
 {
 	Q_OBJECT
@@ -26,11 +24,14 @@ public:
 
 	QAction *add_contact_action(const QString &label, const QString &icon = "");
 	QAction *add_group_action(const QString &label, const QString &icon = "");
-	QAction *add_menu_action(const QString &menu_id, const QString &label, const QString &icon = "");
+	QAction *add_menu_action(const QString &menu_id, const QString &label, const QString &icon = "", QAction *prev = 0);
+	QAction *add_menu_separator(const QString &menu_id, QAction *prev = 0);
 
 	void show_contact_menu(Contact *c, const QPoint &p = QPoint());
 	void show_group_menu(const QStringList &full_gn, int contactCount, const QPoint &p = QPoint());
 	void show_menu(const QString &id, const QPoint &p = QPoint());
+
+	QMenu *get_menu(const QString &id);
 
 protected slots:				
 	void options_applied();		

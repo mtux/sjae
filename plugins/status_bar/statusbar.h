@@ -4,6 +4,7 @@
 #include <icons_i.h>
 #include <events_i.h>
 #include <main_window_i.h>
+#include <menus_i.h>
 #include <accounts_i.h>
 #include <QPointer>
 #include <QSignalMapper>
@@ -36,6 +37,7 @@ protected:
 	QPointer<IconsI> icons_i;
 	QPointer<AccountsI> accounts_i;
 	QPointer<EventsI> events_i;
+	QPointer<MenusI> menus_i;
 
 	QStatusBar *status_bar;
 	QWidget *toolbuttons;
