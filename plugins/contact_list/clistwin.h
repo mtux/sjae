@@ -14,8 +14,6 @@ public:
 	~CListWin();
 	
 	QTreeView *tree() {return ui.treeView;}
-	QMenu *contact_menu() {return &contactMenu;}
-	QMenu *group_menu() {return &groupMenu;}
 
 protected slots:
 	void menuReq(const QPoint &p);
@@ -23,8 +21,6 @@ signals:
 	void showMenu(const QPoint &p, const QModelIndex &index);
 
 private:
-	QMenu contactMenu;
-	QMenu groupMenu;
 	Ui::CListWinClass ui;
 };
 

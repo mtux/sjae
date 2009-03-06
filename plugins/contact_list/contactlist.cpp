@@ -31,6 +31,7 @@ bool ContactList::load(CoreI *core) {
 	icons_i = (IconsI *)core_i->get_interface(INAME_ICONS);
 	if((accounts_i = (AccountsI *)core_i->get_interface(INAME_ACCOUNTS)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
+	if((menus_i = (MenusI *)core_i->get_interface(INAME_MENUS)) == 0) return false;
 
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
@@ -70,12 +71,6 @@ bool ContactList::load(CoreI *core) {
 	if(main_win_i) main_win_i->set_central_widget(win);
 	else win->show();
 
-	newGroupAction = add_group_action("New group...");
-	deleteGroupAction = add_group_action("Delete group");
-
-	connect(newGroupAction, SIGNAL(triggered()), this, SLOT(newGroup()));
-	connect(deleteGroupAction, SIGNAL(triggered()), this, SLOT(deleteGroup()));
-
 	return true;
 }
 
@@ -85,6 +80,12 @@ bool ContactList::modules_loaded() {
 		options_i->add_page("Appearance/Contact List", opt = new CListOptions(current_settings));
 		connect(opt, SIGNAL(applied()), this, SLOT(options_applied()));
 	}
+
+	newGroupAction = menus_i->add_group_action("New group...");
+	deleteGroupAction = menus_i->add_group_action("Delete group");
+
+	connect(newGroupAction, SIGNAL(triggered()), this, SLOT(newGroup()));
+	connect(deleteGroupAction, SIGNAL(triggered()), this, SLOT(deleteGroup()));
 
 	return true;
 }
@@ -160,19 +161,6 @@ QTreeWidgetItem *findGroup(QTreeWidgetItem *parent, const QString &name) {
 	return 0;
 }
 
-QAction *ContactList::add_contact_action(const QString &label, const QString &icon) {
-	QAction *action = new QAction(QIcon(icons_i->get_icon(icon)), label, 0);
-	win->contact_menu()->addAction(action);
-
-	return action;
-}
-
-QAction *ContactList::add_group_action(const QString &label, const QString &icon) {
-	QAction *action = new QAction(QIcon(icons_i->get_icon(icon)), label, 0);
-	win->group_menu()->addAction(action);
-	return action;
-}
-
 void ContactList::add_contact(Contact *contact) {
 	model->addContact(contact);
 }
@@ -193,18 +181,14 @@ void ContactList::update_contact(Contact *contact) {
 void ContactList::aboutToShowMenuSlot(const QPoint &pos, const QModelIndex &i) {
 	Contact *contact = model->getContact(sortedModel->mapToSource(i));
 	if(contact) {
-		ShowContactMenu scm(contact, this);
-		events_i->fire_event(scm);
-		win->contact_menu()->exec(pos);
+		menus_i->show_contact_menu(contact, pos);
 	} else {
 		menuGroup = model->getGroup(sortedModel->mapToSource(i));
 		int contactCount = model->contactCount(menuGroup);
 		
 		deleteGroupAction->setEnabled(menuGroup.size() && contactCount == 0);
 		
-		ShowGroupMenu sgm(menuGroup, contactCount, this);
-		events_i->fire_event(sgm);
-		win->group_menu()->exec(pos);
+		menus_i->show_group_menu(menuGroup, contactCount, pos);
 	}
 }
 

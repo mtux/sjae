@@ -12,7 +12,7 @@
 #include <QTimer>
 
 #include "Roster.h"
-#include <clist_i.h>
+#include <menus_i.h>
 #include <accounts_i.h>
 #include <global_status.h>
 #include <QDomElement>
@@ -125,7 +125,7 @@ protected:
 	QString mid; // contact id for menu signals
 
 	CoreI *core_i;
-	QPointer<CListI> clist_i;
+	QPointer<MenusI> menus_i;
 	QPointer<EventsI> events_i;
 	QPointer<ContactInfoI> contact_info_i;
 

@@ -2,6 +2,7 @@
 #define _I_CLIST_H
 
 #include "contact_info_i.h"
+#include "menus_i.h"
 #include "global_status.h"
 #include <QString>
 #include <QTreeWidgetItem>
@@ -17,8 +18,6 @@
 #define UUID_CONTACT_DBL_CLICKED			"{669304BD-CC4E-46d6-BE27-E1C093C18F0E}"
 #define UUID_SHOW_TIP						"{A9188B2F-919E-4a5f-9506-495E2FA0C333}"
 #define UUID_HIDE_TIP						"{2C930720-D9E2-4940-B57A-247F94C046DA}"
-#define UUID_SHOW_CONTACT_MENU				"{CEC41DE5-9D8C-412a-B504-F329D7514B97}"
-#define UUID_SHOW_GROUP_MENU				"{5C4A3232-E759-40d1-94A4-4B2AB8614712}"
 
 class ContactClicked: public EventsI::Event {
 public:
@@ -43,29 +42,12 @@ public:
 	HideTip(QObject *source = 0): EventsI::Event(UUID_HIDE_TIP, source) {}
 };
 
-class ShowContactMenu: public EventsI::Event {
-public:
-	ShowContactMenu(Contact *c, QObject *source = 0): EventsI::Event(UUID_SHOW_CONTACT_MENU, source), contact(c) {}
-	Contact *contact;
-};
-
-class ShowGroupMenu: public EventsI::Event {
-public:
-	ShowGroupMenu(const QStringList &full_gn, int contacts, QObject *source = 0): EventsI::Event(UUID_SHOW_GROUP_MENU, source), full_group_name(full_gn), contactCount(contacts) {}
-	QStringList full_group_name;
-	int contactCount;
-};
-
-
 class CListI: public PluginI {
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
 public:
 
 	const QString get_interface_name() const {return INAME_CLIST;}
-
-	virtual QAction *add_contact_action(const QString &label, const QString &icon = "") = 0;
-	virtual QAction *add_group_action(const QString &label, const QString &icon = "") = 0;
 };
 
 #endif

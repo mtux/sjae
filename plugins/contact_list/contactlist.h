@@ -41,9 +41,6 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
-	QAction *add_contact_action(const QString &label, const QString &icon = "");
-	QAction *add_group_action(const QString &label, const QString &icon = "");
-
 public slots:
 	void add_contact(Contact *contact);
 	void remove_contact(Contact *contact);
@@ -61,6 +58,7 @@ protected:
 	QPointer<IconsI> icons_i;
 	QPointer<AccountsI> accounts_i;
 	QPointer<EventsI> events_i;
+	QPointer<MenusI> menus_i;
 
 	CListWin *win;
 
