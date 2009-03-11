@@ -150,6 +150,9 @@ SplitterWin *MessageWindow::get_window(Contact *contact) {
 		win->setSendChatState(current_settings.send_chat_state);
 
 		connect(win, SIGNAL(closed(Contact *)), this, SLOT(destroy_window(Contact *)));
+
+		MessageWinEvent mwe(contact, this);
+		events_i->fire_event(mwe);
 	}
 
 	return windows[contact];
@@ -210,9 +213,6 @@ void MessageWindow::open_window(Contact *contact) {
 	win->show();
 	win->activateWindow();
 	win->raise();
-
-	MessageWinEvent mwe(contact, this);
-	events_i->fire_event(mwe);
 }
 
 bool MessageWindow::window_open(Contact *contact) {
