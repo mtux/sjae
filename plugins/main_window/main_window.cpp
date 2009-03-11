@@ -33,6 +33,7 @@ bool main_window::modules_loaded() {
 
 	QSettings settings;
 	MainWinOptions::Settings s;
+	s.close_to_tray = settings.value("MainWin/CloseToTray", false).toBool();
 	s.hide_toolbar = settings.value("MainWin/HideToolbar", false).toBool();
 	s.hide_frame = settings.value("MainWin/HideFrame", false).toBool();
 	s.tool_window = settings.value("MainWin/ToolWindow", false).toBool();
@@ -56,6 +57,7 @@ bool main_window::modules_loaded() {
 void main_window::options_applied() {
 	QSettings settings;
 	MainWinOptions::Settings s = opt->get_settings();
+	settings.setValue("MainWin/CloseToTray", s.close_to_tray);
 	settings.setValue("MainWin/HideToolbar", s.hide_toolbar);
 	settings.setValue("MainWin/HideFrame", s.hide_frame);
 	settings.setValue("MainWin/ToolWindow", s.tool_window);

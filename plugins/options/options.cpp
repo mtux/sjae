@@ -52,8 +52,10 @@ bool options::add_page(const QString &category, OptionsPageI *page) {
 	return false;
 }
 
-void options::show_options() {
-	if(win) win->show();
+void options::show_options(const QString &page) {
+	if(win) {
+		win->showPage(page);
+	}
 }
 
 

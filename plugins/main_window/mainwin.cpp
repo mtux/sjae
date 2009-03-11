@@ -2,6 +2,7 @@
 #include <QSettings>
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
+#include <QShowEvent>
 #include <QStyle>
 #include <QToolButton>
 #include <QDebug>
@@ -30,8 +31,8 @@ QRegion roundRectRegion(int x, int y, int w, int h, int radius) {
 }
 
 MainWin::MainWin(CoreI *core, QWidget *parent)
-	: QMainWindow(parent), core_i(core), closing(false), mousePressed(false), 
-		hideFrame(false), toolWindow(false), roundCorners(false), onTop(false)
+	: QMainWindow(parent), core_i(core), mousePressed(false),
+		closeToTray(false), hideFrame(false), toolWindow(false), roundCorners(false), onTop(false)
 {
 	ui.setupUi(this);
 
@@ -77,7 +78,6 @@ MainWin::~MainWin()
 {
 	QSettings settings;
 	settings.setValue("MainWin/geometry", saveGeometry());
-	settings.setValue("MainWin/hiddenState", isHidden());
 }
 
 void MainWin::modules_loaded() {
@@ -118,6 +118,7 @@ void MainWin::updateFlags() {
 
 void MainWin::set_options(MainWinOptions::Settings settings) {
 	ui.toolBar->setVisible(!settings.hide_toolbar);
+	closeToTray = settings.close_to_tray;
 	hideFrame = settings.hide_frame;
 	toolWindow = settings.tool_window;
 	setWindowOpacity(1 - (settings.trans_percent / 100.0));
@@ -133,7 +134,6 @@ void MainWin::set_options(MainWinOptions::Settings settings) {
 }
 
 void MainWin::quit() {
-	closing = true;
 	qApp->quit();
 }
 
@@ -225,4 +225,19 @@ void MainWin::paintEvent(QPaintEvent *e) {
 	//qDebug() << "Widget rect" << rect();
 	//qDebug() << "Paint rect:" << e->rect();
 	QMainWindow::paintEvent(e);
+}
+
+void MainWin::closeEvent(QCloseEvent *e) {
+	QMainWindow::closeEvent(e);
+	if(closeToTray) {
+		QSettings settings;
+		settings.setValue("MainWin/hiddenState", isHidden());
+	} else
+		 quit();
+}
+
+void MainWin::showEvent(QShowEvent *e) {
+	QMainWindow::showEvent(e);
+	QSettings settings;
+	settings.setValue("MainWin/hiddenState", isHidden());
 }

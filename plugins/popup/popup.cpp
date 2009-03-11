@@ -31,7 +31,7 @@ bool Popup::load(CoreI *core) {
 
 	QSettings settings;
 	current_settings.enabled = settings.value("Popup/Enabled", true).toBool();
-	current_settings.round_corners = settings.value("Popup/RoundCorners", true).toBool();
+	current_settings.round_corners = settings.value("Popup/RoundCorners", false).toBool();
 
 	OptionsI *options_i = (OptionsI*)core_i->get_interface(INAME_OPTIONS);
 	if(options_i) {

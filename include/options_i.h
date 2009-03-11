@@ -25,7 +25,7 @@ public:
 
 	virtual bool add_page(const QString &category, OptionsPageI *page) = 0;
 public slots:
-	virtual void show_options() = 0;
+	virtual void show_options(const QString &page = QString()) = 0;
 };
 
 #endif

@@ -5,6 +5,7 @@ MainWinOptions::MainWinOptions(const Settings &settings, QWidget *parent)
 {
 	ui.setupUi(this);
 
+	connect(ui.chkCloseToTray, SIGNAL(clicked()), this, SIGNAL(changed()));
 	connect(ui.chkRoundCorners, SIGNAL(clicked()), this, SIGNAL(changed()));
 	connect(ui.chkNoFrame, SIGNAL(clicked()), this, SIGNAL(changed()));
 	connect(ui.chkNoToolbar, SIGNAL(clicked()), this, SIGNAL(changed()));
@@ -20,6 +21,7 @@ MainWinOptions::~MainWinOptions()
 }
 
 bool MainWinOptions::apply() {
+	current_settings.close_to_tray = ui.chkCloseToTray->isChecked();
 	current_settings.hide_toolbar = ui.chkNoToolbar->isChecked();
 	current_settings.hide_frame = ui.chkNoFrame->isChecked();
 	current_settings.tool_window = ui.chkToolWin->isChecked();
@@ -31,6 +33,7 @@ bool MainWinOptions::apply() {
 }
 
 void MainWinOptions::reset() {
+	ui.chkCloseToTray->setChecked(current_settings.close_to_tray);
 	ui.chkNoToolbar->setChecked(current_settings.hide_toolbar);
 	ui.chkNoFrame->setChecked(current_settings.hide_frame);
 	ui.chkToolWin->setChecked(current_settings.tool_window);

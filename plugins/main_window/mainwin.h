@@ -36,6 +36,8 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *e);
 	void resizeEvent(QResizeEvent *e);
 	void paintEvent(QPaintEvent *e);
+	void closeEvent(QCloseEvent *e);
+	void showEvent(QShowEvent *e);
 
 	bool eventFilter(QObject *target, QEvent *e);
 
@@ -45,13 +47,12 @@ protected:
 
 	QMenu *winMenu;
 
-	bool closing;
 	QAction *sepAction;
 	QSystemTrayIcon *systray;
 
 	bool mousePressed;
 	QPoint cursorOffset;
-	bool hideFrame, toolWindow, roundCorners, onTop;
+	bool closeToTray, hideFrame, toolWindow, roundCorners, onTop;
 	void updateFlags();
 
 protected slots:

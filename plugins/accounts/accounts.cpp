@@ -46,6 +46,9 @@ bool accounts::modules_loaded() {
 
 	read_data();
 
+	if(account_list.size() == 0)
+		options_i->show_options("Accounts");
+
 	return true;
 }
 

@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>MainWinOptionsClass</class>
- <widget class="OptionsPageI" name="MainWinOptionsClass" >
-  <property name="geometry" >
+ <widget class="OptionsPageI" name="MainWinOptionsClass">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,16 +10,16 @@
     <height>272</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>MainWinOptions</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <spacer name="verticalSpacer" >
-     <property name="orientation" >
+    <spacer name="verticalSpacer">
+     <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" stdset="0" >
+     <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
        <height>40</height>
@@ -27,71 +28,78 @@
     </spacer>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkNoToolbar" >
-     <property name="text" >
+    <widget class="QCheckBox" name="chkCloseToTray">
+     <property name="text">
+      <string>Close to tray</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkNoToolbar">
+     <property name="text">
       <string>Hide toolbar</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkNoFrame" >
-     <property name="text" >
+    <widget class="QCheckBox" name="chkNoFrame">
+     <property name="text">
       <string>Hide frame</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkRoundCorners" >
-     <property name="enabled" >
+    <widget class="QCheckBox" name="chkRoundCorners">
+     <property name="enabled">
       <bool>false</bool>
      </property>
-     <property name="text" >
+     <property name="text">
       <string>Round corners</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkToolWin" >
-     <property name="text" >
+    <widget class="QCheckBox" name="chkToolWin">
+     <property name="text">
       <string>Tool window (don't show in taskbar)</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkOnTop" >
-     <property name="text" >
+    <widget class="QCheckBox" name="chkOnTop">
+     <property name="text">
       <string>Always on top</string>
      </property>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" >
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="label_2" >
-       <property name="text" >
+      <widget class="QLabel" name="label_2">
+       <property name="text">
         <string>Transparency (%):</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QSlider" name="sldTrans" >
-       <property name="orientation" >
+      <widget class="QSlider" name="sldTrans">
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="tickPosition" >
+       <property name="tickPosition">
         <enum>QSlider::TicksBothSides</enum>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label" >
-       <property name="minimumSize" >
+      <widget class="QLabel" name="label">
+       <property name="minimumSize">
         <size>
          <width>20</width>
          <height>0</height>
         </size>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>0</string>
        </property>
       </widget>
@@ -99,11 +107,11 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer_2" >
-     <property name="orientation" >
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" stdset="0" >
+     <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
        <height>40</height>
@@ -113,7 +121,7 @@
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11" />
+ <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
    <class>OptionsPageI</class>
@@ -130,11 +138,11 @@
    <receiver>label</receiver>
    <slot>setNum(int)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>363</x>
      <y>199</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>389</x>
      <y>199</y>
     </hint>
@@ -146,11 +154,11 @@
    <receiver>chkRoundCorners</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>58</x>
      <y>111</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>60</x>
      <y>122</y>
     </hint>

@@ -16,6 +16,8 @@ public:
 	~OptionsWin();
 
 	bool add_page(const QString &category, OptionsPageI *w);
+	void showPage(const QString &page);
+
 protected slots:
 	void apply();
 	void cancel();
@@ -35,6 +37,7 @@ protected:
 	
 private:
 	Ui::OptionsWinClass ui;
+	int numPages;
 };
 
 #endif // OPTIONSWIN_H

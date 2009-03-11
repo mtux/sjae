@@ -19,7 +19,7 @@ public:
 
 	bool add_page(const QString &category, OptionsPageI *page);
 public slots:
-	void show_options();
+	void show_options(const QString &page = QString());
 
 protected:
 	CoreI *core_i;

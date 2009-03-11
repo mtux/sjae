@@ -10,6 +10,7 @@ class MainWinOptions : public OptionsPageI
 
 public:
 	struct Settings {
+		bool close_to_tray;
 		bool hide_toolbar;
 		bool hide_frame;
 		bool tool_window;
