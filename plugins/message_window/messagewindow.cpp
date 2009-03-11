@@ -210,7 +210,7 @@ void MessageWindow::contact_change(Contact *contact) {
 
 void MessageWindow::open_window(Contact *contact) {
 	SplitterWin *win = get_window(contact);
-	win->show();
+	win->showNormal();
 	win->activateWindow();
 	win->raise();
 }
