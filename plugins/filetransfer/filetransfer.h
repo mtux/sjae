@@ -24,13 +24,13 @@ public:
 
 protected slots:				
 	void options_applied();		
-	void cancelled(int id, Contact *contact);
+	void cancelled(QObject *source, const QString &id, Contact *contact);
 protected:
 	CoreI *core_i;
 	FileTransferOptions *opt;
 	QPointer<EventsI> events_i;
 
-	QMap<int, FTProgressDialog *> dialogs;
+	QMap<QObject *, QMap<QString, FTProgressDialog *> > dialogs;
 };
 
 #endif // FILETRANSFER

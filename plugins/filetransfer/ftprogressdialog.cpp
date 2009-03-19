@@ -1,9 +1,9 @@
 #include "ftprogressdialog.h"
 #include "ui_ftprogressdialog.h"
 
-FTProgressDialog::FTProgressDialog(int ftId, bool in, Contact *c, const QString &filename, int bytes, QWidget *parent) :
+FTProgressDialog::FTProgressDialog(QObject *s, const QString &ftId, bool in, Contact *c, const QString &filename, int bytes, QWidget *parent) :
     QDialog(parent),
-	m_ui(new Ui::FTProgressDialog), id(ftId), incoming(in), contact(c), sizeBytes(bytes)
+	m_ui(new Ui::FTProgressDialog), source(s), id(ftId), incoming(in), contact(c), sizeBytes(bytes)
 {
     m_ui->setupUi(this);
 
@@ -68,5 +68,5 @@ void FTProgressDialog::on_btnDone_clicked()
 		setState(ST_COMPLETED);
 	else
 		setState(ST_CANCELLED);
-	emit cancelled(id, contact);
+	emit cancelled(source, id, contact);
 }

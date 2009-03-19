@@ -14,7 +14,7 @@ class FTProgressDialog : public QDialog {
 public:
 	typedef enum {ST_ACCEPTED, ST_CANCELLED, ST_INPROGRESS, ST_COMPLETED} State;
 
-	explicit FTProgressDialog(int ftId, bool incomming, Contact *contact, const QString &filename, int bytes, QWidget *parent = 0);
+	explicit FTProgressDialog(QObject *source, const QString &ftId, bool incomming, Contact *contact, const QString &filename, int bytes, QWidget *parent = 0);
     virtual ~FTProgressDialog();
 
 	void setState(State s);
@@ -23,14 +23,15 @@ public:
 	bool getIncoming() {return incoming;}
 
 signals:
-	void cancelled(int id, Contact *c);
+	void cancelled(QObject *source, const QString &id, Contact *c);
 
 protected:
     virtual void changeEvent(QEvent *e);
 
 private:
     Ui::FTProgressDialog *m_ui;
-	int id;
+	QObject *source;
+	QString id;
 	bool incoming;
 	Contact *contact;
 	int sizeBytes;

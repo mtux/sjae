@@ -15,7 +15,8 @@ public:
 	FileTransferProgress(Contact *c, QObject *source = 0): EventsI::Event(UUID_FT, source), contact(c) {}
 	Contact *contact;
 	QString fileName;
-	int sizeBytes, id, progressBytes;
+	int sizeBytes, progressBytes;
+	QString id;
 };
 
 // to send a file, fire a FileTransferUserEvent with type == ET_OUTGOING && ftType == FT_REQUEST - the contact's protocol
@@ -27,10 +28,13 @@ class FileTransferUserEvent: public EventsI::Event {
 public:
 	typedef enum {FT_REQUEST, FT_ACCEPT, FT_CANCEL} FTType;
 
-	FileTransferUserEvent(Contact *c, const QString &fn, int size, int id, QObject *source = 0): EventsI::Event(UUID_FT_USER, source), contact(c) {}
+	FileTransferUserEvent(Contact *c, const QString &fn, int size, const QString &ft_id, QObject *source = 0):
+			EventsI::Event(UUID_FT_USER, source), contact(c), fileName(fn), sizeBytes(size), id(ft_id)
+	{}
 	Contact *contact;
 	QString fileName;
-	int sizeBytes, id;
+	int sizeBytes;
+	QString id;
 	FTType ftType;
 };
 

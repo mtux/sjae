@@ -1,5 +1,6 @@
 #include "filetransfer.h"
 #include <QtPlugin>
+#include <QMessageBox>
 
 PluginInfo info = {
 	0x600,
@@ -64,42 +65,48 @@ bool FileTransfer::event_fired(EventsI::Event &e) {
 		FileTransferUserEvent &ftue = (FileTransferUserEvent &)e;
 		if(ftue.ftType == FileTransferUserEvent::FT_REQUEST) {
 			if(ftue.type == EventsI::ET_INCOMING) {
-				// TODO: confirmation dialog
-				FileTransferUserEvent r(ftue.contact, ftue.fileName, ftue.sizeBytes, ftue.id, this);
+				FileTransferUserEvent r(ftue.contact, ftue.fileName, ftue.sizeBytes, ftue.id, ftue.source);
 				r.type = EventsI::ET_OUTGOING;
+
+				if(QMessageBox::information(0, tr("Incoming File..."), "File: " + ftue.fileName + "\nFrom: " + ftue.contact->contact_id + "\n\nAccept?", QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Ok) == QMessageBox::Cancel) {
+					r.ftType = FileTransferUserEvent::FT_CANCEL;
+					events_i->fire_event(r);
+					return true;
+				}
+
 				r.ftType = FileTransferUserEvent::FT_ACCEPT;
 				events_i->fire_event(r);
 			}
 
-			dialogs[ftue.id] = new FTProgressDialog(ftue.id, ftue.type == EventsI::ET_INCOMING, ftue.contact, ftue.fileName, ftue.sizeBytes);
-			connect(dialogs[ftue.id], SIGNAL(cancelled(int, Contact *)), this, SLOT(cancelled(int, Contact *)));
-			dialogs[ftue.id]->show();
+			dialogs[ftue.source][ftue.id] = new FTProgressDialog(ftue.source, ftue.id, ftue.type == EventsI::ET_INCOMING, ftue.contact, ftue.fileName, ftue.sizeBytes);
+			connect(dialogs[ftue.source][ftue.id], SIGNAL(cancelled(QObject *, const QString &, Contact *)), this, SLOT(cancelled(QObject *, const QString &, Contact *)));
+			dialogs[ftue.source][ftue.id]->show();
 
 			if(ftue.type == EventsI::ET_INCOMING) {
-				dialogs[ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
+				dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
 			}
-		} else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL && dialogs.contains(ftue.id)) {
-			dialogs[ftue.id]->setState(FTProgressDialog::ST_CANCELLED);
-		} else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT && dialogs.contains(ftue.id)) {
-			dialogs[ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
+		} else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL && dialogs[ftue.source].contains(ftue.id)) {
+			dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_CANCELLED);
+		} else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT && dialogs[ftue.source].contains(ftue.id)) {
+			dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
 		}
 	} else if(e.uuid == UUID_FT) {
 		FileTransferProgress &ftp = (FileTransferProgress &)e;
-		if(dialogs.contains(ftp.id)) {
-			dialogs[ftp.id]->setProgress(ftp.progressBytes);
+		if(dialogs[ftp.source].contains(ftp.id)) {
+			dialogs[ftp.source][ftp.id]->setProgress(ftp.progressBytes);
 		}
 	}
 	return true;
 }
 
-void FileTransfer::cancelled(int id, Contact *contact) {
-	if(dialogs.contains(id)) {
-		FTProgressDialog::State s = dialogs[id]->getState();
+void FileTransfer::cancelled(QObject *source, const QString &id, Contact *contact) {
+	if(dialogs[source].contains(id)) {
+		FTProgressDialog::State s = dialogs[source][id]->getState();
 		if(s == FTProgressDialog::ST_COMPLETED) {
-			dialogs[id]->close();
-			dialogs.remove(id);
-		} else if(s == FTProgressDialog::ST_CANCELLED && dialogs[id]->getIncoming()) {
-			FileTransferUserEvent r(contact, "", 0, id, this);
+			dialogs[source][id]->close();
+			dialogs[source].remove(id);
+		} else if(s == FTProgressDialog::ST_CANCELLED) {
+			FileTransferUserEvent r(contact, "", 0, id, source);
 			r.type = EventsI::ET_OUTGOING;
 			r.ftType = FileTransferUserEvent::FT_CANCEL;
 			events_i->fire_event(r);
