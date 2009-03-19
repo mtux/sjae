@@ -62,7 +62,7 @@ class Message: public EventsI::Event {
 public:
 	Message(QObject *source = 0): EventsI::Event(UUID_MSG, source), contact(0), id(-1), read(false) {}
 	Message(Contact *c, const QString &msg, bool incomming, int i, QObject *source = 0): 
-				EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), id(i), text(msg), read(!incomming)   {}
+				EventsI::Event(UUID_MSG, source, (incomming ? EventsI::ET_INCOMING : EventsI::ET_OUTGOING)), contact(c), id(i), text(msg), read(!incomming)   {}
 	Message(const Message &m): EventsI::Event(UUID_MSG, m.source, m.type), contact(m.contact), id(m.id), text(m.text), read(m.read) {
 		timestamp = m.timestamp;
 	}
@@ -87,7 +87,7 @@ class ChatState: public EventsI::Event {
 public:
 
 	ChatState(Contact *c, ChatStateType type, bool incomming, QObject *source = 0): 
-		EventsI::Event(UUID_CHAT_STATE, source, (incomming ? EventsI::ET_INCOMMING : EventsI::ET_OUTGOING)), contact(c), state_type(type) {}
+		EventsI::Event(UUID_CHAT_STATE, source, (incomming ? EventsI::ET_INCOMING : EventsI::ET_OUTGOING)), contact(c), state_type(type) {}
 	Contact *contact;
 	ChatStateType state_type;
 };

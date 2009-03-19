@@ -9,7 +9,7 @@
 
 #define EVENT_TYPE_MASK_ALL			0xffff
 #define EVENT_TYPE_MASK_INTERNAL	0x0001
-#define EVENT_TYPE_MASK_INCOMMING	0x0002
+#define EVENT_TYPE_MASK_INCOMING	0x0002
 #define EVENT_TYPE_MASK_OUTGOING	0x0004
 
 class EventsI: public PluginI {
@@ -17,7 +17,7 @@ class EventsI: public PluginI {
 	Q_INTERFACES(PluginI)
 public:
 
-	typedef enum {ET_INTERNAL=1, ET_INCOMMING=2, ET_OUTGOING=3} EventType;
+	typedef enum {ET_INTERNAL=1, ET_INCOMING=2, ET_OUTGOING=3} EventType;
 
 	class Event {
 	public:

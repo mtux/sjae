@@ -35,7 +35,7 @@ bool ContactList::load(CoreI *core) {
 
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
-	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMING);
 
 	model = new ContactTreeModel(icons_i, events_i, this);
 	sortedModel = new SortedTreeModel(this);

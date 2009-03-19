@@ -29,11 +29,11 @@ bool MessageWindow::load(CoreI *core) {
 	if((icons_i = (IconsI *)core_i->get_interface(INAME_ICONS)) == 0) return false;
 	if((clist_i = (CListI *)core_i->get_interface(INAME_CLIST)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
-	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING | EVENT_TYPE_MASK_OUTGOING);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMING | EVENT_TYPE_MASK_OUTGOING);
 	events_i->add_event_listener(this, UUID_ACCOUNT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
 	events_i->add_event_listener(this, UUID_CONTACT_DBL_CLICKED);
-	events_i->add_event_listener(this, UUID_CHAT_STATE, EVENT_TYPE_MASK_INCOMMING);
+	events_i->add_event_listener(this, UUID_CHAT_STATE, EVENT_TYPE_MASK_INCOMING);
 
 	QSettings settings;
 	MessageWindowOptions::Settings s;

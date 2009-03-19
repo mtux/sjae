@@ -5,9 +5,9 @@
 #include <filetransfer_i.h>				
 #include <options_i.h> 				
 #include "filetransferoptions.h" 		
+#include "ftprogressdialog.h"
 
-class FileTransfer: public FileTransferI 	
-{
+class FileTransfer: public FileTransferI, EventsI::EventListener{
 	Q_OBJECT
 	Q_INTERFACES(PluginI)
 public:
@@ -20,12 +20,17 @@ public:
 	bool unload();
 	const PluginInfo &get_plugin_info();
 
+	bool event_fired(EventsI::Event &e);
+
 protected slots:				
 	void options_applied();		
-	
+	void cancelled(int id, Contact *contact);
 protected:
 	CoreI *core_i;
-	FileTransferOptions *opt;		
+	FileTransferOptions *opt;
+	QPointer<EventsI> events_i;
+
+	QMap<int, FTProgressDialog *> dialogs;
 };
 
 #endif // FILETRANSFER

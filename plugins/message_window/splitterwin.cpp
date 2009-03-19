@@ -108,7 +108,7 @@ void SplitterWin::openLink(const QUrl &url) {
 }
 
 QString SplitterWin::format_text(Message &m) {
-	QString nick = (m.type == EventsI::ET_INCOMMING ? Qt::escape(getNick()) : Qt::escape(m.contact->account->nick));
+	QString nick = (m.type == EventsI::ET_INCOMING ? Qt::escape(getNick()) : Qt::escape(m.contact->account->nick));
 	QString msg = m.text;
 	if(msg.startsWith("/me "))
 		msg.replace(0, 4, "* " + nick + " ");
@@ -128,7 +128,7 @@ QString SplitterWin::getContent() {
 	QString ret;
 	bool first = true, incomming, last_incomming = false;
 	foreach(Message item, content) {
-		incomming = (item.type == EventsI::ET_INCOMMING);
+		incomming = (item.type == EventsI::ET_INCOMING);
 		if(first || incomming != last_incomming) {
 			if(first)
 				ret += QString("<div class='") + (incomming ? "incomming" : "outgoing") + "'>";
@@ -247,7 +247,7 @@ void SplitterWin::addToLog(Message &m) {
 void SplitterWin::msgEvent(Message &m) {
 	addToLog(m);
 
-	if(m.type == EventsI::ET_INCOMMING) {
+	if(m.type == EventsI::ET_INCOMING) {
 		if(contactChatState != CS_ACTIVE)
 			setContactChatState(CS_ACTIVE);
 		else

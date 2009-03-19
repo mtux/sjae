@@ -33,7 +33,7 @@ bool MessageFormat::load(CoreI *core) {
 	core_i = core;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
-        events_i->add_event_filter(this, 0x200, UUID_MSG, EVENT_TYPE_MASK_INCOMMING | EVENT_TYPE_MASK_OUTGOING);
+		events_i->add_event_filter(this, 0x200, UUID_MSG, EVENT_TYPE_MASK_INCOMING | EVENT_TYPE_MASK_OUTGOING);
 	return true;
 }
 

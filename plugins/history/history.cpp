@@ -111,7 +111,7 @@ bool History::event_fired(EventsI::Event &e) {
 
 			writeMessageQuery.addBindValue(m.contact->hash_id);
 			writeMessageQuery.addBindValue(t);
-			writeMessageQuery.addBindValue(m.type == EventsI::ET_INCOMMING);
+			writeMessageQuery.addBindValue(m.type == EventsI::ET_INCOMING);
 			writeMessageQuery.addBindValue(m.read);
 			writeMessageQuery.addBindValue(m.text);
 

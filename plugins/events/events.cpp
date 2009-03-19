@@ -26,7 +26,7 @@ void Events::fire_event(Event &e) {
 	int m;
 	switch(e.type) {
 		case ET_INTERNAL: m = EVENT_TYPE_MASK_INTERNAL; break;
-		case ET_INCOMMING: m = EVENT_TYPE_MASK_INCOMMING; break;
+		case ET_INCOMING: m = EVENT_TYPE_MASK_INCOMING; break;
 		case ET_OUTGOING: m = EVENT_TYPE_MASK_OUTGOING; break;
 		default:
 			m = EVENT_TYPE_MASK_ALL;

@@ -28,7 +28,7 @@ bool MessageNotify::load(CoreI *core) {
 	if((history_i = (HistoryI *)core_i->get_interface(INAME_HISTORY)) == 0) return false;
 	if((events_i = (EventsI *)core_i->get_interface(INAME_EVENTS)) == 0) return false;
 
-	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMMING);
+	events_i->add_event_listener(this, UUID_MSG, EVENT_TYPE_MASK_INCOMING);
 	events_i->add_event_listener(this, UUID_MSG_WIN);
 
 	PopupI::PopupClass c= popup_i->get_class("Default");
