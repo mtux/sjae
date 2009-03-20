@@ -27,7 +27,7 @@ fi
 
 mkdir -p ../$LOWER
 
-EXTS="h cpp pro vcproj sln"
+EXTS="h cpp pro"
 for e in $EXTS
 do
    if [ -e "template.$e" ]
@@ -71,15 +71,6 @@ if [ $DO_INTERFACE -eq 1 ]
 then
 	sed "s/Template/$NAME/g" template_i.temp_h | sed "s/template/$LOWER/g" | sed "s/TEMPLATE/$UPPER/g" > ../../include/${LOWER}_i.h
 	echo "HEADERS += ../../include/${LOWER}_i.h" >> ../$LOWER/$LOWER.pro
-fi
-
-# replace the vc project's guid with a new one
-if [ -e "../$LOWER/$LOWER.vcproj" ]
-then
-  GUID=`uuidgen`
-  UP_GUID="`echo $GUID | tr \"[:lower:]\" \"[:upper:]\"`"
-  sed "/^\tProjectGUID=/ s/\".*\"/\"{$UP_GUID}\"/" ../$LOWER/$LOWER.vcproj > ../$LOWER/$LOWER.vcproj_test
-  mv ../$LOWER/$LOWER.vcproj_test ../$LOWER/$LOWER.vcproj
 fi
 
 # add the new directory to the qt project file
