@@ -45,6 +45,14 @@ public:
 			transient_properties.append(key);
 		}
 	}
+
+	QString nick() {
+		if(has_property("handle")) return get_property("handle").toString();
+		if(has_property("nick")) return get_property("nick").toString();
+		if(has_property("name")) return get_property("name").toString();
+		return contact_id;
+	}
+
 private:
 	QMap<QString, QVariant> properties; // should be property cache?
 	QStringList changed_properties;

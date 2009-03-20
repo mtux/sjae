@@ -211,18 +211,18 @@ protected:
 
 	void requestFileTransfer(const QString &to, const QString &fileName, const QString &id);
 	void acceptFileTransfer(const QString &sender, const QString &fileName, const QString &id);
-	void rejectFileTransfer(const QString &sender, const QString &fileName, const QString &id);
+	void rejectFileTransfer(const QString &sender, const QString &fileName, const QString &id, bool incoming);
 
 	void parseFileTransferRequest(const QString &id, const QString &from);
 
 	class FTData {
 	public:
-		FTData(): file(0), accepted(false), started(false), stream_accepted(false), completed(false), size(0), progress(0), seq(0), blockSize(4096) {}
+		FTData(): file(0), accepted(false), started(false), ack(false), size(0), progress(0), seq(0), blockSize(4096) {}
 
 		QString id, stream_id;
 		QFile *file;
 		QString contact_id;
-		bool accepted, started, stream_accepted, completed;
+		bool accepted, started, ack;
 		int size, progress, seq;
 		int blockSize;
 	};

@@ -8,7 +8,7 @@ FTProgressDialog::FTProgressDialog(const FTId &id, const QString &filename, int 
     m_ui->setupUi(this);
 
 	m_ui->lblState->setText(ftid.incoming ? tr("INCOMING") : tr("OUTGOING"));
-	m_ui->lblContact->setText(ftid.contact->contact_id);
+	m_ui->lblContact->setText(ftid.contact->nick() + " (" + ftid.contact->contact_id + ")");
 	m_ui->lblFileName->setText(filename);
 	if(bytes < 1024)
 		m_ui->lblSize->setText(QString("%1 b").arg(bytes));

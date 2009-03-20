@@ -1,6 +1,11 @@
 #include "filetransfer.h"
 #include <QtPlugin>
 #include <QMessageBox>
+#include "ftacceptdialog.h"
+
+#include <QDesktopServices>
+#include <QDir>
+#include <QDebug>
 
 PluginInfo info = {
 	0x600,
@@ -28,6 +33,11 @@ bool FileTransfer::load(CoreI *core) {
 
 	events_i->add_event_listener(this, UUID_FT);
 	events_i->add_event_listener(this, UUID_FT_USER);
+
+	QDir saveDir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + "/SajeDownloads");
+	if(!saveDir.exists() && !saveDir.mkdir("."))
+		qWarning() << "Failed to create directory:" << saveDir.absolutePath();
+
 	return true;
 }
 
@@ -60,6 +70,27 @@ const PluginInfo &FileTransfer::get_plugin_info() {
 void FileTransfer::options_applied() {												
 }
 
+void FileTransfer::accepted(const FTId &ftid, const QString &newFileName, int size) {
+	FileTransferUserEvent r(ftid.contact, newFileName, size, ftid.id, this);
+	r.type = EventsI::ET_OUTGOING;
+	r.ftType = FileTransferUserEvent::FT_ACCEPT;
+	r.incoming = ftid.incoming;
+	events_i->fire_event(r);
+
+	dialogs[ftid] = new FTProgressDialog(ftid, newFileName, size);
+	connect(dialogs[ftid], SIGNAL(cancelled(const FTId &)), this, SLOT(cancelled(const FTId &)));
+	dialogs[ftid]->setState(FTProgressDialog::ST_ACCEPTED);
+	dialogs[ftid]->show();
+}
+
+void FileTransfer::rejected(const FTId &ftid) {
+	FileTransferUserEvent r(ftid.contact, "", 0, ftid.id, this);
+	r.type = EventsI::ET_OUTGOING;
+	r.ftType = FileTransferUserEvent::FT_CANCEL;
+	r.incoming = ftid.incoming;
+	events_i->fire_event(r);
+}
+
 bool FileTransfer::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_FT_USER) {
 		FileTransferUserEvent &ftue = (FileTransferUserEvent &)e;
@@ -70,26 +101,16 @@ bool FileTransfer::event_fired(EventsI::Event &e) {
 
 		if(ftue.ftType == FileTransferUserEvent::FT_REQUEST) {
 			if(ftue.type == EventsI::ET_INCOMING) {
-				FileTransferUserEvent r(ftue.contact, ftue.fileName, ftue.sizeBytes, ftue.id, ftue.source);
-				r.type = EventsI::ET_OUTGOING;
-
-				if(QMessageBox::information(0, tr("Incoming File..."), "File: " + ftue.fileName + "\nFrom: " + ftue.contact->contact_id + "\n\nAccept?", QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Ok) == QMessageBox::Cancel) {
-					r.ftType = FileTransferUserEvent::FT_CANCEL;
-					events_i->fire_event(r);
-					return true;
-				}
-
-				r.ftType = FileTransferUserEvent::FT_ACCEPT;
-				events_i->fire_event(r);
+				FTAcceptDialog *fta = new FTAcceptDialog(ftid, ftue.fileName, ftue.sizeBytes, 0);
+				connect(fta, SIGNAL(accepted(const FTId &, const QString &, int)), this, SLOT(accepted(const FTId &, const QString &, int)));
+				connect(fta, SIGNAL(rejected(const FTId &)), this, SLOT(rejected(const FTId &)));
+				fta->show();
+			} else {
+				dialogs[ftid] = new FTProgressDialog(ftid, ftue.fileName, ftue.sizeBytes);
+				connect(dialogs[ftid], SIGNAL(cancelled(const FTId &)), this, SLOT(cancelled(const FTId &)));
+				dialogs[ftid]->show();
 			}
 
-			dialogs[ftid] = new FTProgressDialog(ftid, ftue.fileName, ftue.sizeBytes);
-			connect(dialogs[ftid], SIGNAL(cancelled(const FTId &)), this, SLOT(cancelled(const FTId &)));
-			dialogs[ftid]->show();
-
-			if(ftue.type == EventsI::ET_INCOMING) {
-				dialogs[ftid]->setState(FTProgressDialog::ST_ACCEPTED);
-			}
 		} else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL && dialogs.contains(ftid)) {
 			dialogs[ftid]->setState(FTProgressDialog::ST_CANCELLED);
 		} else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT && dialogs.contains(ftid)) {
@@ -119,7 +140,9 @@ void FileTransfer::cancelled(const FTId &ftid) {
 			FileTransferUserEvent r(ftid.contact, "", 0, ftid.id, this);
 			r.type = EventsI::ET_OUTGOING;
 			r.ftType = FileTransferUserEvent::FT_CANCEL;
+			r.incoming = ftid.incoming;
 			events_i->fire_event(r);
+			qDebug() << "sending cancel event";
 		}
 	}
 }

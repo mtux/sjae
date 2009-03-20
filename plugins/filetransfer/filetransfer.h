@@ -26,6 +26,8 @@ public:
 protected slots:				
 	void options_applied();		
 	void cancelled(const FTId &ftid);
+	void accepted(const FTId &ftid, const QString &newFileName, int size);
+	void rejected(const FTId &ftid);
 protected:
 	CoreI *core_i;
 	FileTransferOptions *opt;
