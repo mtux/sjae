@@ -36,6 +36,7 @@ public:
 	int sizeBytes;
 	QString id;
 	FTType ftType;
+	bool incoming;
 };
 
 class FileTransferI: public PluginI {

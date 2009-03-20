@@ -176,9 +176,9 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 			else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT)
 				acceptFileTransfer(ftue.contact->contact_id, ftue.fileName, ftue.id);
 			else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL) {
-				if(incomingTransfers.contains(ftue.id) && Roster::full_jid2jid(incomingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
+				if(ftue.incoming && incomingTransfers.contains(ftue.id) && Roster::full_jid2jid(incomingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
 					rejectFileTransfer(incomingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
-				} else if(outgoingTransfers.contains(ftue.id) && Roster::full_jid2jid(outgoingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
+				} else if(!ftue.incoming && outgoingTransfers.contains(ftue.id) && Roster::full_jid2jid(outgoingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
 					rejectFileTransfer(outgoingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
 				}
 			}
@@ -647,6 +647,7 @@ void JabberCtx::parseIq() {
 					FileTransferUserEvent ftue(contact_info_i->get_contact(account, from), "", 0, id, this);
 					ftue.type = EventsI::ET_INCOMING;
 					ftue.ftType = FileTransferUserEvent::FT_ACCEPT;
+					ftue.incoming = false;
 					events_i->fire_event(ftue);
 
 
@@ -711,6 +712,7 @@ void JabberCtx::parseIq() {
 			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 			ftue.type = EventsI::ET_INCOMING;
 			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			ftue.incoming = true;
 			events_i->fire_event(ftue);
 		} else if(outgoingTransfers.contains(id) && outgoingTransfers[id].contact_id == from) {
 			delete outgoingTransfers[id].file;
@@ -720,6 +722,7 @@ void JabberCtx::parseIq() {
 			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 			ftue.type = EventsI::ET_INCOMING;
 			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			ftue.incoming = false;
 			events_i->fire_event(ftue);
 		} else {
 			readMoreIfNecessary();
@@ -1471,6 +1474,7 @@ void JabberCtx::sendFile() {
 		FileTransferUserEvent ftue(contact_info_i->get_contact(account, mid), fn, QFile(fn).size(), QString("ft_%1").arg(ftId++), this);
 		ftue.type = EventsI::ET_OUTGOING;
 		ftue.ftType = FileTransferUserEvent::FT_REQUEST;
+		ftue.incoming = false;
 		events_i->fire_event(ftue);
 	}
 }
@@ -1910,6 +1914,7 @@ void JabberCtx::parseFileTransferRequest(const QString &id, const QString &from)
 	FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), ft.file->fileName(), ft.size, id, this);
 	ftue.type = EventsI::ET_INCOMING;
 	ftue.ftType = FileTransferUserEvent::FT_REQUEST;
+	ftue.incoming = true;
 	events_i->fire_event(ftue);
 }
 
@@ -2029,6 +2034,7 @@ void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 			ftue.type = EventsI::ET_OUTGOING;
 			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			ftue.incoming = true;
 			events_i->fire_event(ftue);
 			return;
 		}
@@ -2049,6 +2055,7 @@ void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 		FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 		ftue.type = EventsI::ET_OUTGOING;
 		ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+		ftue.incoming = true;
 		events_i->fire_event(ftue);
 	}
 }

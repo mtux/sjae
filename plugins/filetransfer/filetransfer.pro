@@ -5,9 +5,11 @@ QT += gui
 
 # Input
 HEADERS += filetransfer.h \
-    ftprogressdialog.h
+    ftprogressdialog.h \
+    ftid.h
 SOURCES += filetransfer.cpp \
-    ftprogressdialog.cpp
+    ftprogressdialog.cpp \
+    ftid.cpp
 HEADERS += ../../include/options_i.h \
     filetransferoptions.h
 SOURCES += filetransferoptions.cpp

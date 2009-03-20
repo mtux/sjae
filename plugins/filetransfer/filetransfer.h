@@ -6,6 +6,7 @@
 #include <options_i.h> 				
 #include "filetransferoptions.h" 		
 #include "ftprogressdialog.h"
+#include "ftid.h"
 
 class FileTransfer: public FileTransferI, EventsI::EventListener{
 	Q_OBJECT
@@ -24,13 +25,13 @@ public:
 
 protected slots:				
 	void options_applied();		
-	void cancelled(QObject *source, const QString &id, Contact *contact);
+	void cancelled(const FTId &ftid);
 protected:
 	CoreI *core_i;
 	FileTransferOptions *opt;
 	QPointer<EventsI> events_i;
 
-	QMap<QObject *, QMap<QString, FTProgressDialog *> > dialogs;
+	QMap<FTId, FTProgressDialog *> dialogs;
 };
 
 #endif // FILETRANSFER

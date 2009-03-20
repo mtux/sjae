@@ -63,6 +63,11 @@ void FileTransfer::options_applied() {
 bool FileTransfer::event_fired(EventsI::Event &e) {
 	if(e.uuid == UUID_FT_USER) {
 		FileTransferUserEvent &ftue = (FileTransferUserEvent &)e;
+		FTId ftid;
+		ftid.contact = ftue.contact;
+		ftid.id = ftue.id;
+		ftid.incoming = ftue.incoming;
+
 		if(ftue.ftType == FileTransferUserEvent::FT_REQUEST) {
 			if(ftue.type == EventsI::ET_INCOMING) {
 				FileTransferUserEvent r(ftue.contact, ftue.fileName, ftue.sizeBytes, ftue.id, ftue.source);
@@ -78,35 +83,40 @@ bool FileTransfer::event_fired(EventsI::Event &e) {
 				events_i->fire_event(r);
 			}
 
-			dialogs[ftue.source][ftue.id] = new FTProgressDialog(ftue.source, ftue.id, ftue.type == EventsI::ET_INCOMING, ftue.contact, ftue.fileName, ftue.sizeBytes);
-			connect(dialogs[ftue.source][ftue.id], SIGNAL(cancelled(QObject *, const QString &, Contact *)), this, SLOT(cancelled(QObject *, const QString &, Contact *)));
-			dialogs[ftue.source][ftue.id]->show();
+			dialogs[ftid] = new FTProgressDialog(ftid, ftue.fileName, ftue.sizeBytes);
+			connect(dialogs[ftid], SIGNAL(cancelled(const FTId &)), this, SLOT(cancelled(const FTId &)));
+			dialogs[ftid]->show();
 
 			if(ftue.type == EventsI::ET_INCOMING) {
-				dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
+				dialogs[ftid]->setState(FTProgressDialog::ST_ACCEPTED);
 			}
-		} else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL && dialogs[ftue.source].contains(ftue.id)) {
-			dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_CANCELLED);
-		} else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT && dialogs[ftue.source].contains(ftue.id)) {
-			dialogs[ftue.source][ftue.id]->setState(FTProgressDialog::ST_ACCEPTED);
+		} else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL && dialogs.contains(ftid)) {
+			dialogs[ftid]->setState(FTProgressDialog::ST_CANCELLED);
+		} else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT && dialogs.contains(ftid)) {
+			ftid.incoming = true;
+			dialogs[ftid]->setState(FTProgressDialog::ST_ACCEPTED);
 		}
 	} else if(e.uuid == UUID_FT) {
 		FileTransferProgress &ftp = (FileTransferProgress &)e;
-		if(dialogs[ftp.source].contains(ftp.id)) {
-			dialogs[ftp.source][ftp.id]->setProgress(ftp.progressBytes);
+		FTId ftid;
+		ftid.contact = ftp.contact;
+		ftid.id = ftp.id;
+		ftid.incoming = ftp.type == EventsI::ET_INCOMING;
+		if(dialogs.contains(ftid)) {
+			dialogs[ftid]->setProgress(ftp.progressBytes);
 		}
 	}
 	return true;
 }
 
-void FileTransfer::cancelled(QObject *source, const QString &id, Contact *contact) {
-	if(dialogs[source].contains(id)) {
-		FTProgressDialog::State s = dialogs[source][id]->getState();
+void FileTransfer::cancelled(const FTId &ftid) {
+	if(dialogs.contains(ftid)) {
+		FTProgressDialog::State s = dialogs[ftid]->getState();
 		if(s == FTProgressDialog::ST_COMPLETED) {
-			dialogs[source][id]->close();
-			dialogs[source].remove(id);
+			dialogs[ftid]->close();
+			dialogs.remove(ftid);
 		} else if(s == FTProgressDialog::ST_CANCELLED) {
-			FileTransferUserEvent r(contact, "", 0, id, source);
+			FileTransferUserEvent r(ftid.contact, "", 0, ftid.id, this);
 			r.type = EventsI::ET_OUTGOING;
 			r.ftType = FileTransferUserEvent::FT_CANCEL;
 			events_i->fire_event(r);

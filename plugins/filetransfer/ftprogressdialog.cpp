@@ -1,16 +1,21 @@
 #include "ftprogressdialog.h"
 #include "ui_ftprogressdialog.h"
 
-FTProgressDialog::FTProgressDialog(QObject *s, const QString &ftId, bool in, Contact *c, const QString &filename, int bytes, QWidget *parent) :
+FTProgressDialog::FTProgressDialog(const FTId &id, const QString &filename, int bytes, QWidget *parent) :
     QDialog(parent),
-	m_ui(new Ui::FTProgressDialog), source(s), id(ftId), incoming(in), contact(c), sizeBytes(bytes)
+	m_ui(new Ui::FTProgressDialog), ftid(id), sizeBytes(bytes)
 {
     m_ui->setupUi(this);
 
-	m_ui->lblState->setText(incoming ? tr("INCOMING") : tr("OUTGOING"));
-	m_ui->lblContact->setText(contact->contact_id);
+	m_ui->lblState->setText(ftid.incoming ? tr("INCOMING") : tr("OUTGOING"));
+	m_ui->lblContact->setText(ftid.contact->contact_id);
 	m_ui->lblFileName->setText(filename);
-	m_ui->lblSize->setText(QString("%1 kb").arg(bytes/1024));
+	if(bytes < 1024)
+		m_ui->lblSize->setText(QString("%1 b").arg(bytes));
+	else if(bytes < 1024 * 1024)
+		m_ui->lblSize->setText(QString("%1 kb").arg(bytes/1024.0, 0, 'f', 1));
+	else
+		m_ui->lblSize->setText(QString("%1 mb").arg(bytes/(1024.0 * 1024), 0, 'f', 2));
 
 	m_ui->lblMsg->setText(tr("Waiting for acceptance..."));
 
@@ -44,7 +49,7 @@ void FTProgressDialog::setState(State s) {
 			m_ui->btnDone->setText(tr("Close"));
 			break;
 		case ST_INPROGRESS:
-			msg = incoming ? tr("Receiving...") : tr("Sending...");
+			msg = ftid.incoming ? tr("Receiving...") : tr("Sending...");
 			break;
 		case ST_COMPLETED:
 			msg = tr("Completed.");
@@ -68,5 +73,5 @@ void FTProgressDialog::on_btnDone_clicked()
 		setState(ST_COMPLETED);
 	else if(state != ST_COMPLETED)
 		setState(ST_CANCELLED);
-	emit cancelled(source, id, contact);
+	emit cancelled(ftid);
 }
