@@ -10,10 +10,13 @@
 #include <QBuffer>
 #include <QPointer>
 #include <QTimer>
+#include <QFile>
+#include <QTimer>
 
 #include "Roster.h"
 #include <menus_i.h>
 #include <accounts_i.h>
+#include <filetransfer_i.h>
 #include <global_status.h>
 #include <QDomElement>
 #include "disco.h"
@@ -111,6 +114,10 @@ protected slots:
 	void gatewayRegistration(const QString &gateway, const QMap<QString, QString> &fields);
 
 	void sendKeepAlive();
+
+	void sendFile();
+
+	void sendNextChunk();
 protected:
 	Account *account;
 	bool useSSL, ignoreSSLErrors;
@@ -130,7 +137,7 @@ protected:
 	QPointer<ContactInfoI> contact_info_i;
 
 	QAction *newRosterItemAction, *removeRosterItemAction, *editRosterItemAction,
-		*grantAction, *revokeAction, *requestAction;
+		*grantAction, *revokeAction, *requestAction, *fileTransferAction;
 
 	QSslSocket sslSocket;
 	QXmlStreamReader reader;
@@ -201,6 +208,34 @@ protected:
 
 	void sendIqTimeResult(const QString &id, const QString &sender);
 	void sendXMPPTimeResult(const QString &id, const QString &sender);
+
+	void requestFileTransfer(const QString &to, const QString &fileName, const QString &id);
+	void acceptFileTransfer(const QString &sender, const QString &fileName, const QString &id);
+	void rejectFileTransfer(const QString &sender, const QString &fileName, const QString &id);
+
+	void parseFileTransferRequest(const QString &id, const QString &from);
+
+	class FTData {
+	public:
+		FTData(): file(0), accepted(false), started(false), stream_accepted(false), completed(false), size(0), progress(0), seq(0), blockSize(4096) {}
+
+		QString id, stream_id;
+		QFile *file;
+		QString contact_id;
+		bool accepted, started, stream_accepted, completed;
+		int size, progress, seq;
+		int blockSize;
+	};
+
+	int ftId;
+
+	QMap<QString, FTData> outgoingTransfers;
+	QMap<QString, FTData> incomingTransfers;
+	QTimer fileSendTimer;
+
+	void parseIbbInit(const QString &id, const QString &from);
+	void parseIbbData(const QString &id, const QString &from);
+	void parseIbbClose(const QString &id, const QString &from);
 };
 
 #endif // JABBERCTX_H

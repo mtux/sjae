@@ -14,6 +14,8 @@
 #include <QDateTime>
 #include <QStringList>
 #include <QTextDocument> // for Qt::unescape function
+#include <QFileDialog>
+#include <QDesktopServices>
 
 #include "newrosteritemdialog.h"
 #include "gatewayregister.h"
@@ -29,7 +31,7 @@ QString unescape(const QString &s) {
 JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
         : QObject(parent), account(acc), useSSL(false), ignoreSSLErrors(false), core_i(core), writer(&sendBuffer),
                 sstate(SSNONE), sessionRequired(false), tlsAvailable(false), tlsRequired(false),
-		priority(DEFAULT_PRIORITY)
+				priority(DEFAULT_PRIORITY), ftId(1)
 {
 	sendBuffer.open(QIODevice::WriteOnly);
 
@@ -45,6 +47,9 @@ JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 
 	menus_i = (MenusI *)core_i->get_interface(INAME_MENUS);
 	if(menus_i) {
+		fileTransferAction = menus_i->add_menu_action("Contact Menu", "Send File..");
+		connect(fileTransferAction, SIGNAL(triggered()), this, SLOT(sendFile()));
+
 		requestAction = menus_i->add_menu_action("Contact Menu", "Request");
 		connect(requestAction, SIGNAL(triggered()), this, SLOT(requestSubscription()));
 
@@ -64,11 +69,15 @@ JabberCtx::JabberCtx(Account *acc, CoreI *core, QObject *parent)
 	events_i = (EventsI *)core_i->get_interface(INAME_EVENTS);
 	events_i->add_event_listener(this, UUID_SHOW_MENU);
 	events_i->add_event_listener(this, UUID_CONTACT_CHANGED);
+	events_i->add_event_listener(this, UUID_FT_USER);
 
 	contact_info_i = (ContactInfoI*)core_i->get_interface(INAME_CONTACTINFO);
 
 	keepAliveTimer.setInterval(30000);
 	connect(&keepAliveTimer, SIGNAL(timeout()), this, SLOT(sendKeepAlive()));
+
+	fileSendTimer.setInterval(100);
+	connect(&fileSendTimer, SIGNAL(timeout()), this, SLOT(sendNextChunk()));
 }
 
 void JabberCtx::setAccountInfo(Account *acc) {
@@ -89,6 +98,8 @@ JabberCtx::~JabberCtx()
 
 	events_i->remove_event_listener(this, UUID_SHOW_MENU);
 	events_i->remove_event_listener(this, UUID_CONTACT_CHANGED);
+
+	events_i->remove_event_listener(this, UUID_FT_USER);
 }
 
 Account *JabberCtx::get_account_info() {
@@ -106,6 +117,7 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 
 		removeRosterItemAction->setVisible(vis);
 		editRosterItemAction->setVisible(vis);
+		fileTransferAction->setVisible(vis);
 
 		if(vis) {
 			RosterItem *item = roster.get_item(contact->contact_id);
@@ -156,6 +168,21 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 				}
 			}
 		}
+	} else if(e.uuid == UUID_FT_USER) {
+		FileTransferUserEvent &ftue = (FileTransferUserEvent &)e;
+		if(ftue.contact->account == account && ftue.type == EventsI::ET_OUTGOING) {
+			if(ftue.ftType == FileTransferUserEvent::FT_REQUEST)
+				requestFileTransfer(ftue.contact->contact_id, ftue.fileName, ftue.id);
+			else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT)
+				acceptFileTransfer(ftue.contact->contact_id, ftue.fileName, ftue.id);
+			else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL) {
+				if(incomingTransfers.contains(ftue.id) && Roster::full_jid2jid(incomingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
+					rejectFileTransfer(incomingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
+				} else if(outgoingTransfers.contains(ftue.id) && Roster::full_jid2jid(outgoingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
+					rejectFileTransfer(outgoingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
+				}
+			}
+		}
 	}
 	return true;
 }
@@ -174,7 +201,7 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 		case LMT_NORMAL:
 			qDebug() << msg.toAscii().data();
 			break;
-		/*
+
 		case LMT_SEND:
 				if(message.startsWith("<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"))
 					qDebug() << "Jabber (send): Challenge response: CENSORED FOR SECURITY REASONS";
@@ -184,7 +211,7 @@ void JabberCtx::log(const QString &message, LogMessageType type) {
 		case LMT_RECV:
 			qDebug() << "Jabber (recv):" << message;
 			break;
-		*/
+
 		case LMT_WARNING:
 			qWarning() << msg.toAscii().data();
 			break;
@@ -610,6 +637,24 @@ void JabberCtx::parseIq() {
 			//sendGrant(from);
 		} else if(reader.attributes().value("id") == "gateway_unregister") {
 		} else if(reader.attributes().value("id") == "push") {
+		} else if(outgoingTransfers.contains(id) && outgoingTransfers[id].contact_id == from) {
+			readMoreIfNecessary();
+			if(reader.isStartElement() && reader.name() == "si") {
+				if(!outgoingTransfers[id].accepted) {
+					outgoingTransfers[id].accepted = true;
+					if(!fileSendTimer.isActive()) fileSendTimer.start();
+
+					FileTransferUserEvent ftue(contact_info_i->get_contact(account, from), "", 0, id, this);
+					ftue.type = EventsI::ET_INCOMING;
+					ftue.ftType = FileTransferUserEvent::FT_ACCEPT;
+					events_i->fire_event(ftue);
+
+
+				} else
+					log("Active transfer re-accepted", LMT_ERROR);
+			} else if(outgoingTransfers[id].accepted) {
+				outgoingTransfers[id].stream_accepted = true;
+			}
 		} else {
 			readMoreIfNecessary();
 			if(reader.isStartElement() && reader.name() == "query") {
@@ -626,12 +671,23 @@ void JabberCtx::parseIq() {
 		}
 	} else if(reader.attributes().value("type") == "set") {
 		readMoreIfNecessary();
-		if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:roster") {
-			readMoreIfNecessary();
-			parseRosterItem();
-			sendEmptyResult(id, from);
-		} else
-			sendIqError(id, from);
+		if(incomingTransfers.contains(id) && incomingTransfers[id].contact_id == from && reader.isStartElement()) {
+			if(reader.name() == "open")
+				parseIbbInit(id, from);
+			else if(reader.name() == "data")
+				parseIbbData(id, from);
+			else if(reader.name() == "close")
+				parseIbbClose(id, from);
+		} else {
+			if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:roster") {
+				readMoreIfNecessary();
+				parseRosterItem();
+				sendEmptyResult(id, from);
+			} else if(reader.isStartElement() && reader.name() == "si" && reader.namespaceUri() == "http://jabber.org/protocol/si") {
+				parseFileTransferRequest(id, from);
+			} else
+				sendIqError(id, from);
+		}
 	} else if(reader.attributes().value("type") == "get") {
 		readMoreIfNecessary();
 		if(reader.isStartElement() && reader.name() == "query" && reader.namespaceUri() == "jabber:iq:version") {
@@ -648,7 +704,24 @@ void JabberCtx::parseIq() {
 	} else if(reader.attributes().value("type") == "error") {
 		if(reader.attributes().value("id") == "group_delimiter_get") {
 			getRoster();
-		} else{
+		} else if(incomingTransfers.contains(id) && incomingTransfers[id].contact_id == from) {
+			delete incomingTransfers[id].file;
+			incomingTransfers.remove(id);
+
+			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
+			ftue.type = EventsI::ET_INCOMING;
+			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			events_i->fire_event(ftue);
+		} else if(outgoingTransfers.contains(id) && outgoingTransfers[id].contact_id == from) {
+			delete outgoingTransfers[id].file;
+			outgoingTransfers.remove(id);
+			if(outgoingTransfers.size() == 0) fileSendTimer.stop();
+
+			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
+			ftue.type = EventsI::ET_INCOMING;
+			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			events_i->fire_event(ftue);
+		} else {
 			readMoreIfNecessary();
 			if(reader.isStartElement() && reader.name() == "error") {
 				if(reader.attributes().value("type") != "wait") {// error 'wait' code
@@ -798,7 +871,7 @@ void JabberCtx::sendPresence(const QString &to) {
 
 void JabberCtx::parseGroupDelimiter() {
 	if(reader.isStartElement() && reader.name() == "roster") {
-		reader.readNext();
+		readMoreIfNecessary();
 		QString groupDelim = reader.text().toString();
 		if(!groupDelim.isEmpty()) {
 			RosterGroup::setDelimiter(groupDelim);
@@ -1009,8 +1082,9 @@ void JabberCtx::parsePresence() {
 		}
 	}
 
-	if(presenceType.isEmpty() || presenceType == "unavailable") 
+	if(presenceType.isEmpty() || presenceType == "unavailable") {
 		setPresence(jid, Resource::string2pres(presence), msg, prio);
+	}
 
 	/*
 	if(!nick.isEmpty()) {
@@ -1196,6 +1270,8 @@ void JabberCtx::sendIqError(const QString &id, const QString &sender, const QStr
 	writer.writeAttribute("id", id);
 	if(!sender.isEmpty())
 		writer.writeAttribute("to", sender);
+	writer.writeAttribute("from", jid);
+
 	writer.writeAttribute("type", "error");
 		writer.writeStartElement("error");
 		writer.writeAttribute("type", errorType);
@@ -1212,6 +1288,7 @@ void JabberCtx::sendEmptyResult(const QString &id, const QString &sender) {
 	writer.writeAttribute("id", id);
 	if(!sender.isEmpty())
 		writer.writeAttribute("to", sender);
+	writer.writeAttribute("from", jid);
 	writer.writeAttribute("type", "result");
 	writer.writeCharacters("");
 	sendWriteBuffer();
@@ -1265,6 +1342,10 @@ void JabberCtx::sendDiscoInfoResult(const QString &id, const QString &sender) {
 			writer.writeAttribute("var", "jabber:iq:time");
 			writer.writeEmptyElement("feature");
 			writer.writeAttribute("var", "urn:xmpp:time");
+			writer.writeEmptyElement("feature");
+			writer.writeAttribute("var", "http://jabber.org/protocol/si");
+			writer.writeEmptyElement("feature");
+			writer.writeAttribute("var", "http://jabber.org/protocol/si/profile/file-transfer");
 		writer.writeEndElement(); // query
 	writer.writeEndElement(); // iq
 	sendWriteBuffer();
@@ -1380,6 +1461,17 @@ void JabberCtx::editRosterItem() {
 			writer.writeEndElement();
 			sendWriteBuffer();
 		}
+	}
+}
+
+void JabberCtx::sendFile() {
+	QString fn = QFileDialog::getOpenFileName(0, "Send File...", QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
+	if(!fn.isEmpty()) {
+		//requestFileTransfer(mid, fn, QString("ft_%1").arg(ftId++));
+		FileTransferUserEvent ftue(contact_info_i->get_contact(account, mid), fn, QFile(fn).size(), QString("ft_%1").arg(ftId++), this);
+		ftue.type = EventsI::ET_OUTGOING;
+		ftue.ftType = FileTransferUserEvent::FT_REQUEST;
+		events_i->fire_event(ftue);
 	}
 }
 
@@ -1623,4 +1715,369 @@ void JabberCtx::sendXMPPTimeResult(const QString &id, const QString &sender) {
 	writer.writeEndElement();
 	sendWriteBuffer();
 	log("Sent time (xmpp) to " + sender);
+}
+
+void JabberCtx::requestFileTransfer(const QString &to, const QString &fileName, const QString &id) {
+/*
+<iq type='set' id='offer1' to='receiver@jabber.org/resource'>
+  <si xmlns='http://jabber.org/protocol/si'
+	  id='a0'
+	  mime-type='text/plain'
+	  profile='http://jabber.org/protocol/si/profile/file-transfer'>
+	<file xmlns='http://jabber.org/protocol/si/profile/file-transfer'
+		  name='test.txt'
+		  size='1022'/>
+	<feature xmlns='http://jabber.org/protocol/feature-neg'>
+	  <x xmlns='jabber:x:data' type='form'>
+		<field var='stream-method' type='list-single'>
+		  <option><value>http://jabber.org/protocol/bytestreams</value></option>
+		  <option><value>http://jabber.org/protocol/ibb</value></option>
+		</field>
+	  </x>
+	</feature>
+  </si>
+</iq>
+*/
+	RosterItem *item = roster.get_item(to);
+	Resource *r = item->get_active_resource();
+	if(!r) return;
+
+	QFile *f = new QFile(fileName);
+
+	FTData data;
+	data.id = id;
+	data.stream_id = id;
+	data.file = f;
+	data.contact_id = r->full_jid();
+	data.size = f->size();
+
+	outgoingTransfers[id] = data;
+
+	writer.writeStartElement("iq");
+	writer.writeAttribute("id", id);
+	if(!to.isEmpty())
+		writer.writeAttribute("to", r->full_jid());
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("type", "set");
+
+		writer.writeStartElement("si");
+		writer.writeDefaultNamespace("http://jabber.org/protocol/si");
+		writer.writeAttribute("id", id);
+		writer.writeAttribute("profile", "http://jabber.org/protocol/si/profile/file-transfer");
+
+			writer.writeStartElement("file");
+			writer.writeDefaultNamespace("http://jabber.org/protocol/si/profile/file-transfer");
+			writer.writeAttribute("name", fileName.mid(fileName.lastIndexOf("/") + 1));
+			writer.writeAttribute("size", QString("%1").arg(f->size()));
+
+				writer.writeStartElement("feature");
+				writer.writeDefaultNamespace("http://jabber.org/protocol/feature-neg");
+
+					writer.writeStartElement("x");
+					writer.writeDefaultNamespace("jabber:x:data");
+					writer.writeAttribute("type", "form");
+
+						writer.writeStartElement("field");
+						writer.writeAttribute("var", "stream-method");
+						writer.writeAttribute("type", "list-single");
+
+							writer.writeStartElement("option");
+
+								writer.writeTextElement("value", "http://jabber.org/protocol/ibb");\
+
+							writer.writeEndElement();
+						writer.writeEndElement();
+					writer.writeEndElement();
+				writer.writeEndElement();
+			writer.writeEndElement();
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+	log("Sent file transfer request (" + fileName + ") to " + to);
+}
+
+void JabberCtx::acceptFileTransfer(const QString &sender, const QString &fileName, const QString &id) {
+/*
+<iq type='result' to='sender@jabber.org/resource' id='offer1'>
+  <si xmlns='http://jabber.org/protocol/si'>
+	<feature xmlns='http://jabber.org/protocol/feature-neg'>
+	  <x xmlns='jabber:x:data' type='submit'>
+		<field var='stream-method'>
+		  <value>http://jabber.org/protocol/bytestreams</value>
+		</field>
+	  </x>
+	</feature>
+  </si>
+</iq>
+*/
+	if(!incomingTransfers.contains(id)) {
+		return;
+	}
+
+	incomingTransfers[id].accepted = true;
+
+	writer.writeStartElement("iq");
+	writer.writeAttribute("id", id);
+	writer.writeAttribute("to", incomingTransfers[id].contact_id);
+	writer.writeAttribute("from", jid);
+	writer.writeAttribute("type", "result");
+
+		writer.writeStartElement("si");
+		writer.writeDefaultNamespace("http://jabber.org/protocol/si");
+
+			writer.writeStartElement("feature");
+			writer.writeDefaultNamespace("http://jabber.org/protocol/feature-neg");
+
+				writer.writeStartElement("x");
+				writer.writeDefaultNamespace("jabber:x:data");
+				writer.writeAttribute("type", "submit");
+
+					writer.writeStartElement("field");
+					writer.writeAttribute("var", "stream-method");
+						writer.writeTextElement("value", "http://jabber.org/protocol/ibb");\
+
+					writer.writeEndElement();
+				writer.writeEndElement();
+			writer.writeEndElement();
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+	log("Sent file transfer acceptance (" + fileName + ") to " + sender);
+}
+
+void JabberCtx::rejectFileTransfer(const QString &sender, const QString &fileName, const QString &id) {
+/*
+<iq type='error' to='sender@jabber.org/resource' id='offer1'>
+  <error code='403' type='cancel>
+	<forbidden xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+	<text xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'>Offer Declined</text>
+  </error>
+</iq>
+*/
+	writer.writeStartElement("iq");
+	writer.writeAttribute("id", id);
+	writer.writeAttribute("type", "error");
+	writer.writeAttribute("to", sender);
+
+		writer.writeStartElement("error");
+		writer.writeAttribute("code", "403");
+		writer.writeAttribute("type", "cancel");
+
+			writer.writeEmptyElement("forbidden");
+			writer.writeDefaultNamespace("urn:ietf:params:xml:ns:xmpp-stanzas");
+
+			writer.writeTextElement("urn:ietf:params:xml:ns:xmpp-stanzas", "text", "Offer Declined");
+
+		writer.writeEndElement();
+	writer.writeEndElement();
+	sendWriteBuffer();
+
+	log("Sent file transfer rejection (" + fileName + ") to " + sender);
+
+	if(incomingTransfers.contains(id) && sender == incomingTransfers[id].contact_id) {
+		delete incomingTransfers[id].file;
+		incomingTransfers.remove(id);
+	}
+	if(outgoingTransfers.contains(id) && sender == outgoingTransfers[id].contact_id) {
+		delete outgoingTransfers[id].file;
+		outgoingTransfers.remove(id);
+	}
+}
+
+void JabberCtx::parseFileTransferRequest(const QString &id, const QString &from) {
+	FTData ft;
+	ft.id = id;
+	ft.contact_id = from;
+	ft.stream_id = reader.attributes().value("id").toString();
+
+	do {
+		readMoreIfNecessary();
+		if(reader.isStartElement()) {
+			if(reader.name() == "file") {
+				QString fn = reader.attributes().value("name").toString();
+				ft.file = new QFile(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + "/SajeDownloads/" + fn);
+				ft.size = reader.attributes().value("size").toString().toUInt();
+
+				//qDebug() << "Got file details, name is" << fn << "size is" << ft.size;
+			//} else if(reader.name() == "feature") {
+			} else
+				log("skipping si element: " + reader.name().toString());
+		}
+	} while(!reader.atEnd() && reader.name() != "si");
+
+	incomingTransfers[id] = ft;
+
+	FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), ft.file->fileName(), ft.size, id, this);
+	ftue.type = EventsI::ET_INCOMING;
+	ftue.ftType = FileTransferUserEvent::FT_REQUEST;
+	events_i->fire_event(ftue);
+}
+
+void JabberCtx::sendNextChunk() {
+	QMapIterator<QString, FTData> i(outgoingTransfers);
+	foreach(QString id, outgoingTransfers.keys()) {
+		FTData &data = outgoingTransfers[id];
+		if(!data.started) {
+			// initiate stream
+/*
+<iq from='romeo@montague.net/orchard'
+	id='jn3h8g65'
+	to='juliet@capulet.com/balcony'
+	type='set'>
+  <open xmlns='http://jabber.org/protocol/ibb'
+		block-size='4096'
+		sid='i781hf64'
+		stanza='iq'/>
+</iq>
+*/
+			if(data.file->open(QIODevice::ReadOnly)) {
+
+				writer.writeStartElement("iq");
+				writer.writeAttribute("id", data.id);
+				writer.writeAttribute("type", "set");
+				writer.writeAttribute("to", data.contact_id);
+					writer.writeEmptyElement("open");
+					writer.writeDefaultNamespace("http://jabber.org/protocol/ibb");
+					writer.writeAttribute("block-size", QString("%1").arg(data.blockSize));
+					writer.writeAttribute("sid", data.id);
+					writer.writeAttribute("stanza", "iq");
+				writer.writeEndElement();
+				sendWriteBuffer();
+				log("Sent ibb stream init to " + data.contact_id);
+
+				data.started = true;
+			} else {
+				log("Failed to open file: " + data.file->fileName(), LMT_ERROR);
+				sendIqError(data.id, jid, "cancel", "service-unavailable");
+				delete data.file;
+				outgoingTransfers.remove(data.id);
+				return;
+			}
+		} else if(data.stream_accepted) {
+			// send some data
+/*
+<iq from='romeo@montague.net/orchard'
+	id='kr91n475'
+	to='juliet@capulet.com/balcony'
+	type='set'>
+  <data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='i781hf64'>
+	qANQR1DBwU4DX7jmYZnncmUQB/9KuKBddzQH+tZ1ZywKK0yHKnq57kWq+RFtQdCJ
+	WpdWpR0uQsuJe7+vh3NWn59/gTc5MDlX8dS9p0ovStmNcyLhxVgmqS8ZKhsblVeu
+	IpQ0JgavABqibJolc3BKrVtVV1igKiX/N7Pi8RtY1K18toaMDhdEfhBRzO/XB0+P
+	AQhYlRjNacGcslkhXqNjK5Va4tuOAPy2n1Q8UUrHbUd0g+xJ9Bm0G0LZXyvCWyKH
+	kuNEHFQiLuCY6Iv0myq6iX6tjuHehZlFSh80b5BVV9tNLwNR5Eqz1klxMhoghJOA
+  </data>
+</iq>
+*/
+			if(data.progress == data.size && !data.completed) {
+				// close stream
+				writer.writeStartElement("iq");
+				writer.writeAttribute("id", data.id);
+				writer.writeAttribute("type", "set");
+				writer.writeAttribute("to", data.contact_id);
+				writer.writeAttribute("from", jid);
+					writer.writeEmptyElement("http://jabber.org/protocol/ibb", "close");
+					writer.writeAttribute("sid", data.stream_id);
+				writer.writeEndElement();
+				sendWriteBuffer();
+				log("Sent stream close to " + data.contact_id);
+
+				data.completed = true; // don't send lots of stream closes
+			} else if(data.progress < data.size) {
+				writer.writeStartElement("iq");
+				writer.writeAttribute("id", data.id);
+				writer.writeAttribute("type", "set");
+				writer.writeAttribute("to", data.contact_id);
+				writer.writeAttribute("from", jid);
+					writer.writeStartElement("data");
+					writer.writeDefaultNamespace("http://jabber.org/protocol/ibb");
+					writer.writeAttribute("seq", QString("%1").arg(data.seq++));
+					writer.writeAttribute("sid", data.stream_id);
+
+					QByteArray bytes = data.file->read(data.blockSize);
+					writer.writeCharacters(QString(bytes.toBase64()));
+					data.progress += bytes.size();
+
+					writer.writeEndElement();
+				writer.writeEndElement();
+				sendWriteBuffer();
+				log("Sent stream data to " + data.contact_id);
+
+				FileTransferProgress ftp(contact_info_i->get_contact(account, Roster::full_jid2jid(data.contact_id)), this);
+				ftp.fileName = data.file->fileName();
+				ftp.progressBytes = data.progress;
+				ftp.sizeBytes = data.size;
+				ftp.type = EventsI::ET_OUTGOING;
+				ftp.id = data.id;
+				events_i->fire_event(ftp);
+			}
+		}
+	}
+}
+
+void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
+	QString stream_id = reader.attributes().value("sid").toString();
+	int block_size = reader.attributes().value("block-size").toString().toInt();
+	incomingTransfers[id].stream_id = stream_id;
+	incomingTransfers[id].blockSize = block_size;
+
+	QDir saveDir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + "/SajeDownloads");
+	if(!saveDir.exists()) {
+		if(!saveDir.mkdir(".")) {
+			log("Failed create directory: " + saveDir.absolutePath());
+
+			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
+			ftue.type = EventsI::ET_OUTGOING;
+			ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+			events_i->fire_event(ftue);
+			return;
+		}
+	}
+
+	if(incomingTransfers[id].file->open(QIODevice::WriteOnly)) {
+		writer.writeEmptyElement("iq");
+		writer.writeAttribute("id", id);
+		writer.writeAttribute("to", from);
+		writer.writeAttribute("from", jid);
+		writer.writeAttribute("type", "result");
+		writer.writeCharacters("");
+		sendWriteBuffer();
+		log("Sent stream init accept to " + from);
+	} else {
+		log("Failed to open file: " + incomingTransfers[id].file->fileName());
+
+		FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
+		ftue.type = EventsI::ET_OUTGOING;
+		ftue.ftType = FileTransferUserEvent::FT_CANCEL;
+		events_i->fire_event(ftue);
+	}
+}
+
+void JabberCtx::parseIbbData(const QString &id, const QString &from) {
+	readMoreIfNecessary();
+	QByteArray bytes = QByteArray::fromBase64(reader.text().toString().toAscii());
+	FTData &data = incomingTransfers[id];
+	data.file->write(bytes);
+	data.progress += bytes.size();
+
+	qDebug() << "recv data: progress =" << data.progress << "size =" << data.size;
+
+	FileTransferProgress ftp(contact_info_i->get_contact(account, Roster::full_jid2jid(data.contact_id)), this);
+	ftp.fileName = data.file->fileName();
+	ftp.progressBytes = data.progress;
+	ftp.sizeBytes = data.size;
+	ftp.type = EventsI::ET_INCOMING;
+	ftp.id = data.id;
+	events_i->fire_event(ftp);
+
+	sendEmptyResult(id, from);
+}
+
+void JabberCtx::parseIbbClose(const QString &id, const QString &from) {
+	FTData &data = incomingTransfers[id];
+	data.file->close();
+	delete data.file;
+	incomingTransfers.remove(id);
+
+	sendEmptyResult(id, from);
 }

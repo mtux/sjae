@@ -55,7 +55,7 @@ void FTProgressDialog::setState(State s) {
 }
 
 void FTProgressDialog::setProgress(int prog) {
-	m_ui->prbProgress->setValue((int)(prog / (float)sizeBytes + 0.5));
+	m_ui->prbProgress->setValue((int)(prog / (float)sizeBytes * 100 + 0.5));
 	if(prog == sizeBytes)
 		setState(ST_COMPLETED);
 	else
@@ -66,7 +66,7 @@ void FTProgressDialog::on_btnDone_clicked()
 {
 	if(state == ST_CANCELLED)
 		setState(ST_COMPLETED);
-	else
+	else if(state != ST_COMPLETED)
 		setState(ST_CANCELLED);
 	emit cancelled(source, id, contact);
 }
