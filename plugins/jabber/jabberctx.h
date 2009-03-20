@@ -230,7 +230,7 @@ protected:
 	int ftId;
 
 	QMap<QString, FTData> outgoingTransfers;
-	QMap<QString, FTData> incomingTransfers;
+	QMap<QString, QMap<QString, FTData> > incomingTransfers; // id's might be the same for 2 contacts
 	QTimer fileSendTimer;
 
 	void parseIbbInit(const QString &id, const QString &from);

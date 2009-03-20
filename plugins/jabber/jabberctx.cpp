@@ -176,8 +176,8 @@ bool JabberCtx::event_fired(EventsI::Event &e) {
 			else if(ftue.ftType == FileTransferUserEvent::FT_ACCEPT)
 				acceptFileTransfer(ftue.contact->contact_id, ftue.fileName, ftue.id);
 			else if(ftue.ftType == FileTransferUserEvent::FT_CANCEL) {
-				if(ftue.incoming && incomingTransfers.contains(ftue.id) && Roster::full_jid2jid(incomingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
-					rejectFileTransfer(incomingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
+				if(ftue.incoming && incomingTransfers[ftue.contact->contact_id].contains(ftue.id) && Roster::full_jid2jid(incomingTransfers[ftue.contact->contact_id][ftue.id].contact_id) == ftue.contact->contact_id) {
+					rejectFileTransfer(incomingTransfers[ftue.contact->contact_id][ftue.id].contact_id, ftue.fileName, ftue.id);
 				} else if(!ftue.incoming && outgoingTransfers.contains(ftue.id) && Roster::full_jid2jid(outgoingTransfers[ftue.id].contact_id) == ftue.contact->contact_id) {
 					rejectFileTransfer(outgoingTransfers[ftue.id].contact_id, ftue.fileName, ftue.id);
 				}
@@ -672,7 +672,7 @@ void JabberCtx::parseIq() {
 		}
 	} else if(reader.attributes().value("type") == "set") {
 		readMoreIfNecessary();
-		if(incomingTransfers.contains(id) && incomingTransfers[id].contact_id == from && reader.isStartElement()) {
+		if(incomingTransfers[Roster::full_jid2jid(from)].contains(id) && incomingTransfers[Roster::full_jid2jid(from)][id].contact_id == from && reader.isStartElement()) {
 			if(reader.name() == "open")
 				parseIbbInit(id, from);
 			else if(reader.name() == "data")
@@ -705,9 +705,9 @@ void JabberCtx::parseIq() {
 	} else if(reader.attributes().value("type") == "error") {
 		if(reader.attributes().value("id") == "group_delimiter_get") {
 			getRoster();
-		} else if(incomingTransfers.contains(id) && incomingTransfers[id].contact_id == from) {
-			delete incomingTransfers[id].file;
-			incomingTransfers.remove(id);
+		} else if(incomingTransfers[Roster::full_jid2jid(from)].contains(id) && incomingTransfers[Roster::full_jid2jid(from)][id].contact_id == from) {
+			delete incomingTransfers[Roster::full_jid2jid(from)][id].file;
+			incomingTransfers[Roster::full_jid2jid(from)].remove(id);
 
 			FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 			ftue.type = EventsI::ET_INCOMING;
@@ -1814,15 +1814,15 @@ void JabberCtx::acceptFileTransfer(const QString &sender, const QString &fileNam
   </si>
 </iq>
 */
-	if(!incomingTransfers.contains(id)) {
+	if(!incomingTransfers[Roster::full_jid2jid(sender)].contains(id)) {
 		return;
 	}
 
-	incomingTransfers[id].accepted = true;
+	incomingTransfers[Roster::full_jid2jid(sender)][id].accepted = true;
 
 	writer.writeStartElement("iq");
 	writer.writeAttribute("id", id);
-	writer.writeAttribute("to", incomingTransfers[id].contact_id);
+	writer.writeAttribute("to", incomingTransfers[Roster::full_jid2jid(sender)][id].contact_id);
 	writer.writeAttribute("from", jid);
 	writer.writeAttribute("type", "result");
 
@@ -1878,9 +1878,9 @@ void JabberCtx::rejectFileTransfer(const QString &sender, const QString &fileNam
 
 	log("Sent file transfer rejection (" + fileName + ") to " + sender);
 
-	if(incomingTransfers.contains(id) && sender == incomingTransfers[id].contact_id) {
-		delete incomingTransfers[id].file;
-		incomingTransfers.remove(id);
+	if(incomingTransfers[Roster::full_jid2jid(sender)].contains(id) && sender == incomingTransfers[Roster::full_jid2jid(sender)][id].contact_id) {
+		delete incomingTransfers[Roster::full_jid2jid(sender)][id].file;
+		incomingTransfers[Roster::full_jid2jid(sender)].remove(id);
 	}
 	if(outgoingTransfers.contains(id) && sender == outgoingTransfers[id].contact_id) {
 		delete outgoingTransfers[id].file;
@@ -1909,7 +1909,7 @@ void JabberCtx::parseFileTransferRequest(const QString &id, const QString &from)
 		}
 	} while(!reader.atEnd() && reader.name() != "si");
 
-	incomingTransfers[id] = ft;
+	incomingTransfers[Roster::full_jid2jid(from)][id] = ft;
 
 	FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), ft.file->fileName(), ft.size, id, this);
 	ftue.type = EventsI::ET_INCOMING;
@@ -2023,8 +2023,9 @@ void JabberCtx::sendNextChunk() {
 void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 	QString stream_id = reader.attributes().value("sid").toString();
 	int block_size = reader.attributes().value("block-size").toString().toInt();
-	incomingTransfers[id].stream_id = stream_id;
-	incomingTransfers[id].blockSize = block_size;
+	FTData &data = incomingTransfers[Roster::full_jid2jid(from)][id];
+	data.stream_id = stream_id;
+	data.blockSize = block_size;
 
 	QDir saveDir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation) + "/SajeDownloads");
 	if(!saveDir.exists()) {
@@ -2040,7 +2041,7 @@ void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 		}
 	}
 
-	if(incomingTransfers[id].file->open(QIODevice::WriteOnly)) {
+	if(data.file->open(QIODevice::WriteOnly)) {
 		writer.writeEmptyElement("iq");
 		writer.writeAttribute("id", id);
 		writer.writeAttribute("to", from);
@@ -2050,7 +2051,7 @@ void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 		sendWriteBuffer();
 		log("Sent stream init accept to " + from);
 	} else {
-		log("Failed to open file: " + incomingTransfers[id].file->fileName());
+		log("Failed to open file: " + data.file->fileName());
 
 		FileTransferUserEvent ftue(contact_info_i->get_contact(account, Roster::full_jid2jid(from)), "", 0, id, this);
 		ftue.type = EventsI::ET_OUTGOING;
@@ -2063,7 +2064,7 @@ void JabberCtx::parseIbbInit(const QString &id, const QString &from) {
 void JabberCtx::parseIbbData(const QString &id, const QString &from) {
 	readMoreIfNecessary();
 	QByteArray bytes = QByteArray::fromBase64(reader.text().toString().toAscii());
-	FTData &data = incomingTransfers[id];
+	FTData &data = incomingTransfers[Roster::full_jid2jid(from)][id];
 	data.file->write(bytes);
 	data.progress += bytes.size();
 
@@ -2081,10 +2082,10 @@ void JabberCtx::parseIbbData(const QString &id, const QString &from) {
 }
 
 void JabberCtx::parseIbbClose(const QString &id, const QString &from) {
-	FTData &data = incomingTransfers[id];
+	FTData &data = incomingTransfers[Roster::full_jid2jid(from)][id];
 	data.file->close();
 	delete data.file;
-	incomingTransfers.remove(id);
+	incomingTransfers[Roster::full_jid2jid(from)].remove(id);
 
 	sendEmptyResult(id, from);
 }
